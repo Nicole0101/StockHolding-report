@@ -57,7 +57,10 @@ for s in stock_list:
             continue
 
         latest = df.iloc[-1]
-
+        prev = df.iloc[-2]
+        chg = latest['close'] - prev['close']
+        chgPct = (chg / prev['close']) * 100
+  
         k = round(latest['K'], 1)
         d = round(latest['D'], 1)
 
