@@ -123,3 +123,17 @@ with open(filename, "w", encoding="utf-8") as f:
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
 print("輸出檔案:", filename)
+
+
+import os
+
+# ===== 清理舊檔（只留最新5份）=====
+files = [f for f in os.listdir() if f.startswith("持股_") and f.endswith(".html")]
+
+# 依時間排序（新→舊）
+files.sort(reverse=True)
+
+# 保留前5個，其餘刪掉
+for f in files[3:]:
+    os.remove(f)
+    print("刪除舊檔:", f)
