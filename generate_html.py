@@ -7,21 +7,15 @@ from jinja2 import Template
 # ===== 讀取你的持股 CSV =====
 def load_stock_list():
     df = pd.read_csv("stocks.csv", sep="\t")
-
     # 去除欄位空白（防炸）
     df.columns = df.columns.str.strip()
-
     df = df.rename(columns={
         "Ticker": "stock_id",
         "Name": "name"
     })
-
     print("欄位:", df.columns.tolist())  # debug
-
     return df.to_dict(orient="records")
-
 stock_list = load_stock_list()
-
 results = []
 
 # ===== 主迴圈 =====
