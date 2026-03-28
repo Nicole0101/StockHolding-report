@@ -10,23 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Install Python
-      uses: actions/setup-python@v4
-      with:
-      python-version: "3.11"
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Install packages
-      run: pip install -r requirements.txt
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Run script
-      run: python generate_html.py
+      - name: Install packages
+        run: pip install -r requirements.txt
 
-    - name: Commit HTML
-      run: |
-        git config --global user.name "bot"
-        git config --global user.email "bot@github.com"
-        git add index.html
-        git commit -m "update report"
-        git push
+      - name: Run script
+        run: python generate_html.py
+
+      - name: Commit HTML
+        run: |
+          git config --global user.name "bot"
+          git config --global user.email "bot@github.com"
+          git add index.html
+          git commit -m "update report" || echo "no changes"
+          git push
