@@ -1,1 +1,14 @@
-print(template.html)
+<tbody>
+{% for s in stocks %}
+<tr>
+  <td class="name">{{ s.name }}</td>
+  <td class="code">{{ s.code }}</td>
+  <td>{{ s.price }}</td>
+  <td>{{ s.chg }}</td>
+  <td>{{ s.k }}</td>
+  <td>{{ s.d }}</td>
+  <td>{{ s.signal }}</td>
+  <td>{{ s.analysis }}</td>
+</tr>
+{% endfor %}
+</tbody>
