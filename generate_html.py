@@ -5,11 +5,8 @@ from indicator import add_indicators
 from jinja2 import Template
 from datetime import datetime, timedelta
 
-import os
-API_TOKEN = os.getenv("FINMIND_TOKEN")
-if not API_TOKEN:
-    print("FINMIND_TOKEN 未設定")
-    
+API_TOKEN ="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yOCAyMjo0Mzo0NiIsInVzZXJfaWQiOiJuaWNvbGUwMTAxIiwiZW1haWwiOiJuaWNvbGVfbGluQG1zbi5jb20iLCJpcCI6IjM2LjIyNC4yNTMuMjUifQ.bjWqLj9jmNvMA75Jx6H88FhDWh0D1rHVOkVsndXgboA"   # ⭐ 直接寫這裡
+print("FINMIND_TOKEN:", API_TOKEN)    
 def get_TWSE_data():
     if API_TOKEN is None:
         return pd.DataFrame()
