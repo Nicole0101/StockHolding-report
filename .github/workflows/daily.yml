@@ -1,4 +1,6 @@
 name: Daily Stock Report
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 on:
   schedule:
@@ -8,8 +10,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+   env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
+      - uses: actions/checkout@v4
+      - name: Test API Key
+        run: echo "API KEY is set: ${OPENAI_API_KEY:0:5}****"
+
+    
       - name: Checkout
         uses: actions/checkout@v4
 
