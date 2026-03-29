@@ -1,4 +1,4 @@
-name: Daily Stock Report
+name: DailyStockReport
 
 on:
   schedule:
