@@ -3,28 +3,28 @@ import requests
 from data import get_stock_data
 from indicator import add_indicators
 from jinja2 import Template
+from datetime import datetime, timedelta
 
 import os
 API_TOKEN = os.getenv("FINMIND_TOKEN")
-print("FINMIND_TOKEN:", API_TOKEN)
-
-if API_TOKEN is None:
-    print("⚠️ 沒有設定 FINMIND_TOKEN")
+if not API_TOKEN:
+    print("FINMIND_TOKEN 未設定")
+    
 def get_TWSE_data():
-    url = "https://api.finmindtrade.com/api/v4/data"
+    if API_TOKEN is None:
+        return pd.DataFrame()
 
+    url = "https://api.finmindtrade.com/api/v4/data"
     params = {
         "dataset": "TaiwanStockPrice",
-        "data_id": "TWSE",
+        "data_id": "TWSE",   # ⭐ 修正
         "start_date": "2024-01-01",
         "token": API_TOKEN
     }
-
     res = requests.get(url, params=params)
     data = res.json()
-
-    return pd.DataFrame(data["data"])
-
+    return pd.DataFrame(data.get("data", []))
+    
 
 # ===== 讀CSV =====
 def load_stock_list():
@@ -111,26 +111,23 @@ for s in stock_list:
 
     except Exception as e:
         print(f"錯誤: {s} - {e}")
-print("結果數量:", len(results))
+print("結果數量:",len(results))
 
 # ===== 產HTML =====
-from datetime import datetime, timedelta
-import os
 
-# ===== 讀大盤 =====
+
+# ===== 讀大盤 =====  
 TWSE = get_TWSE_data()
 if API_TOKEN is None:
-    print("⚠️ 沒有設定 FinMind TOKEN")
+    print("沒有設定 FinMind TOKEN")
     TWSE = None
 
 if TWSE is None or TWSE.empty or len(TWSE) < 2:
     print("⚠️ 大盤資料為空，使用預設值")
-
     index_value = 0
     chg = 0
     chg_pct = 0
     market_trend = "資料不足"
-
     summary_text = "⚠️ 無法取得台股資料（請檢查 TOKEN）"
 
 else:
@@ -205,4 +202,4 @@ msg = (
     f"中立：{hold_count}\n\n"
     f"👉 https://Nicole0101.github.io/StockHolding-report/"
 )
-send_line(f"msg")
+send_line("msg")
