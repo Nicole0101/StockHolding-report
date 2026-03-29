@@ -1,4 +1,4 @@
-name: DailyStockReport
+name: DailyStockRpt
 
 on:
   schedule:
