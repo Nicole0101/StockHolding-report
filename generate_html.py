@@ -8,14 +8,11 @@ from jinja2 import Template
 def load_stock_list():
     df = pd.read_csv("stocks.csv", sep="\t", encoding="utf-8-sig")
     df.columns = df.columns.str.strip()
-
     df = df.rename(columns={
         "Ticker": "stock_id",
         "Name": "name"
     })
-
     return df.to_dict(orient="records")
-
 
 # ===== 簡單判斷邏輯（讓UI會動🔥）=====
 def get_signal(k, d):
@@ -48,12 +45,10 @@ for s in stock_list:
     try:
         code = str(s["stock_id"])
         name = s["name"]
-
         print(f"處理中: {code}")
 
         df = get_stock_data(code)
         df = add_indicators(df)
-
         if df.empty:
             continue
 
@@ -94,35 +89,31 @@ for s in stock_list:
 
     except Exception as e:
         print(f"錯誤: {s} - {e}")
-
 print("結果數量:", len(results))
-
 
 # ===== 產HTML =====
 with open("template.html", "r", encoding="utf-8") as f:
     template = Template(f.read())
-
 html = template.render(stocks=results)
 
 from datetime import datetime
-
 now = datetime.now().strftime("%m%d%H%M")
 filename = f"持股_{now}.html"
 
 with open(filename, "w", encoding="utf-8") as f:
     f.write(html)
 
-# 同時更新 index.html（給網站用）
+# ===== 同時更新 index.html（給網站用）===== 
 from datetime import datetime, timedelta
 now = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d%H%M")
 filename = f"持股_{now}.html"
 from line_push import send_line
 send_line(f"📊 股票報告已產生\n👉 {filename}")
-# ⭐ 產生歷史檔
+# ===== 產生歷史檔===== 
 with open(filename, "w", encoding="utf-8") as f:
     f.write(html)
 
-# ⭐ 更新首頁
+# ===== 更新首頁===== 
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
 print("輸出檔案:", filename)
@@ -130,10 +121,8 @@ print("輸出檔案:", filename)
 import os
 # ===== 清理舊檔（只留最新3份）=====
 files = [f for f in os.listdir() if f.startswith("持股_") and f.endswith(".html")]
-
 # 依時間排序（新→舊）
 files.sort(reverse=True)
-
 # 保留前3個，其餘刪掉
 for f in files[3:]:
     os.remove(f)
