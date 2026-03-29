@@ -7,6 +7,7 @@ on:
 
 env:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
 
 jobs:
   build:
@@ -15,8 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Test API Key
-        run: echo "API KEY is set: ${OPENAI_API_KEY:0:5}****"
+      - name: Test API Keys
+        run: |
+          echo "OPENAI: ${OPENAI_API_KEY:0:5}****"
+          echo "FINMIND: ${FINMIND_TOKEN:0:5}****"
 
       - name: Setup Python
         uses: actions/setup-python@v5
