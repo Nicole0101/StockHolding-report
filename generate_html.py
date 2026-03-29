@@ -11,7 +11,6 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 #======ask_gpt======
 def ask_gpt_json(prompt):
     url = "https://api.openai.com/v1/chat/completions"
-
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json"
@@ -28,24 +27,6 @@ def ask_gpt_json(prompt):
 
     res = requests.post(url, headers=headers, json=data)
     return res.json()["choices"][0]["message"]["content"]
-
-#======GPT Prompt======
-prompt = f"""
-請輸出台股分析，使用JSON格式：
-{{
-"summary": "台股總覽",
-"trend": "盤勢分析",
-"strong_sector": "強勢族群",
-"weak_sector": "弱勢族群",
-"buy_list": ["股票A","股票B"],
-"sell_list": ["股票C"]
-}}
-資料：
-大盤漲跌：{round(chg_pct,2)}%
-
-個股：
-{stock_summary}
-"""
 
 #======解析 JSON======
 import json
@@ -259,6 +240,17 @@ else:
     chg_pct = (chg / prev["close"]) * 100
 
     market_trend = "偏多 📈" if chg_pct > 0 else "偏空 📉"
+#======GPT Prompt======
+stock_summary = "\n".join([
+    f"{s['name']} 漲跌{round(s['chgPct'],2)}% 訊號:{s['sig']}"
+    for s in results[:15]
+])
+prompt = f"""
+請輸出台股分析（JSON）：
+大盤漲跌：{round(chg_pct,2)}%
+個股：
+{stock_summary}
+"""
 
 # ===== 產HTML =====
 with open("template.html", "r", encoding="utf-8") as f:
