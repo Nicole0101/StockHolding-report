@@ -4,6 +4,8 @@ from data import get_stock_data
 from indicator import add_indicators
 from jinja2 import Template
 
+import os
+API_TOKEN = os.getenv("FINMIND_TOKEN")
 def get_TWSE_data():
     url = "https://api.finmindtrade.com/api/v4/data"
 
