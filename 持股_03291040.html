@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台股技術分析報告</title>
+
+<style>
+body { background:#0d1117; color:#e6edf3; font-family:Arial; }
+.container { max-width:1200px; margin:auto; padding:20px; }
+
+.card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:15px; margin-bottom:15px; }
+
+h2 { margin-bottom:10px; }
+
+table { width:100%; border-collapse:collapse; }
+th { background:#1c2330; color:#8b949e; font-size:12px; }
+td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
+.name { text-align:left; font-weight:bold; }
+
+.up { color:#f85149; }   /* 紅：上漲 */
+.dn { color:#3fb950; }   /* 綠：下跌 */
+
+/* KD條 */
+.kd-bar { width:80px; height:6px; background:#222; border-radius:3px; position:relative; margin:auto; }
+.kd-dot { width:8px; height:8px; border-radius:50%; position:absolute; top:-1px; transform:translateX(-50%); }
+
+/* 布林 */
+.bb-bar { width:80px; height:6px; background:#222; border-radius:3px; position:relative; margin:auto; }
+.bb-dot { width:6px; height:10px; position:absolute; top:-2px; transform:translateX(-50%); }
+
+/* 訊號 */
+.sig { padding:3px 8px; border-radius:4px; font-size:11px; }
+.sig-buy { background:#3fb95033; color:#3fb950; }
+.sig-sell { background:#f8514933; color:#f85149; }
+.sig-hold { background:#8b949e33; color:#8b949e; }
+.sig-watch { background:#d2992233; color:#d29922; }
+
+.summary { display:flex; gap:10px; margin-bottom:10px; }
+.box { flex:1; padding:10px; border-radius:8px; text-align:center; }
+.buy { background:#3fb95022; }
+.sell { background:#f8514922; }
+.watch { background:#d2992222; }
+.hold { background:#8b949e22; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>📊 台股技術分析報告</h2>
+
+<div class="summary">
+  <div class="box buy"><b id="buyCount"></b><br>買進</div>
+  <div class="box sell"><b id="sellCount"></b><br>賣出</div>
+  <div class="box watch"><b id="watchCount"></b><br>觀察</div>
+  <div class="box hold"><b id="holdCount"></b><br>中立</div>
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+<th>名稱</th>
+<th>代碼</th>
+<th>價格</th>
+<th>漲跌</th>
+<th>漲跌%</th>
+<th>震幅%</th>
+<th>KD</th>
+<th>布林</th>
+<th>訊號</th>
+</tr>
+</thead>
+<tbody id="stockBody"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+const stocks = [{"amp": 1.1, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -0.05, "chgPct": -0.22, "code": "1101", "d": 17.1, "k": 14.5, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u53f0\u6ce5", "price": 22.8, "sig": "buy"}, {"amp": 2.22, "bb": "\u4e2d\u8ecc\u4e0a\u65b9", "bbW": "\u6b63\u5e38", "chg": 0.7, "chgPct": 0.98, "code": "1216", "d": 45.5, "k": 63.7, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u7d71\u4e00", "price": 72.0, "sig": "hold"}, {"amp": 1.92, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -0.6, "chgPct": -0.71, "code": "1319", "d": 29.8, "k": 40.3, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u6771\u967d", "price": 83.4, "sig": "hold"}, {"amp": 1.36, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": 0.1, "chgPct": 0.45, "code": "1532", "d": 17.3, "k": 15.6, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u52e4\u7f8e", "price": 22.1, "sig": "buy"}, {"amp": 2.01, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -1.0, "chgPct": -0.5, "code": "2317", "d": 18.1, "k": 20.9, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u9d3b\u6d77", "price": 199.5, "sig": "buy"}, {"amp": 1.37, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -20.0, "chgPct": -1.09, "code": "2330", "d": 35.2, "k": 34.1, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u53f0\u7a4d\u96fb", "price": 1820.0, "sig": "watch"}, {"amp": 2.6, "bb": "\u4e2d\u8ecc\u4e0a\u65b9", "bbW": "\u6b63\u5e38", "chg": 2.0, "chgPct": 0.7, "code": "2382", "d": 50.8, "k": 55.4, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u5ee3\u9054", "price": 289.0, "sig": "hold"}, {"amp": 3.86, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -25.0, "chgPct": -2.76, "code": "2404", "d": 13.8, "k": 10.3, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u6f22\u5510", "price": 880.0, "sig": "buy"}, {"amp": 2.52, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -5.0, "chgPct": -0.31, "code": "2454", "d": 21.1, "k": 15.6, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u806f\u767c\u79d1", "price": 1585.0, "sig": "buy"}, {"amp": 1.37, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -0.9, "chgPct": -1.02, "code": "2881", "d": 49.8, "k": 49.0, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u5bcc\u90a6\u91d1", "price": 87.7, "sig": "watch"}, {"amp": 1.66, "bb": "\u4e2d\u8ecc\u4e0a\u65b9", "bbW": "\u6b63\u5e38", "chg": -0.75, "chgPct": -1.63, "code": "2885", "d": 64.9, "k": 70.8, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u5143\u5927\u91d1", "price": 45.3, "sig": "hold"}, {"amp": 1.51, "bb": "\u4e2d\u8ecc\u4e0a\u65b9", "bbW": "\u6b63\u5e38", "chg": 0.0, "chgPct": 0.0, "code": "2891", "d": 60.1, "k": 66.3, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u4e2d\u4fe1\u91d1", "price": 53.0, "sig": "hold"}, {"amp": 1.57, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": 0.0, "chgPct": 0.0, "code": "3231", "d": 29.4, "k": 22.0, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u7def\u5275", "price": 127.0, "sig": "buy"}, {"amp": 4.82, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -2.5, "chgPct": -1.19, "code": "3376", "d": 51.5, "k": 39.7, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u65b0\u65e5\u8208", "price": 207.5, "sig": "watch"}, {"amp": 3.86, "bb": "\u4e2d\u8ecc\u4e0a\u65b9", "bbW": "\u6b63\u5e38", "chg": -80.0, "chgPct": -3.15, "code": "3443", "d": 58.3, "k": 52.5, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u5275\u610f", "price": 2460.0, "sig": "watch"}, {"amp": 4.63, "bb": "\u4e2d\u8ecc\u4e0a\u65b9", "bbW": "\u6b63\u5e38", "chg": 6.0, "chgPct": 1.49, "code": "3680", "d": 58.0, "k": 59.0, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u5bb6\u767b", "price": 410.0, "sig": "hold"}, {"amp": 2.43, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": -22.0, "chgPct": -2.48, "code": "4749", "d": 26.2, "k": 28.0, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u65b0\u61c9\u6750", "price": 865.0, "sig": "buy"}, {"amp": 3.88, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": 4.5, "chgPct": 1.54, "code": "4772", "d": 24.0, "k": 18.4, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u53f0\u7279\u5316", "price": 296.5, "sig": "buy"}, {"amp": 4.42, "bb": "\u4e0a\u8ecc\u6311\u6230", "bbW": "\u6b63\u5e38", "chg": 4.0, "chgPct": 3.67, "code": "5871", "d": 77.1, "k": 84.3, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u4e2d\u79df-KY", "price": 113.0, "sig": "sell"}, {"amp": 3.83, "bb": "\u4e0b\u8ecc\u6e2c\u8a66", "bbW": "\u6b63\u5e38", "chg": -70.0, "chgPct": -2.02, "code": "6669", "d": 16.1, "k": 11.4, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u7def\u7a4e", "price": 3395.0, "sig": "buy"}, {"amp": 6.61, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": 9.0, "chgPct": 1.2, "code": "7728", "d": 44.8, "k": 37.7, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u5149\u7131\u79d1\u6280", "price": 756.0, "sig": "watch"}, {"amp": 1.73, "bb": "\u4e2d\u8ecc\u4e0b\u65b9", "bbW": "\u6b63\u5e38", "chg": 0.3, "chgPct": 1.05, "code": "9904", "d": 26.5, "k": 39.4, "kPat": "\u6574\u7406", "kdDiv": "\u7121\u80cc\u96e2", "name": "\u5bf6\u6210", "price": 28.9, "sig": "hold"}];
+</script>
+
+<script>
+const sigLabel = { buy:"買進", sell:"賣出", hold:"中立", watch:"觀察" };
+const sigClass = { buy:"sig-buy", sell:"sig-sell", hold:"sig-hold", watch:"sig-watch" };
+
+function kdColor(k){
+  if(k>70) return "#f85149";
+  if(k<30) return "#3fb950";
+  return "#d29922";
+}
+
+function bbPosition(bb){
+  if(bb.includes("上")) return 80;
+  if(bb.includes("下")) return 20;
+  return 50;
+}
+
+function renderRow(s){
+
+  const chgClass = s.chg >= 0 ? "up":"dn";
+  const chgSign = s.chg >= 0 ? "+" : "";
+
+  return `
+  <tr>
+    <td class="name">${s.name}</td>
+    <td>${s.code}</td>
+    <td>${s.price}</td>
+    <td class="${chgClass}">${chgSign}${s.chg}</td>
+    <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
+    <td>${s.amp}%</td>
+
+    <td>
+      ${s.k}/${s.d}
+      <div class="kd-bar">
+        <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
+      </div>
+    </td>
+
+    <td>
+      ${s.bb}
+      <div class="bb-bar">
+        <div class="bb-dot" style="left:${bbPosition(s.bb)}%; background:#58a6ff"></div>
+      </div>
+    </td>
+
+    <td><span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
+  </tr>
+  `;
+}
+
+document.getElementById("stockBody").innerHTML =
+  stocks.map(renderRow).join("");
+
+const buys = stocks.filter(s=>s.sig==='buy').length;
+const sells = stocks.filter(s=>s.sig==='sell').length;
+const watch = stocks.filter(s=>s.sig==='watch').length;
+const hold = stocks.filter(s=>s.sig==='hold').length;
+
+document.getElementById("buyCount").innerText = buys;
+document.getElementById("sellCount").innerText = sells;
+document.getElementById("watchCount").innerText = watch;
+document.getElementById("holdCount").innerText = hold;
+
+</script>
+
+</body>
+</html>
