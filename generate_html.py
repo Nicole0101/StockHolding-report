@@ -110,8 +110,44 @@ for s in stock_list:
     except Exception as e:
         print(f"錯誤: {s} - {e}")
 print("結果數量:",len(results))
+# ===== 強弱股 =====
+sorted_stocks = sorted(results, key=lambda x: x["chgPct"], reverse=True)
 
-# ===== 產HTML =====
+top_stocks = sorted_stocks[:5]
+weak_stocks = sorted_stocks[-5:]
+
+top_names = ", ".join([s["name"] for s in top_stocks])
+weak_names = ", ".join([s["name"] for s in weak_stocks])
+# ===== AI盤勢判讀 =====
+buy_count = sum(1 for s in results if s["sig"] == "buy")
+sell_count = sum(1 for s in results if s["sig"] == "sell")
+
+if chg_pct > 1:
+    trend = "強勢上攻"
+elif chg_pct > 0:
+    trend = "震盪偏多"
+elif chg_pct < -1:
+    trend = "明顯走弱"
+else:
+    trend = "震盪整理"
+
+ai_summary = f"""
+📊 台股盤勢分析
+
+今日大盤呈現「{trend}」，指數變動 {round(chg_pct,2)}%。
+
+📈 強勢族群：{strong_sector}
+📉 弱勢族群：{weak_sector}
+
+🔥 強勢股：{top_names}
+⚠ 弱勢股：{weak_names}
+
+📊 籌碼結構：
+買進訊號 {buy_count} 檔，賣出訊號 {sell_count} 檔
+
+📌 操作建議：
+短線可關注強勢族群，避免弱勢股追價。
+"""
 # ===== 讀大盤 =====  
 TWSE = get_TWSE_data()
 if API_TOKEN is None:
