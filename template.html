@@ -160,7 +160,8 @@ function renderRow(s){
     <td>${s.price}</td>
     <td class="${chgClass}">${chgSign}${s.chg}</td>
     <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
-    <td>${s.amp}%</td>
+    # <td>${s.amp}%</td>
+    <td>${s.amp ?? 0}%</td>
 
     <td>
       ${s.k}/${s.d}
