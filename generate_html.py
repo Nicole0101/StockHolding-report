@@ -138,7 +138,7 @@ for s in stock_list:
             "k": round(latest["K"], 1),
             "d": round(latest["D"], 1),
             "bb": get_bb_position(latest["close"], latest["BB_upper"], latest["BB_lower"]),
-            "sig": get_signal(latest["K"], latest["D"])
+            "sig": get_signal(latest["K"], latest["D"]),
             "bias_20": bias_20,
             "bias_60": bias_60,
             "eps_4q": eps_list,
