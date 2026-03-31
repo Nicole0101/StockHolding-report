@@ -43,27 +43,16 @@ td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
 .sell { background:#f8514922; }
 .watch { background:#d2992222; }
 .hold { background:#8b949e22; }
-
-pre { white-space:pre-wrap; line-height:1.6; font-size:13px; }
 </style>
 </head>
 
-<div class="summary">
-  <div class="box buy">
-    <b>📌 建議買進</b><br>
-    {{ gpt_buy }}
-  </div>
-  <div class="box sell">
-    <b>📌 建議賣出</b><br>
-    {{ gpt_sell }}
-  </div>
-</div>
-  
+<body>
+
 <div class="container">
 
 <h2>📊 (持股)技術分析報告</h2>
 
-<!-- 🔥 訊號統計 -->
+<!-- 訊號統計 -->
 <div class="summary">
   <div class="box buy"><b id="buyCount"></b><br>買進</div>
   <div class="box sell"><b id="sellCount"></b><br>賣出</div>
@@ -71,7 +60,7 @@ pre { white-space:pre-wrap; line-height:1.6; font-size:13px; }
   <div class="box hold"><b id="holdCount"></b><br>中立</div>
 </div>
 
-<!-- 🔥 表格 -->
+<!-- 表格 -->
 <div class="card">
 <table>
 <thead>
@@ -86,8 +75,6 @@ pre { white-space:pre-wrap; line-height:1.6; font-size:13px; }
 <th>布林</th>
 <th>月線%</th>
 <th>季線%</th>
-<th>EPS(4Q)</th>
-<th>年EPS</th>
 <th>訊號</th>
 <th>策略</th>
 </tr>
@@ -118,7 +105,13 @@ function bbPosition(bb){
   return 50;
 }
 
+function distClass(v){
+  if(v == null) return "";
+  return v >= 0 ? "up" : "dn";
+}
+
 function renderRow(s){
+
   const chgClass = s.chg >= 0 ? "up":"dn";
   const chgSign = s.chg >= 0 ? "+" : "";
 
@@ -127,8 +120,10 @@ function renderRow(s){
     <td class="name">${s.name}</td>
     <td>${s.code}</td>
     <td>${s.price}</td>
+
     <td class="${chgClass}">${chgSign}${s.chg}</td>
     <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
+
     <td>${s.amp ?? 0}%</td>
 
     <td>
@@ -145,10 +140,8 @@ function renderRow(s){
       </div>
     </td>
 
-    <td>{{ s.bias_20 }}%</td>
-    <td>{{ s.bias_60 }}%</td>
-    <td>{{ s.eps_4q | join(",") }}</td>
-    <td>{{ s.eps_est }}</td>
+    <td class="${distClass(s.dist20)}">${s.dist20 ?? ""}%</td>
+    <td class="${distClass(s.dist60)}">${s.dist60 ?? ""}%</td>
 
     <td><span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
     <td>${s.strategy}</td>
@@ -159,6 +152,7 @@ function renderRow(s){
 document.getElementById("stockBody").innerHTML =
   stocks.map(renderRow).join("");
 
+// 統計
 const buys = stocks.filter(s=>s.sig==='buy').length;
 const sells = stocks.filter(s=>s.sig==='sell').length;
 const watch = stocks.filter(s=>s.sig==='watch').length;
