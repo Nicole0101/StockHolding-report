@@ -11,22 +11,21 @@ body { background:#0d1117; color:#e6edf3; font-family:Arial; }
 
 .card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:15px; margin-bottom:15px; }
 
-h2 { margin-bottom:10px; }
-
 table { width:100%; border-collapse:collapse; }
 th { background:#1c2330; color:#8b949e; font-size:12px; }
 td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
+
 .name { text-align:left; font-weight:bold; }
 
 .up { color:#f85149; }
 .dn { color:#3fb950; }
 
 /* KD */
-.kd-bar { width:80px; height:6px; background:#222; border-radius:3px; position:relative; margin:auto; }
+.kd-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
 .kd-dot { width:8px; height:8px; border-radius:50%; position:absolute; top:-1px; transform:translateX(-50%); }
 
 /* BB */
-.bb-bar { width:80px; height:6px; background:#222; border-radius:3px; position:relative; margin:auto; }
+.bb-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
 .bb-dot { width:6px; height:10px; position:absolute; top:-2px; transform:translateX(-50%); }
 
 /* 訊號 */
@@ -73,8 +72,8 @@ td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
 <th>震幅%</th>
 <th>KD</th>
 <th>布林</th>
-<th>月線%</th>
-<th>季線%</th>
+<th>Bias20</th>
+<th>Bias60</th>
 <th>訊號</th>
 <th>策略</th>
 </tr>
@@ -140,6 +139,7 @@ function renderRow(s){
       </div>
     </td>
 
+    <!-- ⭐ 修正重點 -->
     <td class="${distClass(s.dist20)}">${s.dist20 ?? ""}%</td>
     <td class="${distClass(s.dist60)}">${s.dist60 ?? ""}%</td>
 
