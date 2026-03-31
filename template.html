@@ -48,28 +48,6 @@ pre { white-space:pre-wrap; line-height:1.6; font-size:13px; }
 </style>
 </head>
 
-<body>
-<div class="card">
-  <h3>📊 台股總覽</h3>
-  <p>{{ gpt_summary }}</p>
-</div>
-
-<div class="card">
-  <h3>📈 盤勢分析</h3>
-  <p>{{ gpt_trend }}</p>
-</div>
-
-<div class="summary">
-  <div class="box buy">
-    <b>🔥 強勢族群</b><br>
-    {{ gpt_strong }}
-  </div>
-  <div class="box sell">
-    <b>⚠ 弱勢族群</b><br>
-    {{ gpt_weak }}
-  </div>
-</div>
-
 <div class="summary">
   <div class="box buy">
     <b>📌 建議買進</b><br>
@@ -84,20 +62,6 @@ pre { white-space:pre-wrap; line-height:1.6; font-size:13px; }
 <div class="container">
 
 <h2>📊 (持股)技術分析報告</h2>
-
-<!-- 🔥 台股總覽 -->
-<div class="summary">
-  <div class="box"><b>📊 指數</b><br>{{ market.index }}</div>
-  <div class="box"><b>漲跌</b><br>{{ market.chg }} ({{ market.chg_pct }}%)</div>
-  <div class="box"><b>盤勢</b><br>{{ market.trend }}</div>
-  <div class="box"><b>持股</b><br>{{ stocks|length }} 檔</div>
-</div>
-
-<!-- 🔥 盤勢判讀 -->
-<div class="card">
-  <h3>📋 台股盤勢判讀</h3>
-  <pre>{{ summary }}</pre>
-</div>
 
 <!-- 🔥 訊號統計 -->
 <div class="summary">
