@@ -64,6 +64,18 @@ def load_stock_list():
     df = df.rename(columns={"Ticker": "stock_id", "Name": "name"})
     return df.to_dict(orient="records")
 
+# ===== 財務 + 技術補充 =====
+def estimate_eps(eps_list):
+    if not eps_list or len(eps_list) < 4:
+        return None
+    return round(sum(eps_list), 2)
+
+def calc_bias(price, ma):
+    if not ma or ma == 0:
+        return None
+    return round((price - ma) / ma * 100, 2)
+
+
 
 # ===== 技術判斷 =====
 def get_signal(k, d):
@@ -115,8 +127,7 @@ for s in stock_list:
             strategy = "整理"
         else:
             strategy = "觀察"
-        
-        results.append({
+            results.append({
             "name": s["name"],
             "code": s["stock_id"],
             "price": round(latest["close"], 2),
@@ -128,6 +139,10 @@ for s in stock_list:
             "d": round(latest["D"], 1),
             "bb": get_bb_position(latest["close"], latest["BB_upper"], latest["BB_lower"]),
             "sig": get_signal(latest["K"], latest["D"])
+            "bias_20": bias_20,
+            "bias_60": bias_60,
+            "eps_4q": eps_list,
+            "eps_est": eps_est
         })
     except Exception as e:
         print("錯誤:", e)
@@ -148,6 +163,21 @@ else:
     latest = TWSE.iloc[-1]
     prev = TWSE.iloc[-2]
 
+    # ===== 均線 =====
+    ma20 = latest.get("MA20")
+    ma60 = latest.get("MA60")
+    bias_20 = calc_bias(latest["close"], ma20)
+    bias_60 = calc_bias(latest["close"], ma60)
+    # ===== EPS（先用假資料，之後可接 API）=====
+    # TODO: 可改接 FinMind 財報
+    eps_list = [
+        round(latest.get("eps_q1", 1.2), 2),
+        round(latest.get("eps_q2", 1.3), 2),
+        round(latest.get("eps_q3", 1.1), 2),
+        round(latest.get("eps_q4", 1.4), 2),
+    ]
+    eps_est = estimate_eps(eps_list)
+    
     index_value = latest["close"]
     chg = latest["close"] - prev["close"]
     chg_pct = (chg / prev["close"]) * 100
@@ -158,30 +188,6 @@ else:
 sorted_stocks = sorted(results, key=lambda x: x["chgPct"], reverse=True)
 top_names = ", ".join([s["name"] for s in sorted_stocks[:5]])
 weak_names = ", ".join([s["name"] for s in sorted_stocks[-5:]])
-
-
-# ===== GPT =====
-stock_summary = "\n".join([
-    f"{s['name']} {s['chgPct']}%"
-    for s in results[:10]
-])
-
-prompt = f"""
-請輸出JSON：
-{{
-"summary": "",
-"trend": "",
-"strong_sector": "",
-"weak_sector": "",
-"buy_list": [],
-"sell_list": [],
-"risk": ""
-}}
-
-大盤漲跌：{round(chg_pct,2)}%
-個股：
-{stock_summary}
-"""
 
 # ===== GPT 呼叫（含重試）=====
 import time
@@ -197,22 +203,6 @@ for i in range(3):
         print("GPT錯誤:", e)
     time.sleep(2)
 
-# ===== 解析 =====
-try:
-    gpt_data = json.loads(gpt_raw)
-except:
-    print("GPT解析失敗:", gpt_raw)
-    gpt_data = {}
-
-# ===== fallback（關鍵🔥）=====
-gpt_summary = gpt_data.get("summary") or "市場震盪整理"
-gpt_trend = gpt_data.get("trend") or market_trend
-gpt_strong = gpt_data.get("strong_sector") or top_names
-gpt_weak = gpt_data.get("weak_sector") or weak_names
-gpt_buy = ", ".join(gpt_data.get("buy_list", [])) or top_names
-gpt_sell = ", ".join(gpt_data.get("sell_list", [])) or weak_names
-gpt_risk = gpt_data.get("risk") or "注意市場波動"
-
 
 # ===== HTML =====
 with open("template.html", "r", encoding="utf-8") as f:
@@ -225,12 +215,6 @@ html = template.render(
         "chg_pct": round(chg_pct, 2),
         "trend": market_trend
     },
-    gpt_summary=gpt_summary,
-    gpt_trend=gpt_trend,
-    gpt_strong=gpt_strong,
-    gpt_weak=gpt_weak,
-    gpt_buy=gpt_buy,
-    gpt_sell=gpt_sell,
     top_stocks=top_names,
     weak_stocks=weak_names
 )
