@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台股技術分析報告</title>
+
+<style>
+body { background:#0d1117; color:#e6edf3; font-family:Arial; }
+.container { max-width:1200px; margin:auto; padding:20px; }
+
+.card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:15px; margin-bottom:15px; }
+
+table { width:100%; border-collapse:collapse; }
+th { background:#1c2330; color:#8b949e; font-size:12px; }
+td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
+
+.name { text-align:left; font-weight:bold; }
+
+.up { color:#f85149; }
+.dn { color:#3fb950; }
+
+/* KD */
+.kd-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
+.kd-dot { width:8px; height:8px; border-radius:50%; position:absolute; top:-1px; transform:translateX(-50%); }
+
+/* BB */
+.bb-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
+.bb-dot { width:6px; height:10px; position:absolute; top:-2px; transform:translateX(-50%); }
+
+/* 訊號 */
+.sig { padding:3px 8px; border-radius:4px; font-size:11px; }
+.sig-buy { background:#3fb95033; color:#3fb950; }
+.sig-sell { background:#f8514933; color:#f85149; }
+.sig-hold { background:#8b949e33; color:#8b949e; }
+.sig-watch { background:#d2992233; color:#d29922; }
+
+/* summary */
+.summary { display:flex; gap:10px; margin-bottom:10px; }
+.box { flex:1; padding:10px; border-radius:8px; text-align:center; }
+.buy { background:#3fb95022; }
+.sell { background:#f8514922; }
+.watch { background:#d2992222; }
+.hold { background:#8b949e22; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>📊 (持股)技術分析報告</h2>
+
+<!-- 訊號統計 -->
+<div class="summary">
+  <div class="box buy"><b id="buyCount"></b><br>買進</div>
+  <div class="box sell"><b id="sellCount"></b><br>賣出</div>
+  <div class="box watch"><b id="watchCount"></b><br>觀察</div>
+  <div class="box hold"><b id="holdCount"></b><br>中立</div>
+</div>
+
+<!-- 表格 -->
+<div class="card">
+<table>
+<thead>
+<tr>
+<th>名稱</th>
+<th>代碼</th>
+<th>價格</th>
+<th>漲跌</th>
+<th>漲跌%</th>
+<th>震幅%</th>
+<th>KD</th>
+<th>布林</th>
+<th>Bias20</th>
+<th>Bias60</th>
+<th>訊號</th>
+<th>策略</th>
+</tr>
+</thead>
+<tbody id="stockBody"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+const stocks = [{"chgPct": 0, "code": 1101, "name": "\u53f0\u6ce5", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 1216, "name": "\u7d71\u4e00", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 1319, "name": "\u6771\u967d", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 1532, "name": "\u52e4\u7f8e", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 2317, "name": "\u9d3b\u6d77", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 2330, "name": "\u53f0\u7a4d\u96fb", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 2382, "name": "\u5ee3\u9054", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 2404, "name": "\u6f22\u5510", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 2454, "name": "\u806f\u767c\u79d1", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 2881, "name": "\u5bcc\u90a6\u91d1", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 2885, "name": "\u5143\u5927\u91d1", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 2891, "name": "\u4e2d\u4fe1\u91d1", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 3231, "name": "\u7def\u5275", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 3376, "name": "\u65b0\u65e5\u8208", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 3443, "name": "\u5275\u610f", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 3680, "name": "\u5bb6\u767b", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 4749, "name": "\u65b0\u61c9\u6750", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 4772, "name": "\u53f0\u7279\u5316", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 5871, "name": "\u4e2d\u79df-KY", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 6669, "name": "\u7def\u7a4e", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 7728, "name": "\u5149\u7131\u79d1\u6280", "strategy": "\u89c0\u5bdf"}, {"chgPct": 0, "code": 9904, "name": "\u5bf6\u6210", "strategy": "\u89c0\u5bdf"}];
+</script>
+
+<script>
+const sigLabel = { buy:"買進", sell:"賣出", hold:"中立", watch:"觀察" };
+const sigClass = { buy:"sig-buy", sell:"sig-sell", hold:"sig-hold", watch:"sig-watch" };
+
+function kdColor(k){
+  if(k>70) return "#f85149";
+  if(k<30) return "#3fb950";
+  return "#d29922";
+}
+
+function bbPosition(bb){
+  if(bb.includes("上")) return 80;
+  if(bb.includes("下")) return 20;
+  return 50;
+}
+
+function distClass(v){
+  if(v == null) return "";
+  return v >= 0 ? "up" : "dn";
+}
+
+function renderRow(s){
+
+  const chgClass = s.chg >= 0 ? "up":"dn";
+  const chgSign = s.chg >= 0 ? "+" : "";
+
+  return `
+  <tr>
+    <td class="name">${s.name}</td>
+    <td>${s.code}</td>
+    <td>${s.price}</td>
+
+    <td class="${chgClass}">${chgSign}${s.chg}</td>
+    <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
+
+    <td>${s.amp ?? 0}%</td>
+
+    <td>
+      ${s.k}/${s.d}
+      <div class="kd-bar">
+        <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
+      </div>
+    </td>
+
+    <td>
+      ${s.bb}
+      <div class="bb-bar">
+        <div class="bb-dot" style="left:${bbPosition(s.bb)}%; background:#58a6ff"></div>
+      </div>
+    </td>
+
+    <!-- ⭐ 修正重點 -->
+    <td class="${distClass(s.dist20)}">${s.dist20 ?? ""}%</td>
+    <td class="${distClass(s.dist60)}">${s.dist60 ?? ""}%</td>
+
+    <td><span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
+    <td>${s.strategy}</td>
+  </tr>
+  `;
+}
+
+document.getElementById("stockBody").innerHTML =
+  stocks.map(renderRow).join("");
+
+// 統計
+const buys = stocks.filter(s=>s.sig==='buy').length;
+const sells = stocks.filter(s=>s.sig==='sell').length;
+const watch = stocks.filter(s=>s.sig==='watch').length;
+const hold = stocks.filter(s=>s.sig==='hold').length;
+
+document.getElementById("buyCount").innerText = buys;
+document.getElementById("sellCount").innerText = sells;
+document.getElementById("watchCount").innerText = watch;
+document.getElementById("holdCount").innerText = hold;
+</script>
+
+</body>
+</html>
