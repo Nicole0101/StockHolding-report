@@ -113,3 +113,71 @@ def main():
 # =========================
 if __name__ == "__main__":
     main()
+
+
+# ===== LINE 專業版推播 =====
+try:
+    from line_push import send_line
+
+    # 🔥 訊號統計
+    buy_count = sum(1 for s in results if s.get("sig") == "buy")
+    sell_count = sum(1 for s in results if s.get("sig") == "sell")
+    watch_count = sum(1 for s in results if s.get("sig") == "watch")
+    hold_count = sum(1 for s in results if s.get("sig") == "hold")
+
+    # 🔥 市場判斷（用策略推估）
+    if buy_count > sell_count:
+        market = "偏多 📈"
+    elif sell_count > buy_count:
+        market = "偏空 📉"
+    else:
+        market = "震盪 🤝"
+
+    # 🔥 強弱股
+    top5 = [f"{s['name']}({s['chgPct']}%)" for s in sorted_stocks[:5]]
+    weak5 = [f"{s['name']}({s['chgPct']}%)" for s in sorted_stocks[-5:]]
+
+    # 🔥 策略
+    rebound = [s["name"] for s in results if "反彈" in s.get("strategy", "")]
+    selloff = [s["name"] for s in results if "出貨" in s.get("strategy", "")]
+
+    # =========================
+    # 📊 專業版訊息
+    # =========================
+    msg = f"""
+📊 台股技術分析報告（盤後）
+
+━━━━━━━━━━━━━━━
+📈 市場狀態：{market}
+
+🧭 訊號分布
+買進：{buy_count} ｜ 賣出：{sell_count}
+觀察：{watch_count} ｜ 中立：{hold_count}
+
+━━━━━━━━━━━━━━━
+🔥 強勢股 TOP5
+{chr(10).join(top5)}
+
+⚠ 弱勢股 TOP5
+{chr(10).join(weak5)}
+
+━━━━━━━━━━━━━━━
+📌 交易策略
+
+🔥 反彈機會：
+{", ".join(rebound[:5]) if rebound else "無"}
+
+⚠ 出貨警示：
+{", ".join(selloff[:5]) if selloff else "無"}
+
+━━━━━━━━━━━━━━━
+📎 完整報告
+https://nicole0101.github.io/StockHolding-report/
+
+（自動生成）
+"""
+
+    send_line(msg.strip())
+
+except Exception as e:
+    print("LINE發送失敗:", e)
