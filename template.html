@@ -70,6 +70,10 @@ td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
 <th>漲跌</th>
 <th>漲跌%</th>
 <th>震幅%</th>
+<th>去年EPS</th>
+<th>Yield%</th>
+<th>PER</th>
+<th>Est.EPS</th>
 <th>KD</th>
 <th>布林</th>
 <th>Bias20</th>
@@ -124,7 +128,12 @@ function renderRow(s){
     <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
 
     <td>${s.amp ?? 0}%</td>
-
+    
+    <td>${s.eps_last ?? "-"}</td>
+    <td>${s.yield ?? "-"}%</td>
+    <td>${s.per ?? "-"}</td>
+    <td>${s.est_eps ?? "-"}</td>
+    
     <td>
       ${s.k}/${s.d}
       <div class="kd-bar">
