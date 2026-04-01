@@ -15,7 +15,7 @@ def get_stock_data(stock_id):
         params = {
             "dataset": "TaiwanStockPrice",
             "data_id": stock_id,
-            "start_date": "2024-01-01",
+            "start_date": "2022-01-01",
             "token": FINMIND_TOKEN
         }
 
@@ -223,7 +223,11 @@ def main():
             results.append(data)
 
     print("結果數量:", len(results))
-
+    
+    import json
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+        
     if not results:
         print("⚠️ 無資料")
         return
