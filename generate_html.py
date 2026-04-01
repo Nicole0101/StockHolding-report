@@ -34,7 +34,26 @@ def get_stock_data(stock_id):
     except Exception as e:
         print("抓資料錯誤:", stock_id, e)
         return None
-        
+
+# ===============================================
+def get_dividend(stock_id):
+    try:
+        url = "https://api.finmindtrade.com/api/v4/data"
+        params = {
+            "dataset": "TaiwanStockDividend",
+            "data_id": stock_id,
+            "start_date": "2022-01-01",
+            "token": FINMIND_TOKEN
+        }
+
+        res = requests.get(url, params=params)
+        data = res.json().get("data", [])
+
+        return pd.DataFrame(data)
+
+    except:
+        return None
+
 # ===============================================
 def get_eps(stock_id):
     url = "https://api.finmindtrade.com/api/v4/data"
@@ -150,7 +169,7 @@ def process_stock(s):
 
         # ===== PER =====
         per = None
-        if last_eps and last_eps != 0:
+        if last_eps not in [None, 0]:
             per = round(latest["close"] / last_eps, 2)
 
         # ===== 預估 EPS =====
@@ -187,9 +206,9 @@ def process_stock(s):
             "chgPct": round(chgPct, 2),
             "amp": round(amp, 2),
             "eps_last": f"{last_eps}{eps_note}" if last_eps else "-",
-            "yield": yield_pct,
-            "per": per,
-            "est_eps": est_eps,  # ✅ 修正
+            "yield": yield_pct if yield_pct else "-",
+            "per": per if per else "-",
+            "est_eps": est_eps if est_eps else "-",
 
             "dist20": dist20,
             "dist60": dist60,
@@ -207,7 +226,7 @@ def process_stock(s):
     except Exception as e:
         print("單股錯誤:", s["stock_id"], e)
         return None
-
+    print(s["stock_id"], last_eps, yield_pct, per, est_eps)
 
 # =========================
 # 主程式🔥
