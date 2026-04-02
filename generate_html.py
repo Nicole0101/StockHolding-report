@@ -109,22 +109,49 @@ def get_dividend(stock_id):
 
 # ===============================================
 def get_eps(stock_id):
-    url = "https://api.finmindtrade.com/api/v4/data"
-    params = {
-        "dataset": "TaiwanStockFinancialStatements",
-        "data_id": stock_id,
-        "start_date": "2022-01-01",
-        "token": FINMIND_TOKEN
-    }
-    res = requests.get(url, params=params)
-    data = res.json().get("data", [])
-    df = pd.DataFrame(data)
-    if df.empty:
+    try:
+        url = "https://api.finmindtrade.com/api/v4/data"
+        params = {
+            "dataset": "TaiwanStockFinancialStatements",
+            "data_id": stock_id,
+            "start_date": "2023-01-01",
+            "token": FINMIND_TOKEN
+        }
+        res = requests.get(url, params=params)
+        if res.status_code != 200:
+            return None
+        data = res.json().get("data", [])
+        if not data:
+            return None
+        df = pd.DataFrame(data)
+        # 篩選 EPS
+        df = df[df["type"] == "EPS"]
+        if df.empty:
+            return None
+        df["date"] = pd.to_datetime(df["date"])
+        df["year"] = df["date"].dt.year
+        df["season"] = df["date"].dt.quarter
+        df["value"] = pd.to_numeric(df["value"], errors="coerce")
+        # 👉 取去年
+        last_year = datetime.now().year - 1
+        df_year = df[df["year"] == last_year]
+        if df_year.empty:
+            return None
+        # 🔥 關鍵：優先取 Q4（累計EPS）
+        q4 = df_year[df_year["season"] == 4]
+        if not q4.empty:
+            # 取最後一筆（避免重複）
+            return round(q4["value"].iloc[-1], 2)
+        # 👉 fallback：加總單季
+        # （只取每季最後一筆，避免重複）
+        df_year = df_year.sort_values("date")
+        df_unique = df_year.drop_duplicates(subset=["season"], keep="last")
+        if len(df_unique) >= 4:
+            return round(df_unique["value"].sum(), 2)
         return None
-    # ✅ 正確縮排（和 if 同層）
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    df = df[df["type"] == "EPS"]
-    return df.sort_values("date")
+    except Exception as e:
+        print(f"EPS錯誤 {stock_id}:", e)
+        return None
 
 # ================================================
 def est_eps(stock_id):
