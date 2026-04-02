@@ -10,14 +10,14 @@ FINMIND_TOKEN = os.getenv("FINMIND_TOKEN")
 # 抓股價
 # =========================
 def get_stock_data(stock_id):
-try:
-url = "https://api.finmindtrade.com/api/v4/data"
-params = {
-"dataset": "TaiwanStockPrice",
-"data_id": stock_id,
-"start_date": "2022-01-01",
-"token": FINMIND_TOKEN
-}
+    try:
+        url = "https://api.finmindtrade.com/api/v4/data"
+        params = {
+            "dataset": "TaiwanStockPrice",
+            "data_id": stock_id,
+            "start_date": "2022-01-01",
+            "token": FINMIND_TOKEN
+        }    
 
 res = requests.get(url, params=params)
 data = res.json().get("data", [])
