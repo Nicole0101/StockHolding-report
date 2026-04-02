@@ -130,7 +130,7 @@ function renderRow(s){
     <td>${s.amp ?? 0}%</td>
     
     <td>${s.eps_last ?? "-"}</td>
-    <td>${s.yield ?? "-"}%</td>
+    <td>${s.yield != null ? s.yield + "%" : "-"}</td>
     <td>${s.per ?? "-"}</td>
     <td>${s.est_eps ?? "-"}</td>
     
