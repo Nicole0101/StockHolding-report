@@ -25,7 +25,6 @@ def get_stock_data(stock_id):
         df = pd.DataFrame(data)
         if df.empty:
             return None
-
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values("date")
 
@@ -77,35 +76,15 @@ def get_eps(stock_id):
         "start_date": "2022-01-01",
         "token": FINMIND_TOKEN
     }
-
     res = requests.get(url, params=params)
     data = res.json().get("data", [])
     df = pd.DataFrame(data)
-
     if df.empty:
         return None
+    # ✅ 正確縮排（和 if 同層）
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
-        df = df[df["type"] == "EPS"]
-        if df.empty:
-            return "-", None
-        # ⭐ 找去年
-        latest_year = df["date"].dt.year.max()
-        last_year = latest_year - 1
-        year_df = df[df["date"].dt.year == last_year]
-        if year_df.empty:
-            return "-", None
-        eps_sum = year_df["value"].sum()
-        quarters = len(year_df)
-        eps_sum = round(eps_sum, 2)
-        # ✅ 顯示格式
-        if quarters < 4:
-            eps_display = f"{eps_sum}({quarters})"
-        else:
-            eps_display = f"{eps_sum}"
-        return eps_display, eps_sum
-    except Exception as e:
-        print("EPS錯誤:", stock_id, e)
-        return "-", None
+    df = df[df["type"] == "EPS"]
+    return df.sort_values("date")
 
 # ================================================
 def est_eps(stock_id):
