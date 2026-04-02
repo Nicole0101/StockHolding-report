@@ -236,7 +236,7 @@ def process_stock(s):
         yield_pct = None
         dividend = get_dividend(s["stock_id"])
         # 👉 沒資料
-        if dividend is None:
+        if isinstance(dividend, (int, float)):
             yield_pct = None
         else:
         # 👉 如果是 "3.5（累計2季）" 這種字串 → 取數字
