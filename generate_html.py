@@ -213,16 +213,16 @@ def process_stock(s):
             yield_pct = None
         else:
         # 👉 如果是 "3.5（累計2季）" 這種字串 → 取數字
-        if isinstance(dividend, str):
-            try:
-                dividend_value = float(dividend.split("（")[0])
-            except:
-                dividend_value = None
-        else:
-            dividend_value = dividend
-        # 👉 計算殖利率
-        if dividend_value and latest["close"] > 0:
-            yield_pct = round(dividend_value / latest["close"] * 100, 2)
+            if isinstance(dividend, str):
+                try:
+                    dividend_value = float(dividend.split("（")[0])
+                except:
+                    dividend_value = None
+            else:
+                dividend_value = dividend
+                # 👉 計算殖利率
+            if dividend_value and latest["close"] > 0:
+                yield_pct = round(dividend_value / latest["close"] * 100, 2)
 
         # ===== PER =====
         per = None
