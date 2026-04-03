@@ -100,22 +100,38 @@ def get_dividend(stock_id):
 # ======================
 
 
-def calculate_yield(stock_id, latest):
-    dividend = get_dividend(stock_id)
-    # print("DIV", stock_id, dividend)
-    if dividend is None:
-        return None
-    close_price = latest.get("close")
+def get_yield(stock_id):
     try:
-        close_price = float(close_price)
-    except:
-        print("CLOSE錯誤", stock_id, close_price)
+        url = "https://api.finmindtrade.com/api/v4/data"
+        params = {
+            "dataset": "TaiwanStockPER",
+            "data_id": stock_id,
+            "start_date": "2023-01-01",
+            "token": FINMIND_TOKEN
+        }
+
+        res = requests.get(url, params=params)
+        data = res.json().get("data", [])
+
+        if not data:
+            return None
+
+        df = pd.DataFrame(data)
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.sort_values("date")
+
+        latest = df.iloc[-1]
+
+        yield_pct = latest.get("dividend_yield")
+
+        if yield_pct is None:
+            return None
+
+        return round(float(yield_pct), 2)
+
+    except Exception as e:
+        print(f"殖利率錯誤: {stock_id}", e)
         return None
-    if close_price in (None, 0):
-        print("CLOSE為0", stock_id)
-        return None
-    yield_pct = round(dividend / close_price * 100, 2)
-    return yield_pct
 
 # ===============================================
 
@@ -238,7 +254,7 @@ def process_stock(s):
         quarters = 0
 
         # ===== 殖利率 =====
-        yield_pct = calculate_yield(s["stock_id"], latest)
+        yield_pct = get_yield(s["stock_id"])
         print(s["stock_id"], yield_pct)
 
         # ===== PER =====
