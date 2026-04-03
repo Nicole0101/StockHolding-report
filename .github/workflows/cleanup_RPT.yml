@@ -1,4 +1,4 @@
-name: Cleanup Reports
+name: Cleanup Reports(RPT)
 
 on:
   workflow_dispatch:
