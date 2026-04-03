@@ -99,8 +99,27 @@ def get_dividend(stock_id):
         print(f"股利錯誤: {stock_id}", e)
         return None
 
+# ======================
 
+
+def calculate_yield(stock_id, latest):
+    dividend = get_dividend(stock_id)
+    # ===== 檢查股利 =====
+    if dividend is None:
+        return None
+    # ===== 取得收盤價 =====
+    close_price = latest.get("close")
+    try:
+        close_price = float(close_price)
+    except:
+        return None
+    if close_price in (None, 0):
+        return None
+    yield_pct = round(dividend / close_price * 100, 2)
+    return yield_pct
 # ===============================================
+
+
 def get_eps(stock_id):
     try:
         url = "https://api.finmindtrade.com/api/v4/data"
@@ -219,28 +238,7 @@ def process_stock(s):
         quarters = 0
 
         # ===== 殖利率 =====
-        import re
-        yield_pct = None
-        dividend = get_dividend(s["stock_id"])
-        dividend_value = None
-        # 解析股利
-        if dividend not in [None, "None", "", "-"]:
-            if isinstance(dividend, str):
-                match = re.search(r"\d+(\.\d+)?", dividend)
-                if match:
-                    dividend_value = float(match.group())
-                elif isinstance(dividend, (int, float)):
-                    dividend_value = dividend
-        # 處理股價
-            price = latest.get("close")
-            try:
-                price = float(price)
-            except:
-                price = None
-        print(s["stock_id"], dividend_value, latest.get("close"))
-        # 計算殖利率
-        if dividend_value is not None and price not in (None, 0):
-            yield_pct = round(dividend_value / price * 100, 2)
+        yield_pct = calculate_yield(s["stock_id"], latest)
 
         # ===== PER =====
         per = None
