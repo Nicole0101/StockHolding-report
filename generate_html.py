@@ -62,28 +62,29 @@ def get_dividend(stock_id):
 
         print("欄位:", df.columns)
 
-        # ✅ 所有可能股利欄位
-        possible_cols = [
-            "CashEarningsDistribution",
-            "CashDividendPayment",
-            "CashDividend",
-        ]
+        # ✅ 抓兩個現金股利來源
+        cash_cols = []
 
-        exist_cols = [c for c in possible_cols if c in df.columns]
+        if "CashEarningsDistribution" in df.columns:
+            cash_cols.append("CashEarningsDistribution")
 
-        if not exist_cols:
-            print("❌ 沒有股利欄位", stock_id)
+        if "CashStatutorySurplus" in df.columns:
+            cash_cols.append("CashStatutorySurplus")
+
+        if not cash_cols:
+            print("❌ 沒有現金股利欄位", stock_id)
             return None
 
         # ✅ 合併股利
-        df["cash_dividend"] = df[exist_cols].apply(
-            pd.to_numeric, errors="coerce").sum(axis=1)
+        df["cash_dividend"] = df[cash_cols].apply(
+            pd.to_numeric, errors="coerce"
+        ).sum(axis=1)
 
         df["year"] = pd.to_numeric(df["year"], errors="coerce")
 
         df = df.dropna(subset=["year"])
 
-        # 🔥 關鍵：抓「最近有配息的」
+        # 🔥 抓最近有配息的
         df = df.sort_values("year", ascending=False)
 
         for _, row in df.iterrows():
