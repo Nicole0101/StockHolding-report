@@ -60,44 +60,40 @@ def get_dividend(stock_id):
 
         df = pd.DataFrame(data)
 
-        if "year" not in df.columns:
+        print("欄位:", df.columns)
+
+        # ✅ 所有可能股利欄位
+        possible_cols = [
+            "CashEarningsDistribution",
+            "CashDividendPayment",
+            "CashDividend",
+        ]
+
+        exist_cols = [c for c in possible_cols if c in df.columns]
+
+        if not exist_cols:
+            print("❌ 沒有股利欄位", stock_id)
             return None
 
-        if "CashEarningsDistribution" in df.columns:
-            col = "CashEarningsDistribution"
-        elif "CashDividendPayment" in df.columns:
-            col = "CashDividendPayment"
-        else:
-            return None
+        # ✅ 合併股利
+        df["cash_dividend"] = df[exist_cols].apply(
+            pd.to_numeric, errors="coerce").sum(axis=1)
 
-        df["cash_dividend"] = pd.to_numeric(df[col], errors="coerce")
         df["year"] = pd.to_numeric(df["year"], errors="coerce")
 
-        df = df.dropna(subset=["cash_dividend", "year"])
+        df = df.dropna(subset=["year"])
 
-        if df.empty:
-            return None
+        # 🔥 關鍵：抓「最近有配息的」
+        df = df.sort_values("year", ascending=False)
 
-        # 用最新已公告年度
-        latest_year = int(df["year"].max())
-        current_year = datetime.now().year
+        for _, row in df.iterrows():
+            if pd.notna(row["cash_dividend"]) and row["cash_dividend"] > 0:
+                print("DIVIDEND抓到:", stock_id,
+                      row["year"], row["cash_dividend"])
+                return round(row["cash_dividend"], 2)
 
-        # 避免抓到未完成年度
-        if latest_year >= current_year:
-            latest_year = current_year - 1
+        return None
 
-        df_target = df[df["year"] == latest_year]
-
-        if df_target.empty:
-            return None
-
-        total_div = df_target["cash_dividend"].sum()
-        print("df.head():", df.head())
-        print("df.columns", df.columns)
-        print("DIVIDEND", stock_id, latest_year, total_div)
-        if total_div == 0:
-            return None   # 👉 避免 0 誤判
-        return round(total_div, 2)
     except Exception as e:
         print(f"股利錯誤: {stock_id}", e)
         return None
@@ -107,7 +103,7 @@ def get_dividend(stock_id):
 
 def calculate_yield(stock_id, latest):
     dividend = get_dividend(stock_id)
-    print("DIV", stock_id, dividend)
+    # print("DIV", stock_id, dividend)
     if dividend is None:
         return None
     close_price = latest.get("close")
