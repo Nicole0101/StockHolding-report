@@ -426,6 +426,7 @@ def main():
 {chr(10).join(weak5)}
 
 📎 https://nicole0101.github.io/StockHolding-report/持股_{now}.html
+   https://nicole0101.github.io/<repo>/持股_{now}.html
 """
 
         send_line(msg.strip())
