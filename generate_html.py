@@ -98,7 +98,7 @@ def get_dividend(stock_id):
     except Exception as e:
         print(f"股利錯誤: {stock_id}", e)
         return None
-
+    print(stock_id, total_div)
 # ======================
 
 
@@ -117,6 +117,7 @@ def calculate_yield(stock_id, latest):
         return None
     yield_pct = round(dividend / close_price * 100, 2)
     return yield_pct
+    print(stock_id, dividend, close_price)
 # ===============================================
 
 
