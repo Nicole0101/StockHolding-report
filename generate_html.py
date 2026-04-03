@@ -101,48 +101,25 @@ def get_dividend(stock_id):
 # ======================
 def calculate_yield(stock_id, latest):
     dividend = get_dividend(stock_id)
-
-    # ===== debug =====
     print("DIV", stock_id, dividend)
-
     if dividend is None:
         return None
-
     close_price = latest.get("close")
-
     try:
         close_price = float(close_price)
     except:
         print("CLOSE錯誤", stock_id, close_price)
         return None
-
     if close_price in (None, 0):
         print("CLOSE為0", stock_id)
         return None
-
     yield_pct = round(dividend / close_price * 100, 2)
-
     print("YIELD", stock_id, yield_pct)
-
     return yield_pct
-    dividend = get_dividend(stock_id)
-    # ===== 檢查股利 =====
-    if dividend is None:
-        return None
-    # ===== 取得收盤價 =====
-    close_price = latest.get("close")
-    try:
-        close_price = float(close_price)
-    except:
-        return None
-    if close_price in (None, 0):
-        return None
-    yield_pct = round(dividend / close_price * 100, 2)
-    print(stock_id, dividend, close_price)
-    return yield_pct
-
 
 # ===============================================
+
+
 def get_eps(stock_id):
     try:
         url = "https://api.finmindtrade.com/api/v4/data"
