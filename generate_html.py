@@ -92,18 +92,39 @@ def get_dividend(stock_id):
             return None
 
         total_div = df_target["cash_dividend"].sum()
-
+        print("DIVIDEND", stock_id, latest_year, total_div)
+        if total_div == 0:
+            return None   # 👉 避免 0 誤判
         return round(total_div, 2)
-        print(stock_id, total_div)
 
-    except Exception as e:
-        print(f"股利錯誤: {stock_id}", e)
-        return None
 
 # ======================
-
-
 def calculate_yield(stock_id, latest):
+    dividend = get_dividend(stock_id)
+
+    # ===== debug =====
+    print("DIV", stock_id, dividend)
+
+    if dividend is None:
+        return None
+
+    close_price = latest.get("close")
+
+    try:
+        close_price = float(close_price)
+    except:
+        print("CLOSE錯誤", stock_id, close_price)
+        return None
+
+    if close_price in (None, 0):
+        print("CLOSE為0", stock_id)
+        return None
+
+    yield_pct = round(dividend / close_price * 100, 2)
+
+    print("YIELD", stock_id, yield_pct)
+
+    return yield_pct
     dividend = get_dividend(stock_id)
     # ===== 檢查股利 =====
     if dividend is None:
@@ -117,11 +138,11 @@ def calculate_yield(stock_id, latest):
     if close_price in (None, 0):
         return None
     yield_pct = round(dividend / close_price * 100, 2)
-    return yield_pct
     print(stock_id, dividend, close_price)
+    return yield_pct
+
+
 # ===============================================
-
-
 def get_eps(stock_id):
     try:
         url = "https://api.finmindtrade.com/api/v4/data"
@@ -241,6 +262,7 @@ def process_stock(s):
 
         # ===== 殖利率 =====
         yield_pct = calculate_yield(s["stock_id"], latest)
+        print(s["stock_id"], yield_pct)
 
         # ===== PER =====
         per = None
@@ -301,7 +323,6 @@ def process_stock(s):
     except Exception as e:
         print("單股錯誤:", s["stock_id"], e)
         return None
-    print(s["stock_id"], last_eps, yield_pct, per, est_eps)
 
 # =========================
 # 主程式🔥
