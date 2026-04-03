@@ -61,8 +61,11 @@ def get_dividend(stock_id):
         df = pd.DataFrame(data)
 
         # 日期
-        df["date"] = pd.to_datetime(df.get("date"), errors="coerce")
-        df = df.dropna(subset=["date"])
+        # 錯誤df["date"] = pd.to_datetime(df.get("date"), errors="coerce")
+        # 錯誤df = df.dropna(subset=["date"])
+
+        if "year" not in df.columns:
+            return None
 
         # 欄位判斷
         if "CashEarningsDistribution" in df.columns:
@@ -78,39 +81,31 @@ def get_dividend(stock_id):
         if df.empty:
             return None
 
-        # 年份
-        df["year"] = df["date"].dt.year
-
+        # 轉 int
+        df["year"] = pd.to_numeric(df["year"], errors="coerce")
+        df = df.dropna(subset=["year"])
         current_year = datetime.now().year
-        last_year = current_year - 1
 
-        # 👉 優先抓去年
-        df_last = df[df["year"] == last_year]
-
-        # 👉 如果去年沒有 → 抓最新一年
-        if df_last.empty:
+        # 直接抓「去年股利」（最準）
+        target_year = current_year - 1
+        df_target = df[df["year"] == target_year]
+        # 如果去年沒有 → 抓最新年度
+        if df_target.empty:
             latest_year = df["year"].max()
-            df_last = df[df["year"] == latest_year]
+            df_target = df[df["year"] == latest_year]
 
-        if df_last.empty:
+        if df_target.empty:
             return None
-
-        total_div = df_last["cash_dividend"].sum()
-        count = df_last["cash_dividend"].count()
-
+        total_div = df_target["cash_dividend"].sum()
+        count = df_target["cash_dividend"].count()
         if count == 0:
             return None
-
-        # 👉 判斷完整 vs 累計
-        if count >= 4:
-            return round(total_div, 2)
-        else:
-            return f"{round(total_div, 2)}（累計{count}季）"
+        # 台股通常一年1次，不用再判斷4季
+        return round(total_div, 2)
 
     except Exception as e:
         print(f"股利錯誤: {stock_id}", e)
         return None
-
 # ===============================================
 
 
@@ -395,13 +390,12 @@ def main():
 
     user = "nicole0101"
     repo = "StockHolding-report"
-    #base_url = f"https://{user}.github.io/{repo}/"
-    #file_url = base_url + filename
+    # base_url = f"https://{user}.github.io/{repo}/"
+    # file_url = base_url + filename
     if branch == "main":
         file_url = f"https://{user}.github.io/{repo}/{filename}"
     else:
         file_url = f"https://github.com/{user}/{repo}/blob/{branch}/{filename}"
-
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(html)
