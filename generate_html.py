@@ -237,6 +237,7 @@ def process_stock(s):
                 price = float(price)
             except:
                 price = None
+            print(s["stock_id"], dividend_value, latest.get("close"))
         # 計算殖利率
         if dividend_value is not None and price not in (None, 0):
             yield_pct = round(dividend_value / price * 100, 2)
