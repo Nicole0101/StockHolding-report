@@ -231,6 +231,7 @@ def process_stock(s):
                 dividend_value = float(match.group())
             elif isinstance(dividend, (int, float)):
                 dividend_value = dividend
+            print(s["stock_id"], dividend_value)
         # 處理股價
             price = latest.get("close")
             try:
