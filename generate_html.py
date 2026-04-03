@@ -219,25 +219,27 @@ def process_stock(s):
         quarters = 0
 
         # ===== 殖利率 =====
+        import re
         yield_pct = None
         dividend = get_dividend(s["stock_id"])
         dividend_value = None
-
+        # 解析股利
         if dividend is not None:
             if isinstance(dividend, str):
-                try:
-                    dividend_value = float(dividend.split("（")[0])
-                except:
-                    dividend_value = None
-            else:
+                match = re.search(r"\d+(\.\d+)?", dividend)
+            if match:
+                dividend_value = float(match.group())
+            elif isinstance(dividend, (int, float)):
                 dividend_value = dividend
-
-        if (
-            dividend_value is not None
-            and isinstance(dividend_value, (int, float))
-            and latest.get("close") not in (None, 0)
-        ):
-            yield_pct = round(dividend_value / latest["close"] * 100, 2)
+        # 處理股價
+            price = latest.get("close")
+            try:
+                price = float(price)
+            except:
+                price = None
+        # 計算殖利率
+        if dividend_value is not None and price not in (None, 0):
+            yield_pct = round(dividend_value / price * 100, 2)
 
         # ===== PER =====
         per = None
