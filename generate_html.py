@@ -1,4 +1,3 @@
-from FinMind.data import DataLoader
 import pandas as pd
 import requests
 from jinja2 import Template
@@ -42,30 +41,62 @@ def get_stock_data(stock_id):
 # ===============================================
 def get_dividend(stock_id):
     try:
-        dl = DataLoader()
-        df = dl.taiwan_stock_dividend_policy(stock_id=stock_id)
-        if df is None or df.empty:
+        url = "https://api.finmindtrade.com/api/v4/data"
+        params = {
+            "dataset": "TaiwanStockDividend",
+            "data_id": stock_id,
+            "start_date": "2020-01-01",
+            "token": FINMIND_TOKEN
+        }
+        res = requests.get(url, params=params)
+        if res.status_code != 200:
+            print(f"{stock_id} API失敗:", res.status_code)
             return None
-        # 確保型別
-        df["year"] = pd.to_numeric(df["year"], errors="coerce")
-        df["cash_dividend"] = pd.to_numeric(
-            df["cash_dividend"], errors="coerce")
-        df = df.dropna(subset=["year", "cash_dividend"])
+        data = res.json().get("data", [])
+        if not data:
+            return None
+        df = pd.DataFrame(data)
+        # ===== 可能的現金股利欄位 =====
+        cash_cols = [
+            "CashEarningsDistribution",
+            "CashStatutorySurplus"
+        ]
 
-        if df.empty:
+        exist_cols = [c for c in cash_cols if c in df.columns]
+
+        if not exist_cols:
+            print("❌ 沒有現金股利欄位", stock_id)
             return None
-        # 🔥 抓最近有配息的
-        df = df.sort_values("year", ascending=False)
-        for _, row in df.iterrows():
+
+        # ===== 轉數值 =====
+        for col in exist_cols:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        df["year"] = pd.to_numeric(df["year"], errors="coerce")
+
+        # ===== 同一年加總（關鍵🔥）=====
+        df_group = df.groupby("year")[exist_cols].sum().reset_index()
+
+        # 合併成一欄
+        df_group["cash_dividend"] = df_group[exist_cols].sum(axis=1)
+
+        # ===== 排序（最新在前）=====
+        df_group = df_group.sort_values("year", ascending=False)
+
+        print("DIV TABLE", stock_id)
+        print(df_group.head())
+
+        # ===== 找最近有配息 =====
+        for _, row in df_group.iterrows():
             if row["cash_dividend"] > 0:
-                print("DIVIDEND抓到:", stock_id,
-                      row["year"], row["cash_dividend"])
+                print("抓到股利:", stock_id, row["year"], row["cash_dividend"])
                 return round(row["cash_dividend"], 2)
+
         return None
+
     except Exception as e:
         print(f"股利錯誤: {stock_id}", e)
         return None
-
 # ======================
 
 
