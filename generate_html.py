@@ -224,14 +224,13 @@ def process_stock(s):
         dividend = get_dividend(s["stock_id"])
         dividend_value = None
         # 解析股利
-        if dividend is not None:
+        if dividend not in [None, "None", "", "-"]:
             if isinstance(dividend, str):
                 match = re.search(r"\d+(\.\d+)?", dividend)
-            if match:
-                dividend_value = float(match.group())
-            elif isinstance(dividend, (int, float)):
-                dividend_value = dividend
-            print(s["stock_id"], dividend_value)
+                if match:
+                    dividend_value = float(match.group())
+                elif isinstance(dividend, (int, float)):
+                    dividend_value = dividend
         # 處理股價
             price = latest.get("close")
             try:
