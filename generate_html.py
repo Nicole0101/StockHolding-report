@@ -174,7 +174,7 @@ def get_eps(stock_id):
             if val > 4:  # 可依需求調整
                 return round(val, 2)
         return None
-
+        Print("Date EPS: ", df.value)
     except Exception as e:
         print("EPS錯誤:", stock_id, e)
         return None
