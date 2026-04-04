@@ -112,7 +112,6 @@ def get_profit_ratio(stock_id):
         operating = latest.get("OperatingIncome", None)
         # net = latest.get("NetIncome", None)
         net = latest.get("IncomeAfterTaxes", None)  # 本期淨利（淨損）
-        print("df.header ", df.header)
         print("net; ", net)
         if revenue and revenue != 0:
             gross_margin = round(gross / revenue * 100, 2) if gross else None
