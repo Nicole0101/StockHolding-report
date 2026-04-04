@@ -82,10 +82,7 @@ def get_dividend(stock_id):
 
         # ===== 排序（最新在前）=====
         df_group = df_group.sort_values("year", ascending=False)
-
-        print("DIV TABLE", stock_id)
-        print(df_group.head())
-
+        print("df_group.head: ", df_group.head())
         # ===== 找最近有配息 =====
         for _, row in df_group.iterrows():
             if row["cash_dividend"] > 0:
@@ -93,6 +90,7 @@ def get_dividend(stock_id):
                 return round(row["cash_dividend"], 2)
 
         return None
+        print("DIV TABLE", stock_id)
 
     except Exception as e:
         print(f"股利錯誤: {stock_id}", e)
@@ -109,26 +107,18 @@ def get_yield(stock_id):
             "start_date": "2023-01-01",
             "token": FINMIND_TOKEN
         }
-
         res = requests.get(url, params=params)
         data = res.json().get("data", [])
-
         if not data:
             return None
-
         df = pd.DataFrame(data)
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values("date")
-
         latest = df.iloc[-1]
-
         yield_pct = latest.get("dividend_yield")
-
         if yield_pct is None:
             return None
-
         return round(float(yield_pct), 2)
-
     except Exception as e:
         print(f"殖利率錯誤: {stock_id}", e)
         return None
@@ -255,7 +245,7 @@ def process_stock(s):
 
         # ===== 殖利率 =====
         yield_pct = get_yield(s["stock_id"])
-        print(s["stock_id"], yield_pct)
+        print("yield_pct: ", s["stock_id"], yield_pct)
 
         # ===== PER =====
         per = None
