@@ -204,10 +204,10 @@ def add_indicators(df):
     df["BB_lower"] = ma20 - 2 * std
     return df
 
-# 距離（你指定版本）=========================
+# 乖離率=========================
 
 
-def calc_dist(price, ma):
+def calc_bias(price, ma):
     if ma == 0 or pd.isna(ma):
         return None
     return round((price - ma) / ma * 100, 2)
@@ -256,10 +256,10 @@ def process_stock(s):
         ma50 = df["close"].rolling(50).mean().iloc[-1]
         print("ma6 ", ma6, "ma18 ", ma18, "ma50 ", ma50)
 
-        dist6 = calc_dist(latest["close"], ma6)
-        dist18 = calc_dist(latest["close"], ma18)
-        dist50 = calc_dist(latest["close"], ma50)
-        print("dist6 ", dist6, "dist18 ", dist18, "dist50 ", dist50)
+        bias6 = calc_bias(latest["close"], ma6)
+        bias18 = calc_bias(latest["close"], ma18)
+        bias50 = calc_bias(latest["close"], ma50)
+        print("bias6 ", bias6, "bias18 ", bias18, "bias50 ", bias50)
 
         k = latest["K"]
         d = latest["D"]
@@ -286,9 +286,9 @@ def process_stock(s):
             "per": per if per else "-",
             "est_eps": est_eps if est_eps else "-",
 
-            "dist6": dist6,
-            "dist18": dist18,
-            "dist50": dist50,
+            "bias6": bias6,
+            "bias18": bias18,
+            "bias50": bias50,
             "k": round(k, 1),
             "d": round(d, 1),
 
@@ -304,11 +304,8 @@ def process_stock(s):
         print("單股錯誤:", s["stock_id"], e)
         return None
 
-# =========================
-# 主程式🔥
-# =========================
 
-
+# 主程式=========================
 def main():
     import json
 
@@ -319,14 +316,14 @@ def main():
 
     results = []
 
-    # ✅ 一定要在 main 裡面
+    # 一定要在 main 裡面
     results = []
     for s in stock_list:
         data = process_stock(s)
         if data:
             results.append(data)
 
-    # ✅ 放在迴圈外
+    # 放在迴圈外
     if not results:
         print("⚠️ 無資料")
         return
