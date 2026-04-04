@@ -33,7 +33,7 @@ jobs:
       # ========================
       # 3. Install dependencies
       # ========================
-      - name: Install dependencies
+      - name: Install deps
         run: pip install -r requirements.txt
 
       # ========================

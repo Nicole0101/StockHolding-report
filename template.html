@@ -7,11 +7,11 @@
 
 <style>
 body { background:#0d1117; color:#e6edf3; font-family:Arial; }
-.container { max-width:1200px; margin:auto; padding:20px; }
+.container { max-width:1400px; margin:auto; padding:20px; }
 
-.card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:15px; margin-bottom:15px; }
+.card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:15px; margin-bottom:15px;overflow-x: auto}
 
-table { width:100%; border-collapse:collapse; }
+table { width:100%; border-collapse:collapse;min-width: 1200px}
 th { background:#1c2330; color:#8b949e; font-size:12px; }
 td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
 
@@ -37,7 +37,7 @@ td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
 
 /* summary */
 .summary { display:flex; gap:10px; margin-bottom:10px; }
-.box { flex:1; padding:10px; border-radius:8px; text-align:center; }
+.box { flex:1; padding:10px; border-radius:8px; text-align:center;flex-wrap: wrap }
 .buy { background:#3fb95022; }
 .sell { background:#f8514922; }
 .watch { background:#d2992222; }
@@ -71,6 +71,9 @@ td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
 <th>漲跌%</th>
 <th>震幅%</th>
 <th>去年EPS</th>
+<th>毛利率</th>
+<th>營益率</th>
+<th>淨利率</th>
 <th>殖利率</th>
 <th>PER</th>
 <th>Est.EPS</th>
@@ -131,11 +134,13 @@ function renderRow(s){
     <td>${s.amp ?? 0}%</td>
     
     <td>${s.eps_last ?? "-"}</td>
+    <td class="${distClass(s.gross_margin)}">${s.gross_margin ?? ""}%</td>
+    <td class="${distClass(s.op_margin)}">${s.op_margin ?? ""}%</td>
+    <td class="${distClass(s.net_margin)}">${s.net_margin ?? ""}%</td>
     <td>${s.yield != null ? s.yield + "%" : "-"}</td>
     <td>${s.per ?? "-"}</td>
     <td>${s.est_eps ?? "-"}</td>
-    
-    <td>
+        <td>
       ${s.k}/${s.d}
       <div class="kd-bar">
         <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
