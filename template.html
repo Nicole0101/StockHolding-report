@@ -1,10 +1,109 @@
-<script>
-// ===== 直接用你原本資料（關鍵修正） =====
-const stocks = window.stocksData || window.stocks || [];
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>策略型台股 Dashboard</title>
 
-// ===== 安全數值轉換 =====
+<style>
+body { background:#0d1117; color:#e6edf3; font-family:Arial; }
+.container { max-width:1400px; margin:auto; padding:20px; }
+
+.card {
+  background:#161b22;
+  border:1px solid #30363d;
+  border-radius:10px;
+  padding:15px;
+  margin-bottom:15px;
+  overflow:auto;
+  max-height:600px;
+}
+
+table {
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:1200px;
+  font-size:12px;
+}
+
+th { cursor:pointer; }
+
+thead th {
+  position:sticky;
+  top:0;
+  background:#1c2330;
+  z-index:10;
+}
+
+thead th:first-child,
+tbody td:first-child {
+  position:sticky;
+  left:0;
+  background:#1c2330;
+  z-index:11;
+}
+
+td, th {
+  padding:10px;
+  border-bottom:1px solid #30363d;
+  border-right:1px solid #30363d;
+}
+
+.up { color:#f85149; }
+.dn { color:#3fb950; }
+
+.top { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
+.pick {
+  padding:10px;
+  border:1px solid #30363d;
+  border-radius:6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>📊 策略型投資 Dashboard</h2>
+
+<h3>🚀 Top Picks</h3>
+<div id="topPicks" class="top"></div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+<th onclick="sortTable('name')">名稱</th>
+<th onclick="sortTable('code')">代碼</th>
+<th onclick="sortTable('price')">價格</th>
+<th onclick="sortTable('chgPct')">漲跌%</th>
+<th onclick="sortTable('eps_last')">去年EPS</th>
+<th onclick="sortTable('gross_margin')">毛利率</th>
+<th onclick="sortTable('sig')">訊號</th>
+<th onclick="sortTable('strategy')">策略</th>
+<th onclick="sortTable('score')">Score</th>
+</tr>
+</thead>
+<tbody id="stockBody"></tbody>
+</table>
+</div>
+
+</div>
+
+<!-- ✅ 資料（一定要用 window.stocks） -->
+<script>
+window.stocks = [
+  {"name":"光洋科","code":7728,"price":737,"chgPct":4.54,"eps_last":"4.95","gross_margin":70.34,"k":18.1,"bias6":1.54,"bias18":-0.76,"bb":"中軌","per":148.89,"yield":"0.69","sig":"buy"},
+  {"name":"聯發科","code":2454,"price":1465,"chgPct":0,"eps_last":"66.17","gross_margin":46.13,"k":6.8,"bias6":-3.46,"bias18":-10.6,"bb":"中軌","per":22.14,"yield":"3.65","sig":"buy"},
+  {"name":"台積電","code":2330,"price":1810,"chgPct":-2.43,"eps_last":"66.26","gross_margin":62.33,"k":39.6,"bias6":-0.05,"bias18":-1.81,"bb":"中軌","per":27.32,"yield":"1.22","sig":"hold"}
+];
+</script>
+
+<script>
+// ===== 工具 =====
 function toNum(v){
-  if(v === null || v === undefined || v === "-") return null;
   const n = parseFloat(v);
   return isNaN(n) ? null : n;
 }
@@ -39,16 +138,24 @@ function strategyLabel(score){
 }
 
 // ===== 初始化 =====
+let stocks = window.stocks || [];
+
 stocks.forEach(s=>{
   s.score = calcScore(s);
   s.strategy = strategyLabel(s.score);
 });
 
-// ===== 預設排序 =====
+// 預設排序
 stocks.sort((a,b)=> b.score - a.score);
 
 // ===== render =====
 function render(){
+  if(!stocks.length){
+    document.getElementById("stockBody").innerHTML =
+      `<tr><td colspan="9">⚠️ 無資料</td></tr>`;
+    return;
+  }
+
   document.getElementById("stockBody").innerHTML =
     stocks.map(s=>`
       <tr>
@@ -58,10 +165,9 @@ function render(){
         <td class="${s.chgPct>=0?'up':'dn'}">${s.chgPct}%</td>
         <td>${s.eps_last}</td>
         <td>${s.gross_margin ?? "-"}</td>
-        <td>${s.k}</td>
-        <td>${s.bias6}</td>
-        <td><b>${s.score}</b></td>
+        <td>${s.sig}</td>
         <td>${s.strategy}</td>
+        <td><b>${s.score}</b></td>
       </tr>
     `).join("");
 
@@ -94,18 +200,13 @@ function sortTable(key){
     const n1 = toNum(v1);
     const n2 = toNum(v2);
 
-    // 數值排序
     if(n1 !== null && n2 !== null){
       return asc ? n1 - n2 : n2 - n1;
     }
 
-    // 字串排序（策略 / 名稱）
-    v1 = String(v1);
-    v2 = String(v2);
-
     return asc
-      ? v1.localeCompare(v2, 'zh-Hant')
-      : v2.localeCompare(v1, 'zh-Hant');
+      ? String(v1).localeCompare(String(v2),'zh-Hant')
+      : String(v2).localeCompare(String(v1),'zh-Hant');
   });
 
   render();
@@ -113,3 +214,6 @@ function sortTable(key){
 
 render();
 </script>
+
+</body>
+</html>
