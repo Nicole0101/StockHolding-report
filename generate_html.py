@@ -245,7 +245,7 @@ def process_stock(s):
 
         # ===== 殖利率 =====
         yield_pct = get_yield(s["stock_id"])
-        print("yield_pct: ", s["stock_id"], yield_pct)
+        #print("yield_pct: ", s["stock_id"], yield_pct)
 
         # ===== PER =====
         per = None
