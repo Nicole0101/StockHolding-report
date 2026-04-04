@@ -118,8 +118,7 @@ def get_profit_ratio(stock_id):
 
         if revenue and revenue != 0:
             gross_margin = round(gross / revenue * 100, 2) if gross else None
-            op_margin = round(operating / revenue * 100,
-                              2) if operating else None
+            op_margin = round(operating / revenue * 100,2) if operating else None
             net_margin = round(net / revenue * 100, 2) if net else None
         else:
             gross_margin = op_margin = net_margin = None
