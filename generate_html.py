@@ -211,8 +211,6 @@ def add_indicators(df):
     return df
 
 # 距離（你指定版本）=========================
-
-
 def calc_dist(price, ma):
     if ma == 0 or pd.isna(ma):
         return None
