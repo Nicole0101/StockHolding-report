@@ -3,11 +3,14 @@ import requests
 from jinja2 import Template
 from datetime import datetime, timedelta
 import os
+from FinMind.data import DataLoader
 FINMIND_TOKEN = os.getenv("FINMIND_TOKEN")
 
 # =========================
 # 抓股價
 # =========================
+
+api = DataLoader()
 
 
 def get_stock_data(stock_id):
@@ -93,6 +96,53 @@ def get_dividend(stock_id):
     except Exception as e:
         print(f"股利錯誤: {stock_id}", e)
         return None
+
+# 產出毛利率 營業利率 稅後率===================================
+
+
+def get_profit_ratio(stock_id):
+    try:
+        df = api.taiwan_stock_financial_statement(
+            stock_id=stock_id,
+            start_date="2023-01-01"
+        )
+
+        # 只取最新一季
+        df = df.sort_values("date")
+        latest = df.groupby("type").last()["value"]
+
+        revenue = latest.get("Revenue", None)
+        gross = latest.get("GrossProfit", None)
+        operating = latest.get("OperatingIncome", None)
+        net = latest.get("NetIncome", None)
+
+        if revenue and revenue != 0:
+            gross_margin = round(gross / revenue * 100, 2) if gross else None
+            op_margin = round(operating / revenue * 100,
+                              2) if operating else None
+            net_margin = round(net / revenue * 100, 2) if net else None
+        else:
+            gross_margin = op_margin = net_margin = None
+
+        return gross_margin, op_margin, net_margin
+
+    except Exception as e:
+        print(f"{stock_id} 財報錯誤:", e)
+        return None, None, None
+
+# ================================================
+
+
+def est_eps(stock_id):
+    eps_df = api.taiwan_stock_eps(stock_id=stock_id)
+    eps_df = eps_df.sort_values("date", ascending=False).head(4)
+    ttm_eps = eps_df["eps"].sum()
+
+    rev = api.taiwan_stock_month_revenue(stock_id=stock_id)
+    rev["YoY"] = rev["revenue"].pct_change(12)
+    growth = rev.sort_values("date").tail(3)["YoY"].mean()
+    estimated_eps = ttm_eps * (1 + growth)
+    return round(ttm_eps, 2), round(estimated_eps, 2)
 
 
 # ======================
@@ -234,6 +284,8 @@ def process_stock(s):
         last_eps = get_eps(s["stock_id"])
         eps_note = ""
         quarters = 0
+        # =====毛利率 =====
+        gm, om, nm = get_profit_ratio(s["stock_id"])
 
         # ===== 殖利率 =====
         yield_pct = get_yield(s["stock_id"])
@@ -254,7 +306,7 @@ def process_stock(s):
         ma6 = df["close"].rolling(6).mean().iloc[-1]
         ma18 = df["close"].rolling(18).mean().iloc[-1]
         ma50 = df["close"].rolling(50).mean().iloc[-1]
-        print("ma6 ", ma6, "ma18 ", ma18, "ma50 ", ma50)
+        #   print("ma6 ", ma6, "ma18 ", ma18, "ma50 ", ma50)
 
         bias6 = calc_bias(latest["close"], ma6)
         bias18 = calc_bias(latest["close"], ma18)
@@ -282,6 +334,9 @@ def process_stock(s):
             "chgPct": round(chgPct, 2),
             "amp": round(amp, 2),
             "eps_last": f"{last_eps}{eps_note}" if last_eps is not None else "-",
+            "gross_margin": gm,
+            "op_margin": om,
+            "net_margin": nm,
             "yield": f"{yield_pct}" if yield_pct is not None else "-",
             "per": per if per else "-",
             "est_eps": est_eps if est_eps else "-",

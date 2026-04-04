@@ -71,6 +71,9 @@ td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
 <th>漲跌%</th>
 <th>震幅%</th>
 <th>去年EPS</th>
+<th>毛利率</th>
+<th>營益率</th>
+<th>淨利率</th>
 <th>殖利率</th>
 <th>PER</th>
 <th>Est.EPS</th>
@@ -131,11 +134,13 @@ function renderRow(s){
     <td>${s.amp ?? 0}%</td>
     
     <td>${s.eps_last ?? "-"}</td>
+    <td class="${distClass(s.gross_margin)}">${s.gross_margin ?? ""}%</td>
+    <td class="${distClass(s.op_margin)}">${s.op_margin ?? ""}%</td>
+    <td class="${distClass(s.net_margin)}">${s.net_margin ?? ""}%</td>
     <td>${s.yield != null ? s.yield + "%" : "-"}</td>
     <td>${s.per ?? "-"}</td>
     <td>${s.est_eps ?? "-"}</td>
-    
-    <td>
+        <td>
       ${s.k}/${s.d}
       <div class="kd-bar">
         <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
