@@ -89,9 +89,7 @@ def get_dividend(stock_id):
             if row["cash_dividend"] > 0:
                 print("抓到股利:", stock_id, row["year"], row["cash_dividend"])
                 return round(row["cash_dividend"], 2)
-
         return None
-        print("DIV TABLE", stock_id)
 
     except Exception as e:
         print(f"股利錯誤: {stock_id}", e)
@@ -115,14 +113,14 @@ def get_profit_ratio(stock_id):
         gross = latest.get("GrossProfit", None)
         operating = latest.get("OperatingIncome", None)
         net = latest.get("NetIncome", None)
-
+        print("df: ", df, "net; ", net)
         if revenue and revenue != 0:
             gross_margin = round(gross / revenue * 100, 2) if gross else None
-            op_margin = round(operating / revenue * 100,2) if operating else None
+            op_margin = round(operating / revenue * 100,
+                              2) if operating else None
             net_margin = round(net / revenue * 100, 2) if net else None
         else:
             gross_margin = op_margin = net_margin = None
-
         return gross_margin, op_margin, net_margin
 
     except Exception as e:
@@ -217,7 +215,6 @@ def get_eps(stock_id):
             if val > 4:  # 可依需求調整
                 return round(val, 2)
         return None
-        Print("Date EPS: ", df.value)
     except Exception as e:
         print("EPS錯誤:", stock_id, e)
         return None
@@ -288,7 +285,6 @@ def process_stock(s):
 
         # ===== 殖利率 =====
         yield_pct = get_yield(s["stock_id"])
-        # print("yield_pct: ", s["stock_id"], yield_pct)
 
         # ===== PER =====
         per = None
@@ -305,12 +301,10 @@ def process_stock(s):
         ma6 = df["close"].rolling(6).mean().iloc[-1]
         ma18 = df["close"].rolling(18).mean().iloc[-1]
         ma50 = df["close"].rolling(50).mean().iloc[-1]
-        #   print("ma6 ", ma6, "ma18 ", ma18, "ma50 ", ma50)
 
         bias6 = calc_bias(latest["close"], ma6)
         bias18 = calc_bias(latest["close"], ma18)
         bias50 = calc_bias(latest["close"], ma50)
-        print("bias6 ", bias6, "bias18 ", bias18, "bias50 ", bias50)
 
         k = latest["K"]
         d = latest["D"]
@@ -373,8 +367,6 @@ def main():
         data = process_stock(s)
         if data:
             results.append(data)
-            print("results:", results)
-
     # 放在迴圈外
     if not results:
         print("⚠️ 無資料")
