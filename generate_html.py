@@ -245,7 +245,7 @@ def process_stock(s):
 
         # ===== 殖利率 =====
         yield_pct = get_yield(s["stock_id"])
-        #print("yield_pct: ", s["stock_id"], yield_pct)
+        # print("yield_pct: ", s["stock_id"], yield_pct)
 
         # ===== PER =====
         per = None
@@ -259,11 +259,13 @@ def process_stock(s):
             est_eps = round(last_eps * (1 + growth), 2)
 
         # ===== 均線 =====
-        ma20 = df["close"].rolling(20).mean().iloc[-1]
-        ma60 = df["close"].rolling(60).mean().iloc[-1]
+        ma6 = df["close"].rolling(6).mean().iloc[-1]
+        ma18 = df["close"].rolling(18).mean().iloc[-1]
+        ma50 = df["close"].rolling(50).mean().iloc[-1]
 
-        dist20 = calc_dist(latest["close"], ma20)
-        dist60 = calc_dist(latest["close"], ma60)
+        dist6 = calc_dist(latest["close"], ma6)
+        dist18 = calc_dist(latest["close"], ma18)
+        dist50 = calc_dist(latest["close"], ma50)
 
         k = latest["K"]
         d = latest["D"]
@@ -290,8 +292,9 @@ def process_stock(s):
             "per": per if per else "-",
             "est_eps": est_eps if est_eps else "-",
 
-            "dist20": dist20,
-            "dist60": dist60,
+            "dist6": dist6,
+            "dist18": dist18,
+            "dist50": dist50,
             "k": round(k, 1),
             "d": round(d, 1),
 

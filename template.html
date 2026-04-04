@@ -76,8 +76,9 @@ td,th { padding:10px; border-bottom:1px solid #30363d; text-align:center; }
 <th>Est.EPS</th>
 <th>KD</th>
 <th>布林</th>
-<th>Bias20</th>
-<th>Bias60</th>
+<th>Bias6</th>
+<th>Bias18</th>
+<th>Bias50</th>
 <th>訊號</th>
 <th>策略</th>
 </tr>
@@ -148,9 +149,10 @@ function renderRow(s){
       </div>
     </td>
 
-    <!-- ⭐ 修正重點 -->
-    <td class="${distClass(s.dist20)}">${s.dist20 ?? ""}%</td>
-    <td class="${distClass(s.dist60)}">${s.dist60 ?? ""}%</td>
+    <!-- 乖離率>
+    <td class="${distClass(s.dist6)}">${s.dist6 ?? ""}%</td>
+    <td class="${distClass(s.dist18)}">${s.dist18 ?? ""}%</td>
+    <td class="${distClass(s.dist50)}">${s.dist50 ?? ""}%</td>
 
     <td><span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
     <td>${s.strategy}</td>
