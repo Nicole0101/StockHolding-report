@@ -1,74 +1,15 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<title>策略型台股 Dashboard</title>
+<script>
+// ===== 直接用你原本資料（關鍵修正） =====
+const stocks = window.stocksData || window.stocks || [];
 
-<style>
-body { background:#0d1117; color:#e6edf3; font-family:Arial; }
-.container { max-width:1400px; margin:auto; padding:20px; }
-
-.card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:15px; margin-bottom:15px; overflow:auto; max-height:600px;}
-
-table { width:100%; border-collapse: separate; border-spacing:0; min-width:1200px; font-size:11.5px;}
-
-th { cursor:pointer; }
-
-thead th { position: sticky; top:0; background:#1c2330; z-index:10; }
-
-thead th:first-child, tbody td:first-child {
-  position: sticky; left:0; background:#1c2330; z-index:11;
+// ===== 安全數值轉換 =====
+function toNum(v){
+  if(v === null || v === undefined || v === "-") return null;
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
 }
 
-td, th { padding:10px; border-bottom:1px solid #30363d; border-right:1px solid #30363d;}
-
-.up { color:#f85149; }
-.dn { color:#3fb950; }
-
-.sig { padding:3px 6px; border-radius:4px; }
-.sig-buy { background:#3fb95033; color:#3fb950; }
-.sig-sell { background:#f8514933; color:#f85149; }
-.sig-hold { background:#8b949e33; color:#8b949e; }
-
-.top { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;}
-.pick { padding:10px; border:1px solid #30363d; border-radius:6px; }
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<h2>📊 策略型投資 Dashboard</h2>
-
-<h3>🚀 Top Picks</h3>
-<div id="topPicks" class="top"></div>
-
-<div class="card">
-<table>
-<thead>
-<tr>
-<th onclick="sortTable('name')">名稱</th>
-<th onclick="sortTable('code')">代碼</th>
-<th onclick="sortTable('price')">價格</th>
-<th onclick="sortTable('chgPct')">漲跌%</th>
-<th onclick="sortTable('eps_last')">EPS</th>
-<th onclick="sortTable('gross_margin')">毛利率</th>
-<th onclick="sortTable('k')">K</th>
-<th onclick="sortTable('bias6')">Bias6</th>
-<th onclick="sortTable('score')">Score</th>
-<th onclick="sortTable('strategy')">策略</th>
-</tr>
-</thead>
-<tbody id="stockBody"></tbody>
-</table>
-</div>
-
-</div>
-
-<script>
-let stocks = window.stocks || [];
-
-// ===== 評分系統 =====
+// ===== 評分 =====
 function calcScore(s){
   let score = 0;
 
@@ -79,13 +20,13 @@ function calcScore(s){
   if(s.bias6 < -3) score += 2;
   if(s.bias18 < -5) score += 2;
 
-  if(s.bb.includes("下")) score += 2;
-  if(s.bb.includes("上")) score -= 2;
+  if(s.bb?.includes("下")) score += 2;
+  if(s.bb?.includes("上")) score -= 2;
 
-  if(s.per && s.per < 15) score += 1;
-  if(s.per && s.per > 60) score -= 1;
+  if(toNum(s.per) && toNum(s.per) < 15) score += 1;
+  if(toNum(s.per) && toNum(s.per) > 60) score -= 1;
 
-  if(s.yield && parseFloat(s.yield) > 4) score += 1;
+  if(toNum(s.yield) > 4) score += 1;
 
   return score;
 }
@@ -103,7 +44,7 @@ stocks.forEach(s=>{
   s.strategy = strategyLabel(s.score);
 });
 
-// 預設排序
+// ===== 預設排序 =====
 stocks.sort((a,b)=> b.score - a.score);
 
 // ===== render =====
@@ -116,7 +57,7 @@ function render(){
         <td>${s.price}</td>
         <td class="${s.chgPct>=0?'up':'dn'}">${s.chgPct}%</td>
         <td>${s.eps_last}</td>
-        <td>${s.gross_margin ?? ""}</td>
+        <td>${s.gross_margin ?? "-"}</td>
         <td>${s.k}</td>
         <td>${s.bias6}</td>
         <td><b>${s.score}</b></td>
@@ -134,13 +75,13 @@ function renderTop(){
     top.map(s=>`
       <div class="pick">
         ${s.name} (${s.code})<br>
-        ⭐ Score: ${s.score}<br>
+        ⭐ ${s.score}<br>
         ${s.strategy}
       </div>
     `).join("");
 }
 
-// ===== 排序功能 =====
+// ===== 排序 =====
 let sortState = {};
 
 function sortTable(key){
@@ -150,12 +91,21 @@ function sortTable(key){
     let v1 = a[key];
     let v2 = b[key];
 
-    v1 = parseFloat(v1) || v1;
-    v2 = parseFloat(v2) || v2;
+    const n1 = toNum(v1);
+    const n2 = toNum(v2);
 
-    if(v1 > v2) return asc ? 1 : -1;
-    if(v1 < v2) return asc ? -1 : 1;
-    return 0;
+    // 數值排序
+    if(n1 !== null && n2 !== null){
+      return asc ? n1 - n2 : n2 - n1;
+    }
+
+    // 字串排序（策略 / 名稱）
+    v1 = String(v1);
+    v2 = String(v2);
+
+    return asc
+      ? v1.localeCompare(v2, 'zh-Hant')
+      : v2.localeCompare(v1, 'zh-Hant');
   });
 
   render();
@@ -163,6 +113,3 @@ function sortTable(key){
 
 render();
 </script>
-
-</body>
-</html>
