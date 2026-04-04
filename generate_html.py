@@ -313,15 +313,13 @@ def main():
     df = pd.read_csv("stocks.csv", sep="\t", encoding="utf-8-sig")
     df = df.rename(columns={"Ticker": "stock_id", "Name": "name"})
     stock_list = df.to_dict(orient="records")
-
-    results = []
-
     # 一定要在 main 裡面
     results = []
     for s in stock_list:
         data = process_stock(s)
         if data:
             results.append(data)
+            print("results:", results)
 
     # 放在迴圈外
     if not results:
