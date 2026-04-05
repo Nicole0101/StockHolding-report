@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>(持股)台股技術分析報告</title>
+
+<style>
+body { background:#0d1117; color:#e6edf3; font-family:Arial; }
+.container { max-width:1400px; margin:auto; padding:20px; }
+
+.card { 
+  background:#161b22; 
+  border:1px solid #30363d; 
+  border-radius:10px; 
+  padding:15px; 
+  overflow:auto;
+  max-height:600px;
+}
+
+table { 
+  width:100%; 
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:1000px;
+  font-size:12px;
+}
+
+thead th {
+  position:sticky;
+  top:0;
+  background:#1c2330;
+  z-index:10;
+}
+
+thead th:first-child,
+tbody td:first-child {
+  position:sticky;
+  left:0;
+  background:#1c2330;
+  z-index:11;
+}
+
+th, td {
+  padding:8px;
+  border-bottom:1px solid #30363d;
+  border-right:1px solid #30363d;
+}
+
+.name { text-align:left; font-weight:bold; }
+
+.up { color:#f85149; }
+.dn { color:#3fb950; }
+
+.kd-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
+.kd-dot { width:8px; height:8px; border-radius:50%; position:absolute; top:-1px; transform:translateX(-50%); }
+
+.bb-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
+.bb-dot { width:6px; height:10px; position:absolute; top:-2px; transform:translateX(-50%); }
+
+.summary { display:flex; gap:10px; margin-bottom:10px; }
+.box { flex:1; padding:10px; border-radius:8px; text-align:center; }
+.buy { background:#3fb95022; }
+.sell { background:#f8514922; }
+.watch { background:#d2992222; }
+.hold { background:#8b949e22; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>(持股)台股技術分析報告</h2>
+
+<div class="summary">
+  <div class="box buy"><b id="buyCount"></b><br>反彈</div>
+  <div class="box sell"><b id="sellCount"></b><br>出貨</div>
+  <div class="box watch"><b id="watchCount"></b><br>觀察</div>
+  <div class="box hold"><b id="holdCount"></b><br>整理</div>
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+<th>名稱</th>
+<th>代碼</th>
+<th>價格</th>
+<th>漲跌</th>
+<th>漲跌%</th>
+<th>震幅%</th>
+<th>去年EPS</th>
+<th>估EPS</th>
+<th>毛利率</th>
+<th>營益率</th>
+<th>淨利率</th>
+<th>殖利率</th>
+<th>本益比</th>
+<th>KD</th>
+<th>布林</th>
+<th>Bias6</th>
+<th>Bias18</th>
+<th>Bias50</th>
+<th>訊號</th>
+<th>策略</th>
+</tr>
+</thead>
+<tbody id="stockBody"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+const stocks = [{"amp": 3.95, "bb": "\u4e2d\u8ecc", "bias18": -8.61, "bias50": -9.97, "bias6": 0.49, "chgPct": -0.29, "code": 6669, "eps_Y": 275.06, "eps_est": 613.56, "eps_ttm": 275.06, "gross_margin": 7.23, "k": 15.7, "ma18": 3731.11, "ma50": 3787.8, "ma6": 3393.33, "name": "\u7def\u7a4e", "net_margin": 4.72, "per_Y": 12.4, "per_est": 5.56, "per_ttm": 12.4, "price": 3410.0, "score": 305.11, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 4.84}}, {"amp": 3.23, "bb": "\u4e2d\u8ecc", "bias18": -1.81, "bias50": -1.12, "bias6": -0.05, "chgPct": -2.43, "code": 2330, "eps_Y": 66.26, "eps_est": 83.8, "eps_ttm": 66.26, "gross_margin": 62.33, "k": 39.6, "ma18": 1843.33, "ma50": 1830.5, "ma6": 1810.83, "name": "\u53f0\u7a4d\u96fb", "net_margin": 48.31, "per_Y": 27.32, "per_est": 21.6, "per_ttm": 27.32, "price": 1810.0, "score": 35.42, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 1.22}}, {"amp": 3.24, "bb": "\u4e2d\u8ecc", "bias18": -11.04, "bias50": -15.29, "bias6": -2.57, "chgPct": -0.6, "code": 2404, "eps_Y": 48.08, "eps_est": 75.18, "eps_ttm": 48.08, "gross_margin": 17.19, "k": 5.7, "ma18": 931.89, "ma50": 978.68, "ma6": 850.83, "name": "\u6f22\u5510", "net_margin": 12.87, "per_Y": 17.24, "per_est": 11.03, "per_ttm": 17.24, "price": 829.0, "score": 34.28, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 4.83}}, {"amp": 4.44, "bb": "\u4e2d\u8ecc", "bias18": -10.6, "bias50": -13.08, "bias6": -3.46, "chgPct": 0.0, "code": 2454, "eps_Y": 66.17, "eps_est": 66.0, "eps_ttm": 66.17, "gross_margin": 46.13, "k": 6.8, "ma18": 1638.61, "ma50": 1685.5, "ma6": 1517.5, "name": "\u806f\u767c\u79d1", "net_margin": 15.36, "per_Y": 22.14, "per_est": 22.2, "per_ttm": 22.14, "price": 1465.0, "score": 26.34, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 3.65}}, {"amp": 4.03, "bb": "\u4e2d\u8ecc", "bias18": -3.41, "bias50": -6.55, "bias6": -1.63, "chgPct": -1.49, "code": 3443, "eps_Y": 28.13, "eps_est": 50.97, "eps_ttm": 28.13, "gross_margin": 19.04, "k": 31.1, "ma18": 2401.94, "ma50": 2482.6, "ma6": 2358.33, "name": "\u5275\u610f", "net_margin": 9.35, "per_Y": 82.47, "per_est": 45.52, "per_ttm": 82.47, "price": 2320.0, "score": 11.83, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 0.86}}, {"amp": 3.15, "bb": "\u4e2d\u8ecc", "bias18": -3.1, "bias50": -5.23, "bias6": -0.53, "chgPct": -1.57, "code": 3231, "eps_Y": 9.02, "eps_est": 23.17, "eps_ttm": 9.02, "gross_margin": 5.62, "k": 23.5, "ma18": 129.0, "ma50": 131.9, "ma6": 125.67, "name": "\u7def\u5275", "net_margin": 2.27, "per_Y": 13.86, "per_est": 5.39, "per_ttm": 13.86, "price": 125.0, "score": 9.97, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 4.4}}, {"amp": 3.81, "bb": "\u4e2d\u8ecc", "bias18": -5.25, "bias50": -11.24, "bias6": -1.15, "chgPct": -2.03, "code": 2317, "eps_Y": 13.6, "eps_est": 17.02, "eps_ttm": 13.6, "gross_margin": 5.88, "k": 25.9, "ma18": 203.69, "ma50": 217.43, "ma6": 195.25, "name": "\u9d3b\u6d77", "net_margin": 2.06, "per_Y": 14.19, "per_est": 11.34, "per_ttm": 14.19, "price": 193.0, "score": 5.11, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 3.73}}, {"amp": 6.06, "bb": "\u4e2d\u8ecc", "bias18": -9.45, "bias50": -13.8, "bias6": -2.86, "chgPct": -4.15, "code": 4772, "eps_Y": 4.21, "eps_est": 16.07, "eps_ttm": 4.21, "gross_margin": 48.92, "k": 16.7, "ma18": 305.92, "ma50": 321.34, "ma6": 285.17, "name": "\u53f0\u7279\u5316", "net_margin": 32.51, "per_Y": 65.8, "per_est": 17.24, "per_ttm": 65.8, "price": 277.0, "score": 2.86, "strategy": "\u53cd\u5f48\ud83d\udd25", "yield": {"dividend": null, "yield": 1.08}}, {"amp": 2.75, "bb": "\u4e2d\u8ecc", "bias18": 0.94, "bias50": 2.25, "bias6": -2.12, "chgPct": -1.38, "code": 5871, "eps_Y": 11.24, "eps_est": 10.92, "eps_ttm": 11.24, "gross_margin": 65.76, "k": 58.5, "ma18": 106.5, "ma50": 105.13, "ma6": 109.83, "name": "\u4e2d\u79df-", "net_margin": 20.9, "per_Y": 9.56, "per_est": 9.84, "per_ttm": 9.56, "price": 107.5, "score": 2.51, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 5.58}}, {"amp": 1.56, "bb": "\u4e2d\u8ecc", "bias18": -1.67, "bias50": -5.59, "bias6": -0.55, "chgPct": -1.39, "code": 9904, "eps_Y": 4.1, "eps_est": 3.97, "eps_ttm": 4.1, "gross_margin": 23.03, "k": 44.7, "ma18": 28.93, "ma50": 30.14, "ma6": 28.61, "name": "\u5bf6\u6210", "net_margin": 7.68, "per_Y": 6.94, "per_est": 7.17, "per_ttm": 6.94, "price": 28.45, "score": -0.17, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 5.98}}, {"amp": 1.37, "bb": "\u4e2d\u8ecc", "bias18": -0.41, "bias50": -3.68, "bias6": 0.48, "chgPct": 0.0, "code": 2881, "eps_Y": 8.37, "eps_est": 6.84, "eps_ttm": 8.37, "gross_margin": 0.0, "k": 49.1, "ma18": 88.16, "ma50": 91.15, "ma6": 87.38, "name": "\u5bcc\u90a6\u91d1", "net_margin": 0.0, "per_Y": 10.49, "per_est": 12.84, "per_ttm": 10.49, "price": 87.8, "score": -0.43, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 4.84}}, {"amp": 1.69, "bb": "\u4e2d\u8ecc", "bias18": -0.08, "bias50": -5.2, "bias6": 2.6, "chgPct": 0.0, "code": 1101, "eps_Y": -1.61, "eps_est": -1.51, "eps_ttm": -1.61, "gross_margin": 18.49, "k": 52.6, "ma18": 23.72, "ma50": 25.0, "ma6": 23.1, "name": "\u53f0\u6ce5", "net_margin": -3.9, "per_Y": "-", "per_est": "-", "per_ttm": "-", "price": 23.7, "score": -0.76, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 3.38}}, {"amp": 2.61, "bb": "\u4e0a\u8ecc", "bias18": 4.31, "bias50": 5.15, "bias6": 3.02, "chgPct": 1.49, "code": 2891, "eps_Y": 4.08, "eps_est": 4.95, "eps_ttm": 4.08, "gross_margin": 0.0, "k": 72.6, "ma18": 52.25, "ma50": 51.83, "ma6": 52.9, "name": "\u4e2d\u4fe1\u91d1", "net_margin": 0.0, "per_Y": 13.36, "per_est": 11.01, "per_ttm": 13.36, "price": 54.5, "score": -0.83, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 4.22}}, {"amp": 3.45, "bb": "\u4e2d\u8ecc", "bias18": -3.87, "bias50": -7.56, "bias6": -3.78, "chgPct": -0.53, "code": 3680, "eps_Y": 9.43, "eps_est": 13.73, "eps_ttm": 9.43, "gross_margin": 43.28, "k": 17.0, "ma18": 390.11, "ma50": 405.66, "ma6": 389.75, "name": "\u5bb6\u767b", "net_margin": 23.65, "per_Y": 39.77, "per_est": 27.31, "per_ttm": 39.77, "price": 375.0, "score": -1.33, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 1.84}}, {"amp": 2.76, "bb": "\u4e2d\u8ecc", "bias18": 2.3, "bias50": 4.0, "bias6": 0.59, "chgPct": -2.65, "code": 2885, "eps_Y": 2.74, "eps_est": 3.94, "eps_ttm": 2.74, "gross_margin": 0.0, "k": 69.7, "ma18": 44.82, "ma50": 44.08, "ma6": 45.58, "name": "\u5143\u5927\u91d1", "net_margin": 0.0, "per_Y": 16.73, "per_est": 11.64, "per_ttm": 16.73, "price": 45.85, "score": -1.52, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 4.8}}, {"amp": 3.29, "bb": "\u4e2d\u8ecc", "bias18": -4.55, "bias50": -17.24, "bias6": -2.34, "chgPct": -2.32, "code": 1319, "eps_Y": 6.43, "eps_est": 5.29, "eps_ttm": 6.43, "gross_margin": 33.68, "k": 20.6, "ma18": 83.92, "ma50": 96.79, "ma6": 82.02, "name": "\u6771\u967d", "net_margin": 19.15, "per_Y": 12.46, "per_est": 15.14, "per_ttm": 12.46, "price": 80.1, "score": -1.9, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 6.24}}, {"amp": 1.11, "bb": "\u4e2d\u8ecc", "bias18": 2.24, "bias50": -0.13, "bias6": 0.91, "chgPct": 0.7, "code": 1216, "eps_Y": 3.46, "eps_est": 3.58, "eps_ttm": 3.46, "gross_margin": 31.73, "k": 75.5, "ma18": 70.82, "ma50": 72.5, "ma6": 71.75, "name": "\u7d71\u4e00", "net_margin": 3.15, "per_Y": 20.92, "per_est": 20.22, "per_ttm": 20.92, "price": 72.4, "score": -4.28, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 4.14}}, {"amp": 1.38, "bb": "\u4e2d\u8ecc", "bias18": -3.8, "bias50": -8.72, "bias6": -0.53, "chgPct": -0.46, "code": 1532, "eps_Y": 0.99, "eps_est": 1.02, "eps_ttm": 0.99, "gross_margin": 24.21, "k": 19.0, "ma18": 22.56, "ma50": 23.77, "ma6": 21.82, "name": "\u52e4\u7f8e", "net_margin": 3.64, "per_Y": 21.92, "per_est": 21.27, "per_ttm": 21.92, "price": 21.7, "score": -5.87, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 3.69}}, {"amp": 4.59, "bb": "\u4e2d\u8ecc", "bias18": -9.79, "bias50": -9.0, "bias6": -3.86, "chgPct": -3.26, "code": 4749, "eps_Y": 11.32, "eps_est": 13.88, "eps_ttm": 11.32, "gross_margin": 44.02, "k": 12.1, "ma18": 887.89, "ma50": 880.22, "ma6": 833.17, "name": "\u65b0\u61c9\u6750", "net_margin": 24.17, "per_Y": 70.76, "per_est": 57.71, "per_ttm": 70.76, "price": 801.0, "score": -10.37, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 1.0}}, {"amp": 7.94, "bb": "\u4e2d\u8ecc", "bias18": -0.76, "bias50": -0.41, "bias6": 1.54, "chgPct": 4.54, "code": 7728, "eps_Y": 4.95, "eps_est": 7.47, "eps_ttm": 4.95, "gross_margin": 70.34, "k": 18.1, "ma18": 742.67, "ma50": 740.02, "ma6": 725.83, "name": "\u5149\u7131\u79d1", "net_margin": 32.41, "per_Y": 148.89, "per_est": 98.66, "per_ttm": 148.89, "price": 737.0, "score": -25.86, "strategy": "\u53cd\u5f48\ud83d\udd25", "yield": {"dividend": null, "yield": 0.69}}, {"amp": 5.61, "bb": "\u4e2d\u8ecc", "bias18": -9.7, "bias50": -10.3, "bias6": -6.02, "chgPct": -4.34, "code": 3376, "eps_Y": 1.66, "eps_est": 1.35, "eps_ttm": 1.66, "gross_margin": 11.53, "k": 13.6, "ma18": 207.64, "ma50": 209.03, "ma6": 199.5, "name": "\u65b0\u65e5\u8208", "net_margin": 3.3, "per_Y": 112.95, "per_est": 138.89, "per_ttm": 112.95, "price": 187.5, "score": -40.99, "strategy": "\u53cd\u5f48\ud83d\udd25", "yield": {"dividend": null, "yield": 3.2}}];
+</script>
+
+<script>
+function kdColor(k){
+  if(k > 75) return "#f85149";
+  if(k < 25) return "#3fb950";
+  return "#d29922";
+}
+
+function bbPosition(bb){
+  if(!bb) return 50;
+  if(bb.includes("上")) return 80;
+  if(bb.includes("下")) return 20;
+  return 50;
+}
+
+function renderRow(s){
+
+  const chgClass = s.chgPct >= 0 ? "up":"dn";
+  const chgSign = s.chgPct >= 0 ? "+" : "";
+
+  return `
+  <tr>
+    <td class="name">${s.name}</td>
+    <td>${s.code}</td>
+    <td>${s.price}</td>
+
+    <td class="${chgClass}">${chgSign}${s.chg}</td>
+    <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
+
+    <td>${s.amp ?? 0}%</td>
+    
+    <td>${s.eps_last ?? "-"}</td>
+    <td class="${distClass(s.gross_margin)}">${s.gross_margin ?? ""}%</td>
+    <td class="${distClass(s.op_margin)}">${s.op_margin ?? ""}%</td>
+    <td class="${distClass(s.net_margin)}">${s.net_margin ?? ""}%</td>
+    <td>${s.est_eps ?? "-"}</td>
+    <td>${s.yield != null ? s.yield + "%" : "-"}</td>
+    <td>${s.per ?? "-"}</td>    
+    <td>${s.k}/${s.d}
+        <div class="kd-bar">
+        <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
+      </div>
+    </td>
+    <td>
+      ${s.bb}
+      <div class="bb-bar">
+        <div class="bb-dot" style="left:${bbPosition(s.bb)}%; background:#58a6ff"></div>
+      </div>
+    </td>
+
+    <!-- 乖離率 -->
+    <td class="${distClass(s.bias6)}">${s.bias6 ?? ""}%</td>
+    <td class="${distClass(s.bias18)}">${s.bias18 ?? ""}%</td>
+    <td class="${distClass(s.bias50)}">${s.bias50 ?? ""}%</td>
+    <td><span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
+    <td>${s.strategy}</td>
+  </tr>
+  `;
+}
+
+document.getElementById("stockBody").innerHTML =
+  stocks.map(renderRow).join("");
+
+
+// ===== 統計（改用 strategy）=====
+const rebound = stocks.filter(s => s.strategy?.includes("反彈")).length;
+const sell = stocks.filter(s => s.strategy?.includes("出貨")).length;
+const watch = stocks.filter(s => s.strategy === "觀察").length;
+const hold = stocks.filter(s => s.strategy === "整理").length;
+
+document.getElementById("buyCount").innerText = rebound;
+document.getElementById("sellCount").innerText = sell;
+document.getElementById("watchCount").innerText = watch;
+document.getElementById("holdCount").innerText = hold;
+</script>
+
+</body>
+</html>
