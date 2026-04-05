@@ -97,7 +97,7 @@ def main():
             template = Template(f.read())
 
         html_content = template.render(
-            stocksall=data["stocks"],
+            stocks=data["stocks"],
             top_stocks=text_data["top_str"],
             weak_stocks=text_data["weak_str"],
             rebound_list=text_data["rebound_str"],

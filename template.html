@@ -116,6 +116,11 @@ th, td {
 const stocks = {{ stocks | tojson }};
 </script>
 
+function distClass(val) {
+  if (!val) return "";
+  return val > 0 ? "up" : "dn";
+}
+
 <script>
 function kdColor(k){
   if(k > 75) return "#f85149";
@@ -134,6 +139,9 @@ function renderRow(s){
 
   const chgClass = s.chgPct >= 0 ? "up":"dn";
   const chgSign = s.chgPct >= 0 ? "+" : "";
+  const yieldVal = (typeof s.yield === 'object' && s.yield !== null) ? s.yield.yield : s.yield;
+  const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+  const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
   return `
   <tr>
