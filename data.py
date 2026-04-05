@@ -291,8 +291,8 @@ def get_dividend_yield(stock_id, current_price=None):
 # ========================
 def add_indicators(df):
     try:
-        low_min = df["low"].rolling(9).min()
-        high_max = df["high"].rolling(9).max()
+        low_min = df["min"].rolling(9).min()
+        high_max = df["max"].rolling(9).max()
         denom = (high_max - low_min)
         denom = denom.replace(0, pd.NA)
         rsv = (df["close"] - low_min) / denom * 100

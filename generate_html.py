@@ -20,8 +20,10 @@ def format_output(results):
         elif isinstance(r.get("yield"), (int, float)):
             y = r["yield"]
 
-        e = r.get("eps_est") if isinstance(r.get("eps_est"), (int, float)) else 0
-        p = r.get("per_est") if isinstance(r.get("per_est"), (int, float)) else 0
+        e = r.get("eps_est") if isinstance(
+            r.get("eps_est"), (int, float)) else 0
+        p = r.get("per_est") if isinstance(
+            r.get("per_est"), (int, float)) else 0
 
         r["score"] = round((y * 2) + (e * 0.5) - (p * 0.3), 2)
 
@@ -36,6 +38,7 @@ def format_output(results):
         "rebound_list": [s for s in results if "反彈" in s.get("strategy", "")],
         "selloff_list": [s for s in results if "出貨" in s.get("strategy", "")],
     }
+
 
 def build_strings(data):
     def safe_join(lst):
@@ -90,7 +93,7 @@ def main():
     else:
         file_url = f"https://github.com/{user}/{repo_name}/blob/{branch}/{filename}"
 
-    # 4. 渲染 HTML (修正了您原本多出的括號錯誤)
+    # 4. HTML
     try:
         with open("template.html", "r", encoding="utf-8") as f:
             template = Template(f.read())
@@ -116,11 +119,10 @@ def main():
     # 5. 發送 LINE 通知
     send_line_notify(data, file_url)
 
+
 # ========================
 # 3️⃣ LINE 通知模組
 # ========================
-
-
 def send_line_notify(data, file_url):
     """獨立發送 LINE 訊息"""
     try:
