@@ -25,18 +25,15 @@ def get_stock_data(stock_id):
             "start_date": "2023-01-01",
             "token": API_TOKEN
         }
-
         res = requests.get(api_url, params=params, timeout=10)
         data = res.json()
 
         if "data" not in data or len(data["data"]) == 0:
             return pd.DataFrame()
-
         df = pd.DataFrame(data["data"])
-        df = df.rename(columns={"max": "high", "min": "low", "chg"})
-
-        return df[["close", "high", "low"]].dropna()
-
+        required_cols = ["open", "close", "high", "low"]
+        df = df[required_cols].dropna()
+        return df
     except Exception as e:
         print(f"❌ get_stock_data error {stock_id}: {e}")
         return pd.DataFrame()
@@ -355,23 +352,29 @@ def process_stock(s):
         latest, prev = df.iloc[-1], df.iloc[-2]
 
         # 2. 計算漲跌幅與震幅
-        chg = latest["close"] - prev["close"]
-        chgPct = round(
-            ((latest["close"] - prev["close"]) / prev["close"]) * 100, 2)
+        chg = latest["close"] - latest["open"]
+        chgPct = round((chg / prev["close"]) * 100, 2)
         amp = round(
             ((latest["high"] - latest["low"]) / prev["close"]) * 100, 2)
 
         # 3. 呼叫各項分析函式 (結構化資料)
         # EPS 分析回傳: (last_year_eps, ttm_eps, est_eps, per_last, per_ttm, per_est)
-        eps_res = get_eps_analysis(s["stock_id"], latest["close"])
+        #   eps_res = get_eps_analysis(s["stock_id"], latest["close"])
+        eps_res = get_eps_analysis(s["stock_id"], latest["close"]) or (None,)*6
 
         # 獲取毛利與淨利率
-        gm, om, nm = get_profit_ratio(s["stock_id"]) or (None, None, None)
+        #   gm, om, nm = get_profit_ratio(s["stock_id"]) or (None, None, None)
+        # 毛利率（避免 0 被吃掉）
+        profit_res = get_profit_ratio(s["stock_id"])
+        if profit_res is None:
+            gm, om, nm = None, None, None
+        else:
+            gm, om, nm = profit_res
 
         # 獲取殖利率
         yield_pct = get_dividend_yield(s["stock_id"], latest["close"])
 
-        # 獲取均線與乖離率 (修正變數命名不一致問題)
+        # 獲取均線與乖離率
         ma_stats = get_MABias(df)
 
         # 4. 策略邏輯判斷
