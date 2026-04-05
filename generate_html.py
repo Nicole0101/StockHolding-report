@@ -7,8 +7,6 @@ from data import get_full_stock_analysis  # 確保 data.py 已準備好
 # ========================
 # 1️⃣ 工具函數：資料結構化整理
 # ========================
-
-
 def format_output(results):
     results = [r for r in results if r and r.get("price")]
 

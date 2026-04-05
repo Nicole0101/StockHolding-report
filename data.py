@@ -32,7 +32,7 @@ def get_stock_data(stock_id):
             return pd.DataFrame()
         df = pd.DataFrame(data["data"])
         required_cols = ["open", "close", "max", "min"]
-        print(df.head())
+        #   print(df.head())
         df = df[required_cols].dropna()
         return df
     except Exception as e:
@@ -152,8 +152,7 @@ def get_eps_analysis(stock_id, current_price):
         per_last = calc_per(current_price, last_Y_eps)
         per_ttm = calc_per(current_price, ttm_eps)
         per_est = calc_per(current_price, est_eps)
-        print("股票: ", stock_id, "EPS: ", last_Y_eps, ttm_eps, est_eps,
-              "PER", per_last, per_ttm, per_est)
+        #   print("股票: ", stock_id, "EPS: ", last_Y_eps, ttm_eps, est_eps,"PER", per_last, per_ttm, per_est)
         #   return last_Y_eps, ttm_eps, est_eps, per_last, per_ttm, per_est
     except Exception as e:
         print(f"❌ EPS/PER 分析錯誤 {stock_id}: {e}")
@@ -341,8 +340,6 @@ def get_MABias(df):
 # ========================
 # 5️⃣ 單支股票分析
 # ========================
-
-
 def process_stock(s):
     try:
         # 1. 基礎資料獲取與技術指標計算
@@ -426,8 +423,6 @@ def process_stock(s):
 # ========================
 # 6️⃣ 全部股票
 # ========================
-
-
 def get_full_stock_analysis(stock_list):
     results = []
 
