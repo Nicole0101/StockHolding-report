@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>台股技術分析報告</title>
+<title>(持股)台股技術分析報告</title>
 
 <style>
 body { background:#0d1117; color:#e6edf3; font-family:Arial; }
@@ -71,7 +71,7 @@ th, td {
 
 <div class="container">
 
-<h2>📊 台股技術分析報告</h2>
+<h2>(持股)台股技術分析報告</h2>
 
 <div class="summary">
   <div class="box buy"><b id="buyCount"></b><br>反彈</div>
@@ -87,14 +87,22 @@ th, td {
 <th>名稱</th>
 <th>代碼</th>
 <th>價格</th>
+<th>漲跌</th>
 <th>漲跌%</th>
 <th>震幅%</th>
+<th>去年EPS</th>
+<th>估EPS</th>
 <th>毛利率</th>
+<th>營益率</th>
 <th>淨利率</th>
-<th>TTM EPS</th>
-<th>預估EPS</th>
+<th>殖利率</th>
+<th>本益比</th>
 <th>KD</th>
 <th>布林</th>
+<th>Bias6</th>
+<th>Bias18</th>
+<th>Bias50</th>
+<th>訊號</th>
 <th>策略</th>
 </tr>
 </thead>
@@ -110,8 +118,8 @@ const stocks = {{ stocks | tojson }};
 
 <script>
 function kdColor(k){
-  if(k > 70) return "#f85149";
-  if(k < 30) return "#3fb950";
+  if(k > 75) return "#f85149";
+  if(k < 25) return "#3fb950";
   return "#d29922";
 }
 
@@ -131,39 +139,38 @@ function renderRow(s){
   <tr>
     <td class="name">${s.name}</td>
     <td>${s.code}</td>
-    <td>${s.price ?? "-"}</td>
+    <td>${s.price}</td>
 
-    <td class="${chgClass}">
-      ${chgSign}${s.chgPct ?? 0}%
-    </td>
+    <td class="${chgClass}">${chgSign}${s.chg}</td>
+    <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
 
-    <td>${s.amp ?? "-"}%</td>
-
-    <td>${s.gross_margin ?? "-"}%</td>
-    <td>${s.net_margin ?? "-"}%</td>
-
-    <td>${s.ttm_eps ?? "-"}</td>
+    <td>${s.amp ?? 0}%</td>
+    
+    <td>${s.eps_last ?? "-"}</td>
+    <td class="${distClass(s.gross_margin)}">${s.gross_margin ?? ""}%</td>
+    <td class="${distClass(s.op_margin)}">${s.op_margin ?? ""}%</td>
+    <td class="${distClass(s.net_margin)}">${s.net_margin ?? ""}%</td>
     <td>${s.est_eps ?? "-"}</td>
-
-    <td>
-      ${s.k ?? "-"}
-      <div class="kd-bar">
-        <div class="kd-dot"
-          style="left:${s.k ?? 50}%; background:${kdColor(s.k ?? 50)}">
-        </div>
+    <td>${s.yield != null ? s.yield + "%" : "-"}</td>
+    <td>${s.per ?? "-"}</td>    
+    <td>${s.k}/${s.d}
+        <div class="kd-bar">
+        <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
       </div>
     </td>
-
     <td>
-      ${s.bb ?? "-"}
+      ${s.bb}
       <div class="bb-bar">
-        <div class="bb-dot"
-          style="left:${bbPosition(s.bb)}%; background:#58a6ff">
-        </div>
+        <div class="bb-dot" style="left:${bbPosition(s.bb)}%; background:#58a6ff"></div>
       </div>
     </td>
 
-    <td>${s.strategy ?? "-"}</td>
+    <!-- 乖離率 -->
+    <td class="${distClass(s.bias6)}">${s.bias6 ?? ""}%</td>
+    <td class="${distClass(s.bias18)}">${s.bias18 ?? ""}%</td>
+    <td class="${distClass(s.bias50)}">${s.bias50 ?? ""}%</td>
+    <td><span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
+    <td>${s.strategy}</td>
   </tr>
   `;
 }
