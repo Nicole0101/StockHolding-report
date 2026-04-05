@@ -1,13 +1,14 @@
 import requests
 import pandas as pd
 import os
+import logging
 from datetime import datetime, timedelta
 from FinMind.data import DataLoader
 
 API_TOKEN = os.getenv("FINMIND_TOKEN")
 api_url = "https://api.finmindtrade.com/api/v4/data"
 api = DataLoader()
-
+logging.getLogger('FinMind').setLevel(logging.WARNING)
 
 # ========================
 # 1️⃣ 價格資料
@@ -149,7 +150,8 @@ def get_eps_analysis(stock_id, current_price):
         per_last = calc_per(current_price, last_Y_eps)
         per_ttm = calc_per(current_price, ttm_eps)
         per_est = calc_per(current_price, est_eps)
-        print("EPS; ",last_Y_eps, ttm_eps, est_eps,"PER",per_last, per_ttm, per_est)
+        print("EPS; ", last_Y_eps, ttm_eps, est_eps,
+              "PER", per_last, per_ttm, per_est)
         return last_Y_eps, ttm_eps, est_eps, per_last, per_ttm, per_est
     except Exception as e:
         print(f"❌ EPS/PER 分析錯誤 {stock_id}: {e}")

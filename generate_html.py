@@ -90,7 +90,7 @@ def main():
     if branch == "main":
         file_url = f"https://{user}.github.io/{repo_name}/{filename}"
     else:
-        file_url = f"https://github.com/{user}/{repo}/blob/{branch}/{filename}"
+        file_url = f"https://github.com/{user}/{repo_name}/blob/{branch}/{filename}"
 
     # 4. 渲染 HTML (修正了您原本多出的括號錯誤)
     try:
