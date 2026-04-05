@@ -355,7 +355,7 @@ def process_stock(s):
         latest, prev = df.iloc[-1], df.iloc[-2]
 
         # 2. 計算漲跌幅與震幅
-        chg = latest["close"] - latest["open"]
+        chg = latest["close"] - prev["close"]
         chgPct = round(
             ((latest["close"] - prev["close"]) / prev["close"]) * 100, 2)
         amp = round(
@@ -388,6 +388,7 @@ def process_stock(s):
             "name": s["name"][:3],
             "code": s["stock_id"],
             "price": round(latest["close"], 2),
+            "chg": round(chg, 2),
             "chgPct": chgPct,
             "amp": amp,
             "gross_margin": gm,
