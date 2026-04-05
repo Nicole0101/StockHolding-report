@@ -7,8 +7,6 @@ from data import get_full_stock_analysis  # 確保 data.py 已準備好
 # ========================
 # 1️⃣ 工具函數：資料結構化整理
 # ========================
-
-
 def format_output(results):
     """將原始分析結果進行過濾、評分與多維度排序"""
     # 1. 過濾掉無效資料

@@ -61,11 +61,10 @@ def get_profit_ratio(stock_id):
         print(f"❌ profit error {stock_id}: {e}")
         return None, None, None
 
+
 # ========================
 # 3️⃣ EPS
 # ========================
-
-
 def get_eps_analysis(stock_id, current_price):
     """從 EPS 產出三個值，並計算對應的 PER (本益比)，回傳: (去年EPS, TTM_EPS, 預估今年EPS, 去年PER, TTM_PER, 預估PER)    """
     try:
@@ -107,19 +106,40 @@ def get_eps_analysis(stock_id, current_price):
                     last_Y_eps = round(q4["value"].iloc[-1], 2)
 
         # --- B. 近四季 TTM EPS ---
-        eps_df = api.taiwan_stock_eps(stock_id=stock_id)
-        if not eps_df.empty:
-            eps_df = eps_df.sort_values("date", ascending=False).head(4)
-            ttm_eps = round(eps_df["eps"].sum(), 2)
+        ttm_eps = None
+        eps_data = df.sort_values("date", ascending=False).drop_duplicates(
+            ["year", "season"]
+        ).head(4)
+        if len(eps_data) >= 4:
+            ttm_eps = round(eps_data["value"].sum(), 2)
 
         # --- C. 推估今年 EPS (TTM * 營收成長率) ---
+        est_eps = None
         if ttm_eps:
-            rev = api.taiwan_stock_month_revenue(stock_id=stock_id)
-            if not rev.empty:
-                rev["YoY"] = rev["revenue"].pct_change(12)
-                growth = rev.sort_values("date").tail(3)["YoY"].mean()
-                growth = growth if pd.notna(growth) else 0
-                est_eps = round(ttm_eps * (1 + growth), 2)
+            try:
+                rev_params = {
+                    "dataset": "TaiwanStockMonthRevenue",
+                    "data_id": str(stock_id),
+                    "start_date": start_date,
+                    "token": API_TOKEN
+                }
+                rev_res = requests.get(api_url, params=rev_params)
+                rev_data = rev_res.json().get("data", [])
+
+                if rev_data:
+                    rev_df = pd.DataFrame(rev_data)
+                    rev_df["date"] = pd.to_datetime(rev_df["date"])
+                    rev_df["revenue"] = pd.to_numeric(
+                        rev_df["revenue"], errors="coerce")
+
+                    rev_df = rev_df.sort_values("date")
+                    rev_df["YoY"] = rev_df["revenue"].pct_change(12)
+                    growth = rev_df.tail(3)["YoY"].mean()
+                    growth = growth if pd.notna(growth) else 0
+                    est_eps = round(ttm_eps * (1 + growth), 2)
+
+            except Exception as e:
+                print(f"⚠️ 營收成長率計算失敗 {stock_id}: {e}")
 
         # 2. 計算三種 PER (本益比 = 股價 / EPS)
         def calc_per(price, eps):
