@@ -32,6 +32,7 @@ def get_stock_data(stock_id):
             return pd.DataFrame()
         df = pd.DataFrame(data["data"])
         required_cols = ["open", "close", "max", "min"]
+        print(df.head())
         df = df[required_cols].dropna()
         return df
     except Exception as e:
@@ -355,7 +356,7 @@ def process_stock(s):
         chg = latest["close"] - latest["open"]
         chgPct = round((chg / prev["close"]) * 100, 2)
         amp = round(
-            ((latest["high"] - latest["low"]) / prev["close"]) * 100, 2)
+            ((latest["max"] - latest["min"]) / prev["close"]) * 100, 2)
 
         # 3. 呼叫各項分析函式 (結構化資料)
         # EPS 分析回傳: (last_year_eps, ttm_eps, est_eps, per_last, per_ttm, per_est)
