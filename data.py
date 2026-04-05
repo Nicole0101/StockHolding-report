@@ -149,6 +149,7 @@ def get_eps_analysis(stock_id, current_price):
         per_last = calc_per(current_price, last_Y_eps)
         per_ttm = calc_per(current_price, ttm_eps)
         per_est = calc_per(current_price, est_eps)
+        print("EPS; ",last_Y_eps, ttm_eps, est_eps,"PER",per_last, per_ttm, per_est)
         return last_Y_eps, ttm_eps, est_eps, per_last, per_ttm, per_est
     except Exception as e:
         print(f"❌ EPS/PER 分析錯誤 {stock_id}: {e}")

@@ -7,6 +7,8 @@ from data import get_full_stock_analysis  # 確保 data.py 已準備好
 # ========================
 # 1️⃣ 工具函數：資料結構化整理
 # ========================
+
+
 def format_output(results):
     """將原始分析結果進行過濾、評分與多維度排序"""
     # 1. 過濾掉無效資料
@@ -67,6 +69,7 @@ def main():
 
     print("🚀 開始分析股票...")
     results = get_full_stock_analysis(stock_list)
+    print("results: ", results)
 
     if not results:
         print("⚠️ 無分析結果")
@@ -83,7 +86,11 @@ def main():
     # 3. 設定 GitHub Pages 連結
     user = "nicole0101"
     repo_name = "StockHolding-report"
-    file_url = f"https://{user}.github.io/{repo_name}/{filename}"
+    branch = os.getenv("GITHUB_REF_NAME", "main")
+    if branch == "main":
+        file_url = f"https://{user}.github.io/{repo_name}/{filename}"
+    else:
+        file_url = f"https://github.com/{user}/{repo}/blob/{branch}/{filename}"
 
     # 4. 渲染 HTML (修正了您原本多出的括號錯誤)
     try:
