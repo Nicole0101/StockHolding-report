@@ -124,16 +124,18 @@ th, td {
 <th>去年EPS</th>
 <th>估EPS</th>
 <th>
-  <div>毛利率%</div>
-  <div>QoQ YoY</div>
+  毛利率%<br>
+  <small>QoQ YoY</small>
 </th>
+
 <th>
-  <div>營益率%</div>
-  <div>QoQ YoY</div>
+  營益率%<br>
+  <small>QoQ YoY</small>
 </th>
+
 <th>
-  <div>淨利率%</div>
-  <div>QoQ YoY</div>
+  淨利率%<br>
+  <small>QoQ YoY</small>
 </th>
 <th>殖利率</th>
 <th>本益比</th>
@@ -169,11 +171,18 @@ function renderMetric(value, qoq, yoy) {
   };
 
   return `
-    <div class="metric">
-      <div class="main">${fmt(value)}</div>
-      <div class="sub">
-        <span class="${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</span>
-        <span class="${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</span>
+    <div>
+      <div style="font-size:14px;font-weight:bold;">
+        ${fmt(value)}
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:6px; font-size:11px;">
+        <small class="${colorClass(qoq)}">
+          ${arrow(qoq)}${fmt(qoq)}
+        </small>
+        <small class="${colorClass(yoy)}">
+          ${arrow(yoy)}${fmt(yoy)}
+        </small>
       </div>
     </div>
   `;

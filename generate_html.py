@@ -83,7 +83,7 @@ def main():
 
     # 3. 設定 GitHub Pages 連結
     user = "nicole0101"
-    repo_name = "StockHolding-report"
+    repo_name = os.getenv("GITHUB_REPOSITORY", "nicole0101/StockHolding-report")
     branch = os.getenv("GITHUB_REF_NAME", "main")
     if branch == "main":
         file_url = f"https://{user}.github.io/{repo_name}/{filename}"
