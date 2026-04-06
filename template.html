@@ -150,8 +150,10 @@ function renderRow(s){
     <td>${s.eps_Y ?? "-"}</td>
 
     <td>
-      <small style="color: gray;">TTM:</small> ${s.eps_ttm ?? "-"} <br>
-      <small style="color: blue;">預估:</small> ${s.eps_est ?? "-"}
+      //<small style="color: gray;">TTM:</small> ${s.eps_ttm ?? "-"} <br>
+      //<small style="color: gray;">預估:</small> ${s.eps_est ?? "-"}
+      <small>TTM:</small> ${s.eps_ttm ?? "-"} <br>
+      <small>預估:</small> ${s.eps_est ?? "-"}
     </td>
 
     <td class="${distClass(s.gross_margin)}">${s.gross_margin ?? ""}%</td>
