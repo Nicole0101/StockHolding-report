@@ -2,6 +2,7 @@ import logging
 import requests
 import pandas as pd
 import os
+from loguru import logger
 from datetime import datetime, timedelta
 from FinMind.data import DataLoader
 
@@ -10,7 +11,9 @@ api_url = "https://api.finmindtrade.com/api/v4/data"
 api = DataLoader()
 
 # 停用所有來自 FinMind 的 Log 訊息
+logger.remove()
 logging.getLogger('FinMind').setLevel(logging.WARNING)
+
 
 # ========================
 # 1️⃣ 價格資料
@@ -407,7 +410,7 @@ def process_stock(s):
         bb_pct = None
         if pd.notna(bb_upper) and pd.notna(bb_lower) and bb_upper != bb_lower:
             bb_pct = round((close - bb_lower) / (bb_upper - bb_lower) * 100, 1)
-            
+
         strategy = (
             "反彈🔥" if amp > 5 and k < 30 else
             "出貨⚠" if amp > 5 and k > 70 else
