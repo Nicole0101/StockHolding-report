@@ -34,6 +34,7 @@ def get_stock_data(stock_id):
         required_cols = ["open", "close", "max", "min"]
         print(df.head())
         df = df[required_cols].dropna()
+        print("df:", df)
         return df
     except Exception as e:
         print(f"❌ get_stock_data error {stock_id}: {e}")
