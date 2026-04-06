@@ -53,12 +53,17 @@ def get_profit_ratio(stock_id):
         df = df.sort_values("date")
         latest = df.groupby("type").last()["value"]
         revenue = latest.get("Revenue", 0)
+        GrossProfit = latest.get("GrossProfit", 0)
+        OperatingIncome = latest.get("OperatingIncome")
+        IncomeAfterTaxes = latest.get("IncomeAfterTaxes", 0)
+        print("stock_id:", stock_id, "Revenue", revenue,
+              GrossProfit, OperatingIncome, IncomeAfterTaxes)
         if revenue == 0:
             return None, None, None
         return (
-            round(latest.get("GrossProfit", 0) / revenue * 100, 2),
-            round(latest.get("OperatingIncome", 0) / revenue * 100, 2),
-            round(latest.get("IncomeAfterTaxes", 0) / revenue * 100, 2),
+            round(GrossProfit / revenue * 100, 2),
+            round(OperatingIncome / revenue * 100, 2),
+            round(IncomeAfterTaxes / revenue * 100, 2),
         )
     except Exception as e:
         print(f"❌ profit error {stock_id}: {e}")
@@ -68,14 +73,21 @@ def get_profit_ratio(stock_id):
 # ========================
 # 3️⃣ EPS
 # ========================
+
+
 def get_eps_analysis(stock_id, current_price):
-    """從 EPS 產出三個值，並計算對應的 PER (本益比)，回傳: (去年EPS, TTM_EPS, 預估今年EPS, 去年PER, TTM_PER, 預估PER)    """
+    """
+    回傳: (去年EPS, TTM_EPS, 預估今年EPS, 去年PER, TTM_PER, 預估PER)
+    """
+    # 初始化回傳值
+    last_Y_eps, ttm_eps, est_eps = None, None, None
+    per_last, per_ttm, per_est = None, None, None
+
     try:
-        # 1. 取得財報資料 (設定從兩年前開始抓，確保資料完整)
-        start_date = (datetime.now() - timedelta(days=365*2)
+        # 1. 取得財報資料 (拉長到 3 年確保 TTM 計算完整)
+        start_date = (datetime.now() - timedelta(days=365*3)
                       ).strftime("%Y-%m-%d")
 
-        # 取得年度/季度財報 (用於計算去年全年)
         params = {
             "dataset": "TaiwanStockFinancialStatements",
             "data_id": str(stock_id),
@@ -85,77 +97,82 @@ def get_eps_analysis(stock_id, current_price):
         res = requests.get(api_url, params=params)
         data = res.json().get("data", [])
 
-        last_Y_eps = None
-        ttm_eps = None
-        est_eps = None
+        if not data:
+            print(f"⚠️ {stock_id} 無財報資料")
+            return None, None, None, None, None, None
 
-        if data:
-            df = pd.DataFrame(data)
-            df = df[df["type"] == "EPS"]
-            df["date"] = pd.to_datetime(df["date"])
-            df["year"] = df["date"].dt.year
-            df["season"] = df["date"].dt.quarter
-            df["value"] = pd.to_numeric(df["value"], errors="coerce")
+        df = pd.DataFrame(data)
+        # 過濾 EPS 資料 (FinMind 中通常標註為 'EPS')
+        df = df[df["type"] == "EPS"].copy()
+        df["date"] = pd.to_datetime(df["date"])
+        df["value"] = pd.to_numeric(df["value"], errors="coerce")
+        df = df.sort_values("date")
 
-            # --- A. 去年全年 EPS ---
-            last_year = datetime.now().year - 1
-            df_last = df[df["year"] == last_year].drop_duplicates(
-                ["year", "season"], keep="last")
-            if df_last["season"].nunique() >= 4:
-                last_Y_eps = round(df_last["value"].sum(), 2)
-            else:
-                q4 = df_last[df_last["season"] == 4]
-                if not q4.empty and q4["value"].iloc[-1] > 4:  # 判斷是否為累計值
-                    last_Y_eps = round(q4["value"].iloc[-1], 2)
+        # --- 重要：將累計 EPS 轉換為單季 EPS ---
+        # 台灣財報 Q1=Q1, Q2=Q1+Q2, Q3=Q1+Q2+Q3, Q4=全年
+        df["year"] = df["date"].dt.year
+        df["quarter"] = df["date"].dt.quarter
+
+        # 計算單季值：如果是同一年，後一季減去前一季
+        df["single_eps"] = df.groupby(
+            "year")["value"].diff().fillna(df["value"])
+
+        # --- A. 去年全年 EPS ---
+        last_year = datetime.now().year - 1
+        # 直接抓去年 Q4 的累計值，那就是全年 EPS
+        df_last_q4 = df[(df["year"] == last_year) & (df["quarter"] == 4)]
+        if not df_last_q4.empty:
+            last_Y_eps = round(df_last_q4["value"].iloc[-1], 2)
+        else:
+            # 如果還沒出 Q4，就用現有的加總 (非累計法)
+            last_Y_eps = round(df[df["year"] == last_year]
+                               ["single_eps"].sum(), 2)
 
         # --- B. 近四季 TTM EPS ---
-        ttm_eps = None
-        eps_data = df.sort_values("date", ascending=False).drop_duplicates(
-            ["year", "season"]
-        ).head(4)
-        if len(eps_data) >= 4:
-            ttm_eps = round(eps_data["value"].sum(), 2)
+        # 取最後四筆單季 EPS 加總
+        if len(df) >= 4:
+            ttm_eps = round(df["single_eps"].tail(4).sum(), 2)
 
-        # --- C. 推估今年 EPS (TTM * 營收成長率) ---
-        est_eps = None
-        if ttm_eps:
-            try:
-                rev_params = {
-                    "dataset": "TaiwanStockMonthRevenue",
-                    "data_id": str(stock_id),
-                    "start_date": start_date,
-                    "token": API_TOKEN
-                }
-                rev_res = requests.get(api_url, params=rev_params)
-                rev_data = rev_res.json().get("data", [])
+        # --- C. 推估今年 EPS (使用營收 YoY 修正) ---
+        try:
+            rev_params = {
+                "dataset": "TaiwanStockMonthRevenue",
+                "data_id": str(stock_id),
+                "start_date": (datetime.now() - timedelta(days=365*2)).strftime("%Y-%m-%d"),
+                "token": API_TOKEN
+            }
+            rev_res = requests.get(api_url, params=rev_params)
+            rev_data = rev_res.json().get("data", [])
 
-                if rev_data:
-                    rev_df = pd.DataFrame(rev_data)
-                    rev_df["date"] = pd.to_datetime(rev_df["date"])
-                    rev_df["revenue"] = pd.to_numeric(
-                        rev_df["revenue"], errors="coerce")
+            if rev_data and ttm_eps:
+                rev_df = pd.DataFrame(rev_data)
+                rev_df["revenue"] = pd.to_numeric(
+                    rev_df["revenue"], errors="coerce")
+                # 計算近三個月平均營收年增率
+                # 假設資料已有 'revenue' 且按日期排序
+                rev_df = rev_df.sort_values("date")
+                # FinMind 營收資料通常有現成的 YoY，若無則手動計算
+                rev_df["YoY"] = rev_df["revenue"].pct_change(12)
+                growth = rev_df["YoY"].tail(3).mean()
 
-                    rev_df = rev_df.sort_values("date")
-                    rev_df["YoY"] = rev_df["revenue"].pct_change(12)
-                    growth = rev_df.tail(3)["YoY"].mean()
-                    growth = growth if pd.notna(growth) else 0
+                if pd.notna(growth):
                     est_eps = round(ttm_eps * (1 + growth), 2)
+                else:
+                    est_eps = ttm_eps
+        except Exception as e:
+            print(f"⚠️ 營收計算失敗: {e}")
+            est_eps = ttm_eps
 
-            except Exception as e:
-                print(f"⚠️ 營收成長率計算失敗 {stock_id}: {e}")
-
-        # 2. 計算三種 PER (本益比 = 股價 / EPS)
-        def calc_per(price, eps):
-            if eps and eps > 0:
-                return round(price / eps, 2)
-            return None
+        # 2. 計算 PER
+        def calc_per(p, e):
+            return round(p / e, 2) if e and e > 0 else None
         per_last = calc_per(current_price, last_Y_eps)
         per_ttm = calc_per(current_price, ttm_eps)
         per_est = calc_per(current_price, est_eps)
-        #   print("股票: ", stock_id, "EPS: ", last_Y_eps, ttm_eps, est_eps,"PER", per_last, per_ttm, per_est)
-        #   return last_Y_eps, ttm_eps, est_eps, per_last, per_ttm, per_est
+        return last_Y_eps, ttm_eps, est_eps, per_last, per_ttm, per_est
+
     except Exception as e:
-        print(f"❌ EPS/PER 分析錯誤 {stock_id}: {e}")
+        print(f"❌ 錯誤: {e}")
         return None, None, None, None, None, None
 
 
@@ -361,7 +378,7 @@ def process_stock(s):
         # EPS 分析回傳: (last_year_eps, ttm_eps, est_eps, per_last, per_ttm, per_est)
         #   eps_res = get_eps_analysis(s["stock_id"], latest["close"])
         eps_res = get_eps_analysis(s["stock_id"], latest["close"]) or (None,)*6
-        print("stock_id ", "eps_res: ", eps_res)
+        print("stock_id ", stock_id, "eps_res: ", eps_res)
         # 獲取毛利與淨利率
         #   gm, om, nm = get_profit_ratio(s["stock_id"]) or (None, None, None)
         # 毛利率（避免 0 被吃掉）
