@@ -18,8 +18,6 @@ logging.getLogger('FinMind').setLevel(logging.WARNING)
 # ========================
 # 1️⃣ 價格資料
 # ========================
-
-
 def get_stock_data(stock_id):
     try:
         params = {
@@ -35,9 +33,8 @@ def get_stock_data(stock_id):
             return pd.DataFrame()
         df = pd.DataFrame(data["data"])
         required_cols = ["open", "close", "max", "min"]
-        #   print(df.head())
         df = df[required_cols].dropna()
-        #   print("df:", df)
+        print("df:", df)
         return df
     except Exception as e:
         print(f"❌ get_stock_data error {stock_id}: {e}")
@@ -92,96 +89,83 @@ def get_eps_analysis(stock_id, current_price):
     per_last, per_ttm, per_est = None, None, None
 
     try:
-        # 1. 取得財報資料 (拉長到 3 年確保 TTM 計算完整)
-        start_date = (datetime.now() - timedelta(days=365*3)
-                      ).strftime("%Y-%m-%d")
-
+        url = "https://api.finmindtrade.com/api/v4/data"
         params = {
             "dataset": "TaiwanStockFinancialStatements",
-            "data_id": str(stock_id),
-            "start_date": start_date,
+            "data_id": stock_id,
+            "start_date": "2020-01-01",  # ⬅️ 至少抓3年以上
             "token": API_TOKEN
         }
-        res = requests.get(api_url, params=params)
-        data = res.json().get("data", [])
 
+        data = requests.get(url, params=params).json().get("data", [])
         if not data:
-            print(f"⚠️ {stock_id} 無財報資料")
-            return None, None, None, None, None, None
+            return None
 
         df = pd.DataFrame(data)
-        # 過濾 EPS 資料 (FinMind 中通常標註為 'EPS')
-        df = df[df["type"] == "EPS"].copy()
+        df = df[df["type"] == "EPS"]
+
+        if df.empty:
+            return None
+
+        # ===== 基本整理 =====
         df["date"] = pd.to_datetime(df["date"])
-        df["value"] = pd.to_numeric(df["value"], errors="coerce")
-        df = df.sort_values("date")
-
-        # --- 重要：將累計 EPS 轉換為單季 EPS ---
-        # 台灣財報 Q1=Q1, Q2=Q1+Q2, Q3=Q1+Q2+Q3, Q4=全年
         df["year"] = df["date"].dt.year
-        df["quarter"] = df["date"].dt.quarter
+        df["season"] = df["date"].dt.quarter
+        df["value"] = pd.to_numeric(df["value"], errors="coerce")
 
-        # 計算單季值：如果是同一年，後一季減去前一季
-        df["single_eps"] = df.groupby(
-            "year")["value"].diff().fillna(df["value"])
+        # 去重（同一季只留最新）
+        df = df.sort_values("date").drop_duplicates(
+            ["year", "season"], keep="last"
+        )
 
-        # --- A. 去年全年 EPS ---
+        # ===== eps_last：去年全年 =====
         last_year = datetime.now().year - 1
-        # 直接抓去年 Q4 的累計值，那就是全年 EPS
-        df_last_q4 = df[(df["year"] == last_year) & (df["quarter"] == 4)]
-        if not df_last_q4.empty:
-            last_Y_eps = round(df_last_q4["value"].iloc[-1], 2)
-        else:
-            # 如果還沒出 Q4，就用現有的加總 (非累計法)
-            last_Y_eps = round(df[df["year"] == last_year]
-                               ["single_eps"].sum(), 2)
+        df_last = df[df["year"] == last_year]
 
-        # --- B. 近四季 TTM EPS ---
-        # 取最後四筆單季 EPS 加總
-        if len(df) >= 4:
-            ttm_eps = round(df["single_eps"].tail(4).sum(), 2)
+        eps_last = None
+        if df_last["season"].nunique() >= 4:
+            eps_last = round(df_last["value"].sum(), 2)
 
-        # --- C. 推估今年 EPS (使用營收 YoY 修正) ---
-        try:
-            rev_params = {
-                "dataset": "TaiwanStockMonthRevenue",
-                "data_id": str(stock_id),
-                "start_date": (datetime.now() - timedelta(days=365*2)).strftime("%Y-%m-%d"),
-                "token": API_TOKEN
-            }
-            rev_res = requests.get(api_url, params=rev_params)
-            rev_data = rev_res.json().get("data", [])
+        # ===== eps_ttm：最近四季 =====
+        df_sorted = df.sort_values("date")
+        df_ttm = df_sorted.tail(4)
 
-            if rev_data and ttm_eps:
-                rev_df = pd.DataFrame(rev_data)
-                rev_df["revenue"] = pd.to_numeric(
-                    rev_df["revenue"], errors="coerce")
-                # 計算近三個月平均營收年增率
-                # 假設資料已有 'revenue' 且按日期排序
-                rev_df = rev_df.sort_values("date")
-                # FinMind 營收資料通常有現成的 YoY，若無則手動計算
-                rev_df["YoY"] = rev_df["revenue"].pct_change(12)
-                growth = rev_df["YoY"].tail(3).mean()
+        eps_ttm = None
+        if len(df_ttm) == 4:
+            eps_ttm = round(df_ttm["value"].sum(), 2)
 
-                if pd.notna(growth):
-                    est_eps = round(ttm_eps * (1 + growth), 2)
-                else:
-                    est_eps = ttm_eps
-        except Exception as e:
-            print(f"⚠️ 營收計算失敗: {e}")
-            est_eps = ttm_eps
+        # ===== eps_est：三年成長預估 =====
+        yearly_eps = (
+            df.groupby("year")["value"]
+            .sum()
+            .sort_index()
+        )
 
-        # 2. 計算 PER
-        def calc_per(p, e):
-            return round(p / e, 2) if e and e > 0 else None
-        per_last = calc_per(current_price, last_Y_eps)
-        per_ttm = calc_per(current_price, ttm_eps)
-        per_est = calc_per(current_price, est_eps)
-        return last_Y_eps, ttm_eps, est_eps, per_last, per_ttm, per_est
+        eps_est = None
+        if len(yearly_eps) >= 3:
+            last_3 = yearly_eps.tail(3)
+
+            start = last_3.iloc[0]
+            end = last_3.iloc[-1]
+            years = len(last_3) - 1
+
+            if start > 0 and years > 0:
+                cagr = (end / start) ** (1 / years) - 1
+                eps_est = round(end * (1 + cagr), 2)
+
+         # ===== PER =====
+        def calc_per(price, eps):
+            return round(price / eps, 2) if eps and eps > 0 else None
+
+        per_last = calc_per(current_price, eps_last)
+        per_ttm = calc_per(current_price, eps_ttm)
+        per_est = calc_per(current_price, eps_est)
+
+        return eps_last, eps_ttm, eps_est, per_last, per_ttm, per_est
 
     except Exception as e:
         print(f"❌ 錯誤: {e}")
-        return None, None, None, None, None, None
+        return (None,) * 6
 
 
 # ===============================================
