@@ -58,6 +58,11 @@ th, td {
 .bb-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
 .bb-dot { width:6px; height:10px; position:absolute; top:-2px; transform:translateX(-50%); }
 
+.sig { padding:2px 6px; border-radius:4px; font-size:11px; }
+.sig.up { background:#3fb95022; color:#3fb950; }
+.sig.dn { background:#f8514922; color:#f85149; }
+.sig.watch { background:#d2992222; color:#d29922; }
+
 .summary { display:flex; gap:10px; margin-bottom:10px; }
 .box { flex:1; padding:10px; border-radius:8px; text-align:center; }
 .buy { background:#3fb95022; }
@@ -165,16 +170,19 @@ function renderRow(s){
       <small>預估:</small> ${s.per_est ?? "-"}
     </td>
 
-    <td>${s.k}/${s.d}
+    <td>
+      ${s.k}/${s.d}
       <div class="kd-bar">
         <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
       </div>
     </td>
 
     <td>
-      ${s.bb}
+      ${s.bb_pct ?? "-"}%
       <div class="bb-bar">
-        <div class="bb-dot" style="left:${bbPosition(s.bb)}%; background:#58a6ff"></div>
+        <div class="bb-dot"
+         style="left:${s.bb_pct ?? 50}%; background:#58a6ff">
+        </div>
       </div>
     </td>
 
@@ -183,6 +191,7 @@ function renderRow(s){
     <td class="${distClass(s.bias50)}">${s.bias50 ?? ""}%</td>
 
     <td><span class="${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
+        <span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span>
     <td>${s.strategy}</td>
   </tr>`;
 }

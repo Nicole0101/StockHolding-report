@@ -395,12 +395,25 @@ def process_stock(s):
 
         # 4. 策略邏輯判斷
         k = latest["K"] if pd.notna(latest["K"]) else 50
-        D = latest["D"] if pd.notna(latest["D"]) else 50
+        d = latest["D"] if pd.notna(latest["D"]) else 50
+
+        bb_upper = latest["BB_upper"]
+        bb_lower = latest["BB_lower"]
+        close = latest["close"]
+        bb_pct = None
+
+        if pd.notna(bb_upper) and pd.notna(bb_lower) and bb_upper != bb_lower:
+            bb_pct = round((close - bb_lower) / (bb_upper - bb_lower) * 100, 1)
         strategy = (
             "反彈🔥" if amp > 5 and k < 30 else
             "出貨⚠" if amp > 5 and k > 70 else
             "整理" if amp < 2 else
             "觀察"
+        )
+        sig = (
+            1 if k < 30 else
+            -1 if k > 70 else
+            0
         )
 
         # 5. 回傳結構化字典
@@ -425,15 +438,11 @@ def process_stock(s):
             "per_est": eps_res[5] if eps_res[5] is not None else "-",
             "per_estcombined": f"{eps_res[3] if eps_res[3] is not None else '-'} / {eps_res[4] if eps_res[4] is not None else '-'}/ {eps_res[5] if eps_res[5] is not None else '-'}",
             "k": round(k, 1),
-            "D": round(D, 1),
-            "bb": (
-                "上軌" if latest["close"] > latest["BB_upper"] else
-                "下軌" if latest["close"] < latest["BB_lower"] else
-                "中軌"
-            ),
+            "d": round(d, 1),
+            "bb_pct": bb_pct,
             # 自動展開 ma6, bias6, ma18, bias18, ma50, bias50 等欄位
             **ma_stats,
-            "sig": "buy" if k < 30 else "sell" if k > 70 else "hold",
+            "sig": sig,
             "strategy": strategy
         }
 
