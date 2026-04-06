@@ -25,7 +25,7 @@ def format_output(results):
         p = r.get("per_est") if isinstance(
             r.get("per_est"), (int, float)) else 0
 
-        r["score"] = round((y * 2) + (e * 0.5) - (p * 0.3), 2)
+        #   r["score"] = round((y * 2) + (e * 0.5) - (p * 0.3), 2)
 
     sorted_by_score = sorted(results, key=lambda x: x["score"], reverse=True)
     sorted_by_chg = sorted(results, key=lambda x: x["chgPct"], reverse=True)
