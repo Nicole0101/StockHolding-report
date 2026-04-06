@@ -340,6 +340,8 @@ def get_MABias(df):
 # ========================
 # 5️⃣ 單支股票分析
 # ========================
+
+
 def process_stock(s):
     try:
         # 1. 基礎資料獲取與技術指標計算
@@ -359,7 +361,7 @@ def process_stock(s):
         # EPS 分析回傳: (last_year_eps, ttm_eps, est_eps, per_last, per_ttm, per_est)
         #   eps_res = get_eps_analysis(s["stock_id"], latest["close"])
         eps_res = get_eps_analysis(s["stock_id"], latest["close"]) or (None,)*6
-
+        print("stock_id ", "eps_res: ", eps_res)
         # 獲取毛利與淨利率
         #   gm, om, nm = get_profit_ratio(s["stock_id"]) or (None, None, None)
         # 毛利率（避免 0 被吃掉）
@@ -368,7 +370,7 @@ def process_stock(s):
             gm, om, nm = None, None, None
         else:
             gm, om, nm = profit_res
-
+        print("stock_id ", "profit_res: ", profit_res)
         # 獲取殖利率
         yield_pct = get_dividend_yield(s["stock_id"], latest["close"])
 
@@ -423,6 +425,8 @@ def process_stock(s):
 # ========================
 # 6️⃣ 全部股票
 # ========================
+
+
 def get_full_stock_analysis(stock_list):
     results = []
 
