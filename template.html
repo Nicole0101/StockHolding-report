@@ -75,16 +75,13 @@ th, td {
   line-height: 1.2;
 }
 
-.metric .main {
-  font-size: 16px;
-  font-weight: bold;
+..metric-main {
+  font-size: 12px;
+  font-weight: normal;
 }
 
-.metric .sub {
-  font-size: 12px;
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2px;
+.metric-sub {
+  font-size: 11px;
 }
 
 .text-red {
@@ -137,6 +134,7 @@ th, td {
   淨利率%<br>
   <small>QoQ YoY</small>
 </th>
+<th>評分</th>
 <th>殖利率</th>
 <th>本益比</th>
 <th>KD</th>
@@ -169,22 +167,15 @@ function renderMetric(value, qoq, yoy) {
     if (v === null || v === undefined) return "";
     return v > 0 ? "text-red" : v < 0 ? "text-green" : "";
   };
-
   return `
-    <div>
-      <div style="font-size:14px;font-weight:bold;">
-        ${fmt(value)}
-      </div>
-
-      <div style="display:flex; justify-content:center; gap:6px; font-size:11px;">
-        <small class="${colorClass(qoq)}">
-          ${arrow(qoq)}${fmt(qoq)}
-        </small>
-        <small class="${colorClass(yoy)}">
-          ${arrow(yoy)}${fmt(yoy)}
-        </small>
-      </div>
+   
+  <div class="metric">
+    <div class="metric-main">${fmt(value)}</div>
+    <div class="metric-sub">
+      <small class="${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</small>
+      <small class="${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</small>
     </div>
+  </div>
   `;
 }
 
@@ -250,7 +241,7 @@ function renderRow(s){
         s.net_margin_yoy_diff
       )}
     </td>
-
+    <td>${s.score?.score ?? "-"}%</td>
     <td>${s.yield?.yield ?? "-"}%</td>
 
     <td>
