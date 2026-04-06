@@ -97,9 +97,9 @@ th, td {
 <th>震幅%</th>
 <th>去年EPS</th>
 <th>估EPS</th>
-<th>毛利率</th>
-<th>營益率</th>
-<th>淨利率</th>
+<th>毛利率%\nQoQ YoY</th>
+<th>營益率%\nQoQ YoY</th>
+<th>淨利率%\nQoQ YoY</th>
 <th>殖利率</th>
 <th>本益比</th>
 <th>KD</th>
@@ -159,9 +159,9 @@ function renderRow(s){
       <small>預估:</small> ${s.eps_est ?? "-"}
     </td>
 
-    <td class="${distClass(s.gross_margin)}">${s.gross_margin ?? ""}%</td>
-    <td class="${distClass(s.operating_margin)}">${s.operating_margin ?? ""}%</td>
-    <td class="${distClass(s.net_margin)}">${s.net_margin ?? ""}%</td>
+    <td class="${distClass(s.gross_margin)}">${s.gross_margin ?? ""}</td>
+    <td class="${distClass(s.operating_margin)}">${s.operating_margin ?? ""}</td>
+    <td class="${distClass(s.net_margin)}">${s.net_margin ?? ""}</td>
 
     <td>${s.yield?.yield ?? "-"}%</td>
 

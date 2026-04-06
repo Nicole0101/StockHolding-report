@@ -507,9 +507,9 @@ def process_stock(s):
             "chgPct": chgPct,
             "amp": amp,
 
-            "gross_margin": f"{fmt(profit_output.get('gross_margin'))} ({fmt(profit_output.get('gross_margin_qoq'))}, {fmt(profit_output.get('gross_margin_yoy_diff'))})",
-            "operating_margin": f"{fmt(profit_output.get('operating_margin'))} ({fmt(profit_output.get('operating_margin_qoq'))}, {fmt(profit_output.get('operating_margin_yoy_diff'))})",
-            "net_margin": f"{fmt(profit_output.get('net_margin'))} ({fmt(profit_output.get('net_margin_qoq'))}, {fmt(profit_output.get('net_margin_yoy_diff'))})",
+            "gross_margin": f"{fmt(profit_output.get('gross_margin'))}\n({fmt(profit_output.get('gross_margin_qoq'))}, {fmt(profit_output.get('gross_margin_yoy_diff'))})",
+            "operating_margin": f"{fmt(profit_output.get('operating_margin'))}\n ({fmt(profit_output.get('operating_margin_qoq'))}, {fmt(profit_output.get('operating_margin_yoy_diff'))})",
+            "net_margin": f"{fmt(profit_output.get('net_margin'))} \n({fmt(profit_output.get('net_margin_qoq'))}, {fmt(profit_output.get('net_margin_yoy_diff'))})",
 
             # EPS 與 PER 相關資料 (從元組中取值)
             "eps_Y": eps_res[0] if eps_res[0] is not None else "-",
