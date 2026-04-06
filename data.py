@@ -44,6 +44,14 @@ def get_stock_data(stock_id):
 # ========================
 # 2️⃣ 財務資料
 # ========================
+def safe_margin(num, denom):
+    num = to_number(num)
+    denom = to_number(denom)
+    if num is None or denom is None or denom <= 0:
+        return None
+    return round(num / denom * 100, 2)
+
+
 def get_profit_ratio(stock_id):
     try:
         df = api.taiwan_stock_financial_statement(
@@ -52,19 +60,17 @@ def get_profit_ratio(stock_id):
         if df.empty:
             return None, None, None
         df = df.sort_values("date")
-        latest = df.groupby("type").last()["value"]
-        revenue = latest.get("Revenue", 0)
-        GrossProfit = latest.get("GrossProfit", 0)
+        latest = df.groupby("type")["value"].last()
+        revenue = latest.get("Revenue")
+        GrossProfit = latest.get("GrossProfit")
         OperatingIncome = latest.get("OperatingIncome")
-        IncomeAfterTaxes = latest.get("IncomeAfterTaxes", 0)
+        IncomeAfterTaxes = latest.get("IncomeAfterTaxes")
         print("財務資料", "Revenue", revenue,
               GrossProfit, OperatingIncome, IncomeAfterTaxes)
-        if revenue == 0:
-            return None, None, None
         return (
-            round(GrossProfit / revenue * 100, 2),
-            round(OperatingIncome / revenue * 100, 2),
-            round(IncomeAfterTaxes / revenue * 100, 2),
+            safe_margin(GrossProfit, revenue),
+            safe_margin(OperatingIncome, revenue),
+            safe_margin(IncomeAfterTaxes, revenue),
         )
     except Exception as e:
         print(f"❌ profit error {stock_id}: {e}")
@@ -74,8 +80,6 @@ def get_profit_ratio(stock_id):
 # ========================
 # 3️⃣ EPS
 # ========================
-
-
 def get_eps_analysis(stock_id, current_price):
     """
     回傳: (去年EPS, TTM_EPS, 預估今年EPS, 去年PER, TTM_PER, 預估PER)
