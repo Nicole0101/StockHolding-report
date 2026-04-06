@@ -7,6 +7,8 @@ from data import get_full_stock_analysis  # 確保 data.py 已準備好
 # ========================
 # 1️⃣ 工具函數：資料結構化整理
 # ========================
+
+
 def format_output(results):
     results = [r for r in results if r and r.get("price")]
 
@@ -53,8 +55,6 @@ def build_strings(data):
 # ========================
 # 2️⃣ 主流程
 # ========================
-
-
 def main():
     # 1. 讀取清單與執行分析
     try:
@@ -68,7 +68,6 @@ def main():
 
     print("🚀 開始分析股票...")
     results = get_full_stock_analysis(stock_list)
-    print("results: ", results)
 
     if not results:
         print("⚠️ 無分析結果")
@@ -112,7 +111,7 @@ def main():
         print(f"✅ HTML 已生成：{filename}")
 
     except Exception as e:
-        print(f"❌ HTML 渲染失敗: {e}")
+        print(f"❌ HTML 生成失敗: {e}")
 
     # 5. 發送 LINE 通知
     send_line_notify(data, file_url)

@@ -114,12 +114,14 @@ th, td {
 
 <script>
 const stocks = {{ stocks | tojson }};
+</script>
 
 function distClass(val) {
   if (!val) return "";
   return val > 0 ? "up" : "dn";
 }
 
+<script>
 function kdColor(k){
   if(k > 75) return "#f85149";
   if(k < 25) return "#3fb950";
@@ -134,12 +136,17 @@ function bbPosition(bb){
 }
 
 function renderRow(s){
+
   const chgClass = s.chgPct >= 0 ? "up":"dn";
   const chgSign = s.chgPct >= 0 ? "+" : "";
+  const yieldVal = (typeof s.yield === 'object' && s.yield !== null) ? s.yield.yield : s.yield;
   const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
   const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
-
-  return `
+  const rebound = stocks.filter(s => s.strategy?.includes("反彈")).length;
+  const sell = stocks.filter(s => s.strategy?.includes("出貨")).length;
+  const watch = stocks.filter(s => s.strategy === "觀察").length;
+  const hold = stocks.filter(s => s.strategy === "整理").length;
+  return 
   <tr>
     <td class="name">${s.name}</td>
     <td>${s.code}</td>
@@ -148,29 +155,34 @@ function renderRow(s){
     <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
     <td>${s.amp ?? 0}%</td>
     <td>${s.eps_Y ?? "-"}</td>
-
+    #    <td>${s.eps_ttm ?? "-"} 
+    #    <td>${s.eps_est ?? "-"} 
+    
+    <td>${s.eps_ttm ?? "-"} / ${s.eps_est ?? "-"}</td>
     <td>
       <small style="color: gray;">TTM:</small> ${s.eps_ttm ?? "-"} <br>
       <small style="color: blue;">預估:</small> ${s.eps_est ?? "-"}
     </td>
 
     <td class="${distClass(s.gross_margin)}">${s.gross_margin ?? ""}%</td>
-    <td class="${distClass(s.op_margin)}">${s.op_margin ?? ""}%</td>
+    <td class="${distClass(s.oerating_Margin)}">${s.op_margin ?? ""}%</td>
     <td class="${distClass(s.net_margin)}">${s.net_margin ?? ""}%</td>
-
+    #    <td>${s.yield != null ? s.yield + "%" : "-"}</td>
     <td>${s.yield?.yield ?? "-"}%</td>
 
+    <td>${s.per_estcombined ?? "-"}</td>    
+    <td>${s.per_ttm ?? "-"} / ${s.per_est ?? "-"}</td>
     <td>
-      <small>TTM:</small> ${s.per_ttm ?? "-"} <br>
-      <small>預估:</small> ${s.per_est ?? "-"}
+      <small style="color: gray;">TTM:</small> ${s.per_ttm ?? "-"} <br>
+      <small style="color: blue;">預估:</small> ${s.per_est ?? "-"}
     </td>
 
+
     <td>${s.k}/${s.d}
-      <div class="kd-bar">
+        <div class="kd-bar">
         <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
       </div>
     </td>
-
     <td>
       ${s.bb}
       <div class="bb-bar">
@@ -178,26 +190,18 @@ function renderRow(s){
       </div>
     </td>
 
+    <!-- 乖離率 -->
     <td class="${distClass(s.bias6)}">${s.bias6 ?? ""}%</td>
     <td class="${distClass(s.bias18)}">${s.bias18 ?? ""}%</td>
     <td class="${distClass(s.bias50)}">${s.bias50 ?? ""}%</td>
-
-    <td><span class="${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
+    <td><span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
     <td>${s.strategy}</td>
   </tr>`;
 }
 
-// ✅ 統計（放外面）
-const rebound = stocks.filter(s => s.strategy?.includes("反彈")).length;
-const sell = stocks.filter(s => s.strategy?.includes("出貨")).length;
-const watch = stocks.filter(s => s.strategy === "觀察").length;
-const hold = stocks.filter(s => s.strategy === "整理").length;
-
-// render
 document.getElementById("stockBody").innerHTML =
   stocks.map(renderRow).join("");
 
-// summary
 document.getElementById("buyCount").innerText = rebound;
 document.getElementById("sellCount").innerText = sell;
 document.getElementById("watchCount").innerText = watch;
