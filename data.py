@@ -32,9 +32,9 @@ def get_stock_data(stock_id):
             return pd.DataFrame()
         df = pd.DataFrame(data["data"])
         required_cols = ["open", "close", "max", "min"]
-        print(df.head())
+        #   print(df.head())
         df = df[required_cols].dropna()
-        print("df:", df)
+        #   print("df:", df)
         return df
     except Exception as e:
         print(f"❌ get_stock_data error {stock_id}: {e}")
@@ -379,7 +379,6 @@ def process_stock(s):
         # EPS 分析回傳: (last_year_eps, ttm_eps, est_eps, per_last, per_ttm, per_est)
         #   eps_res = get_eps_analysis(s["stock_id"], latest["close"])
         eps_res = get_eps_analysis(s["stock_id"], latest["close"]) or (None,)*6
-        print("stock_id ", s["stock_id"], "eps_res: ", eps_res)
         # 獲取毛利與淨利率
         #   gm, om, nm = get_profit_ratio(s["stock_id"]) or (None, None, None)
         # 毛利率（避免 0 被吃掉）
@@ -388,7 +387,8 @@ def process_stock(s):
             gm, om, nm = None, None, None
         else:
             gm, om, nm = profit_res
-        print("stock_id ", "profit_res: ", profit_res)
+        print("stock_id ", s["stock_id"], "eps_res: ", eps_res)
+        print("stock_id ", s["stock_id"], "profit_res: ", profit_res)
         # 獲取殖利率
         yield_pct = get_dividend_yield(s["stock_id"], latest["close"])
 
@@ -413,7 +413,7 @@ def process_stock(s):
             "chgPct": chgPct,
             "amp": amp,
             "gross_margin": gm,
-            "operating_Margin": om,
+            "operating_margin": om,
             "net_margin": nm,
             # EPS 與 PER 相關資料 (從元組中取值)
             "eps_Y": eps_res[0] if eps_res[0] is not None else "-",
