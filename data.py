@@ -32,7 +32,7 @@ def get_stock_data(stock_id):
             return pd.DataFrame()
         df = pd.DataFrame(data["data"])
         required_cols = ["open", "close", "max", "min"]
-        #   print(df.head())
+        print(df.head())
         df = df[required_cols].dropna()
         return df
     except Exception as e:
