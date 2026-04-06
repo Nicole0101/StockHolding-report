@@ -52,34 +52,128 @@ def safe_margin(num, denom):
     return round(num / denom * 100, 2)
 
 
+def calc_diff(a, b):
+    if a is None or b is None:
+        return None
+    return round(a - b, 2)
+
+
+def fmt(v):
+    return "-" if v is None else v
+
+
+def build_output(result):
+    cur = result["current"]
+    prev = result["prev"]
+    yoy = result["yoy"]
+    qoq = result["qoq"]
+    yoy_diff = result["yoy_diff"]
+
+    output = {
+        # ===== 毛利率 =====
+        "gross_margin": cur["gross"],
+        "gross_margin_prev": prev["gross"],
+        "gross_margin_yoy": yoy["gross"],
+        "gross_margin_qoq": qoq["gross"],
+        "gross_margin_yoy_diff": yoy_diff["gross"],
+        "gross_margin_combined": f"{fmt(cur['gross'])} / {fmt(prev['gross'])} / {fmt(yoy['gross'])}",
+
+        # ===== 營益率 =====
+        "operating_margin": cur["op"],
+        "operating_margin_prev": prev["op"],
+        "operating_margin_yoy": yoy["op"],
+        "operating_margin_qoq": qoq["op"],
+        "operating_margin_yoy_diff": yoy_diff["op"],
+        "operating_margin_combined": f"{fmt(cur['op'])} / {fmt(prev['op'])} / {fmt(yoy['op'])}",
+
+        # ===== 淨利率 =====
+        "net_margin": cur["net"],
+        "net_margin_prev": prev["net"],
+        "net_margin_yoy": yoy["net"],
+        "net_margin_qoq": qoq["net"],
+        "net_margin_yoy_diff": yoy_diff["net"],
+        "net_margin_combined": f"{fmt(cur['net'])} / {fmt(prev['net'])} / {fmt(yoy['net'])}",
+    }
+
+    return output
+
+
 def get_profit_ratio(stock_id):
     try:
         df = api.taiwan_stock_financial_statement(
-            stock_id=stock_id, start_date="2023-01-01"
+            stock_id=stock_id,
+            start_date="2022-01-01"  # 至少抓2年以上
         )
+
         if df.empty:
-            return None, None, None
+            return None
+
+        # ===== 基本整理 =====
+        df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values("date")
-        latest = df.groupby("type")["value"].last()
-        revenue = latest.get("Revenue")
-        GrossProfit = latest.get("GrossProfit")
-        OperatingIncome = latest.get("OperatingIncome")
-        IncomeAfterTaxes = latest.get("IncomeAfterTaxes")
-        print("財務資料", "Revenue", revenue,
-              GrossProfit, OperatingIncome, IncomeAfterTaxes)
-        return (
-            safe_margin(GrossProfit, revenue),
-            safe_margin(OperatingIncome, revenue),
-            safe_margin(IncomeAfterTaxes, revenue),
-        )
+
+        # ===== pivot 成每季一列 =====
+        pivot = df.pivot_table(
+            index="date",
+            columns="type",
+            values="value",
+            aggfunc="last"
+        ).sort_index()
+
+        # ===== 只留必要欄位 =====
+        cols = ["Revenue", "GrossProfit",
+                "OperatingIncome", "IncomeAfterTaxes"]
+        pivot = pivot[cols].dropna()
+
+        if len(pivot) < 5:
+            return None
+
+        # ===== 抓三個時間點 =====
+        current = pivot.iloc[-1]       # 本期
+        prev = pivot.iloc[-2]          # 上季
+        yoy = pivot.iloc[-5]           # 去年同期（4季前）
+
+        # ===== 計算三率 =====
+        def calc(row):
+            return {
+                "gross": safe_margin(row["GrossProfit"], row["Revenue"]),
+                "op": safe_margin(row["OperatingIncome"], row["Revenue"]),
+                "net": safe_margin(row["IncomeAfterTaxes"], row["Revenue"]),
+            }
+
+        cur_m = calc(current)
+        prev_m = calc(prev)
+        yoy_m = calc(yoy)
+
+        # ===== QoQ / YoY =====
+        result = {
+            "current": cur_m,
+            "prev": prev_m,
+            "yoy": yoy_m,
+
+            "qoq": {
+                "gross": calc_diff(cur_m["gross"], prev_m["gross"]),
+                "op": calc_diff(cur_m["op"], prev_m["op"]),
+                "net": calc_diff(cur_m["net"], prev_m["net"]),
+            },
+
+            "yoy_diff": {
+                "gross": calc_diff(cur_m["gross"], yoy_m["gross"]),
+                "op": calc_diff(cur_m["op"], yoy_m["op"]),
+                "net": calc_diff(cur_m["net"], yoy_m["net"]),
+            }
+        }
+
+        return result
     except Exception as e:
         print(f"❌ profit error {stock_id}: {e}")
-        return None, None, None
-
+        return None
 
 # ========================
 # 3️⃣ EPS
 # ========================
+
+
 def get_eps_analysis(stock_id, current_price):
     """
     回傳: (去年EPS, TTM_EPS, 預估今年EPS, 去年PER, TTM_PER, 預估PER)
@@ -361,7 +455,7 @@ def process_stock(s):
         latest, prev = df.iloc[-1], df.iloc[-2]
 
         # 2. 計算漲跌幅與震幅
-        chg = latest["close"] - latest["open"]
+        chg = latest["close"] - prev["close"]
         chgPct = round((chg / prev["close"]) * 100, 2)
         amp = round(
             ((latest["max"] - latest["min"]) / prev["close"]) * 100, 2)
@@ -372,10 +466,7 @@ def process_stock(s):
         # 獲取毛利與淨利率
         # 毛利率（避免 0 被吃掉）
         profit_res = get_profit_ratio(s["stock_id"])
-        if profit_res is None:
-            gm, om, nm = None, None, None
-        else:
-            gm, om, nm = profit_res
+        profit_output = build_output(profit_res) if profit_res else {}
         #   print("stock_id ", s["stock_id"], "eps_res: ", eps_res)
         #   print("stock_id ", s["stock_id"], "profit_res: ", profit_res)
         # 獲取殖利率
@@ -415,9 +506,11 @@ def process_stock(s):
             "chg": round(chg, 2),
             "chgPct": chgPct,
             "amp": amp,
-            "gross_margin": gm,
-            "operating_margin": om,
-            "net_margin": nm,
+
+            "gross_margin": f"{fmt(profit_output.get('gross_margin'))} ({fmt(profit_output.get('gross_margin_qoq'))}, {fmt(profit_output.get('gross_margin_yoy_diff'))})",
+            "operating_margin": f"{fmt(profit_output.get('operating_margin'))} ({fmt(profit_output.get('operating_margin_qoq'))}, {fmt(profit_output.get('operating_margin_yoy_diff'))})",
+            "net_margin": f"{fmt(profit_output.get('net_margin'))} ({fmt(profit_output.get('net_margin_qoq'))}, {fmt(profit_output.get('net_margin_yoy_diff'))})",
+
             # EPS 與 PER 相關資料 (從元組中取值)
             "eps_Y": eps_res[0] if eps_res[0] is not None else "-",
             "eps_ttm": eps_res[1] if eps_res[1] is not None else "-",
