@@ -496,9 +496,9 @@ def process_stock(s):
         chg = latest["close"] - latest["open"]
         chgamp = latest["max"] - latest["min"]
         chgPct = round((chg / prev["close"]) * 100, 2)
-        print("stock_id: ", s["stock_id"], s["date"],
+        print("stock_id: ", s["stock_id"],
               "chg: ", latest["close"], prev["open"])
-        print("stock_id: ", s["stock_id"], s["date"],
+        print("stock_id: ", s["stock_id"],
               "chgamp: ", latest["max"], latest["min"])
         amp = round(
             # ((latest["max"] - latest["min"]) / prev["close"]) * 100, 2)
