@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>(持股)台股技術分析報告</title>
+
+<style>
+body { background:#0d1117; color:#e6edf3; font-family:Arial; }
+.container { max-width:1400px; margin:auto; padding:20px; }
+
+.card { 
+  background:#161b22; 
+  border:1px solid #30363d; 
+  border-radius:10px; 
+  padding:15px; 
+  overflow:auto;
+  max-height:600px;
+}
+
+table { 
+  width:100%; 
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:1000px;
+  font-size:12px;
+}
+
+thead th {
+  position:sticky;
+  top:0;
+  background:#1c2330;
+  z-index:10;
+}
+
+thead th:first-child,
+tbody td:first-child {
+  position:sticky;
+  left:0;
+  background:#1c2330;
+  z-index:11;
+}
+
+th, td {
+  padding:8px;
+  border-bottom:1px solid #30363d;
+  border-right:1px solid #30363d;
+}
+
+.name { text-align:left; font-weight:bold; }
+
+.up { color:#f85149; }
+.dn { color:#3fb950; }
+
+.kd-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
+.kd-dot { width:8px; height:8px; border-radius:50%; position:absolute; top:-1px; transform:translateX(-50%); }
+
+.bb-bar { width:80px; height:6px; background:#222; border-radius:3px; margin:auto; position:relative; }
+.bb-dot { width:6px; height:10px; position:absolute; top:-2px; transform:translateX(-50%); }
+
+.sig { padding:2px 6px; border-radius:4px; font-size:11px; }
+.sig.up { background:#3fb95022; color:#3fb950; }
+.sig.dn { background:#f8514922; color:#f85149; }
+.sig.watch { background:#d2992222; color:#d29922; }
+
+.summary { display:flex; gap:10px; margin-bottom:10px; }
+.box { flex:1; padding:10px; border-radius:8px; text-align:center; }
+.buy { background:#3fb95022; }
+.sell { background:#f8514922; }
+.watch { background:#d2992222; }
+.hold { background:#8b949e22; }
+
+.metric {
+  text-align: center;
+  line-height: 1.2;
+}
+
+..metric-main {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.metric-sub {
+  font-size: 11px;
+}
+
+.text-red {
+  color: #ff4d4f;
+}
+
+.text-green {
+  color: #00b050;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>(持股)台股技術分析報告</h2>
+
+<div class="summary">
+  <div class="box buy"><b id="buyCount"></b><br>反彈</div>
+  <div class="box sell"><b id="sellCount"></b><br>出貨</div>
+  <div class="box watch"><b id="watchCount"></b><br>觀察</div>
+  <div class="box hold"><b id="holdCount"></b><br>整理</div>
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+<th>名稱</th>
+<th>代碼</th>
+<th>價格</th>
+<th>漲跌</th>
+<th>漲跌%</th>
+<th>震幅%</th>
+<th>去年EPS</th>
+<th>估EPS</th>
+<th>
+  毛利率%<br>
+  <small>QoQ YoY</small>
+</th>
+
+<th>
+  營益率%<br>
+  <small>QoQ YoY</small>
+</th>
+
+<th>
+  淨利率%<br>
+  <small>QoQ YoY</small>
+</th>
+<th>評分</th>
+<th>殖利率</th>
+<th>本益比</th>
+<th>KD</th>
+<th>布林</th>
+<th>Bias6</th>
+<th>Bias18</th>
+<th>Bias50</th>
+<th>訊號</th>
+<th>策略</th>
+</tr>
+</thead>
+<tbody id="stockBody"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+const stocks = [{"amp": 5.87, "bb_pct": 48.7, "bias18": -1.01, "bias50": -1.3, "bias6": 3.6, "chg": 18.5, "chgPct": 9.87, "code": 3376, "d": 25.8, "eps_Y": 1.66, "eps_est": 1.03, "eps_estcombined": "1.66 / 1.03", "eps_ttm": 1.66, "gross_margin": 11.53, "gross_margin_qoq": -2.07, "gross_margin_yoy_diff": -4.93, "k": 26.6, "ma18": 208.11, "ma50": 208.71, "ma6": 198.83, "name": "\u65b0\u65e5\u8208", "net_margin": 3.3, "net_margin_qoq": -1.07, "net_margin_yoy_diff": -5.81, "operating_margin": -3.62, "operating_margin_qoq": -3.64, "operating_margin_yoy_diff": -9.91, "per_Y": 124.1, "per_est": 200.0, "per_estcombined": "124.1 / 124.1/ 200.0", "per_ttm": 124.1, "price": 206.0, "score": -10.62, "sig": 1, "strategy": "\u53cd\u5f48\ud83d\udd25", "yield": {"dividend": null, "yield": 2.91}}, {"amp": 5.19, "bb_pct": 25.9, "bias18": -7.23, "bias50": -12.23, "bias6": 1.48, "chg": 26.0, "chgPct": 3.14, "code": 2404, "d": 8.7, "eps_Y": 48.08, "eps_est": 66.9, "eps_estcombined": "48.08 / 66.9", "eps_ttm": 48.08, "gross_margin": 17.19, "gross_margin_qoq": -2.99, "gross_margin_yoy_diff": -3.48, "k": 11.2, "ma18": 921.61, "ma50": 974.18, "ma6": 842.5, "name": "\u6f22\u5510", "net_margin": 12.87, "net_margin_qoq": -2.99, "net_margin_yoy_diff": -3.1, "operating_margin": 13.88, "operating_margin_qoq": -2.76, "operating_margin_yoy_diff": -2.98, "per_Y": 17.78, "per_est": 12.78, "per_estcombined": "17.78 / 17.78/ 12.78", "per_ttm": 17.78, "price": 855.0, "score": 16.76, "sig": 1, "strategy": "\u53cd\u5f48\ud83d\udd25", "yield": {"dividend": null, "yield": 4.68}}, {"amp": 1.38, "bb_pct": 60.6, "bias18": 0.87, "bias50": 1.45, "bias6": 2.53, "chg": 50.0, "chgPct": 2.76, "code": 2330, "d": 40.5, "eps_Y": 66.26, "eps_est": 94.84, "eps_estcombined": "66.26 / 94.84", "eps_ttm": 66.26, "gross_margin": 62.33, "gross_margin_qoq": 2.88, "gross_margin_yoy_diff": 3.33, "k": 55.4, "ma18": 1843.89, "ma50": 1833.5, "ma6": 1814.17, "name": "\u53f0\u7a4d\u96fb", "net_margin": 48.31, "net_margin_qoq": 2.67, "net_margin_yoy_diff": 5.19, "operating_margin": 54.0, "operating_margin_qoq": 3.42, "operating_margin_yoy_diff": 4.98, "per_Y": 28.07, "per_est": 19.61, "per_estcombined": "28.07 / 28.07/ 19.61", "per_ttm": 28.07, "price": 1860.0, "score": 36.25, "sig": 0, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 1.18}}, {"amp": 4.95, "bb_pct": 118.1, "bias18": 6.27, "bias50": 7.4, "bias6": 4.56, "chg": 1.3, "chgPct": 2.39, "code": 2891, "d": 69.1, "eps_Y": 4.08, "eps_est": 4.91, "eps_estcombined": "4.08 / 4.91", "eps_ttm": 4.08, "gross_margin": null, "gross_margin_qoq": null, "gross_margin_yoy_diff": null, "k": 80.3, "ma18": 52.51, "ma50": 51.95, "ma6": 53.37, "name": "\u4e2d\u4fe1\u91d1", "net_margin": null, "net_margin_qoq": null, "net_margin_yoy_diff": null, "operating_margin": null, "operating_margin_qoq": null, "operating_margin_yoy_diff": null, "per_Y": 13.68, "per_est": 11.36, "per_estcombined": "13.68 / 13.68/ 11.36", "per_ttm": 13.68, "price": 55.8, "score": 6.1, "sig": -1, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 4.12}}, {"amp": 1.99, "bb_pct": 23.3, "bias18": -6.96, "bias50": -11.46, "bias6": -0.24, "chg": 6.0, "chgPct": 2.17, "code": 4772, "d": 18.9, "eps_Y": 4.21, "eps_est": 7.38, "eps_estcombined": "4.21 / 7.38", "eps_ttm": 4.21, "gross_margin": 48.92, "gross_margin_qoq": -5.24, "gross_margin_yoy_diff": -9.23, "k": 21.6, "ma18": 304.17, "ma50": 319.62, "ma6": 283.67, "name": "\u53f0\u7279\u5316", "net_margin": 32.51, "net_margin_qoq": -3.76, "net_margin_yoy_diff": -18.4, "operating_margin": 38.48, "operating_margin_qoq": -4.17, "operating_margin_yoy_diff": -8.21, "per_Y": 67.22, "per_est": 38.35, "per_estcombined": "67.22 / 67.22/ 38.35", "per_ttm": 67.22, "price": 283.0, "score": 36.19, "sig": 1, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 1.06}}, {"amp": 3.23, "bb_pct": 45.7, "bias18": -1.81, "bias50": -4.69, "bias6": 1.54, "chg": 45.0, "chgPct": 1.94, "code": 3443, "d": 35.8, "eps_Y": 28.13, "eps_est": 29.16, "eps_estcombined": "28.13 / 29.16", "eps_ttm": 28.13, "gross_margin": 19.04, "gross_margin_qoq": -5.18, "gross_margin_yoy_diff": -14.16, "k": 34.2, "ma18": 2408.61, "ma50": 2481.5, "ma6": 2329.17, "name": "\u5275\u610f", "net_margin": 9.35, "net_margin_qoq": -0.71, "net_margin_yoy_diff": -4.71, "operating_margin": 10.13, "operating_margin_qoq": -2.12, "operating_margin_yoy_diff": -4.43, "per_Y": 84.07, "per_est": 81.1, "per_estcombined": "84.07 / 84.07/ 81.1", "per_ttm": 84.07, "price": 2365.0, "score": 4.62, "sig": 0, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 0.85}}, {"amp": 1.74, "bb_pct": 92.5, "bias18": 3.41, "bias50": 5.19, "bias6": 1.84, "chg": 0.65, "chgPct": 1.42, "code": 2885, "d": 68.1, "eps_Y": 2.74, "eps_est": 3.14, "eps_estcombined": "2.74 / 3.14", "eps_ttm": 2.74, "gross_margin": null, "gross_margin_qoq": null, "gross_margin_yoy_diff": null, "k": 72.5, "ma18": 44.97, "ma50": 44.2, "ma6": 45.66, "name": "\u5143\u5927\u91d1", "net_margin": null, "net_margin_qoq": null, "net_margin_yoy_diff": null, "operating_margin": null, "operating_margin_qoq": null, "operating_margin_yoy_diff": null, "per_Y": 16.97, "per_est": 14.81, "per_estcombined": "16.97 / 16.97/ 14.81", "per_ttm": 16.97, "price": 46.5, "score": 4.38, "sig": -1, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 4.73}}, {"amp": 2.32, "bb_pct": 57.1, "bias18": 1.24, "bias50": -3.93, "bias6": 3.04, "chg": 0.3, "chgPct": 1.27, "code": 1101, "d": 44.5, "eps_Y": -1.61, "eps_est": NaN, "eps_estcombined": "-1.61 / nan", "eps_ttm": -1.61, "gross_margin": 18.49, "gross_margin_qoq": -4.15, "gross_margin_yoy_diff": -4.8, "k": 68.4, "ma18": 23.71, "ma50": 24.98, "ma6": 23.29, "name": "\u53f0\u6ce5", "net_margin": -3.9, "net_margin_qoq": 26.27, "net_margin_yoy_diff": -14.63, "operating_margin": 3.76, "operating_margin_qoq": -9.4, "operating_margin_yoy_diff": -7.12, "per_Y": "-", "per_est": "-", "per_estcombined": "- / -/ -", "per_ttm": "-", "price": 24.0, "score": 3.14, "sig": 0, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 3.33}}, {"amp": 2.0, "bb_pct": 15.8, "bias18": -8.03, "bias50": -7.64, "bias6": -1.16, "chg": 10.0, "chgPct": 1.25, "code": 4749, "d": 15.1, "eps_Y": 11.32, "eps_est": 15.19, "eps_estcombined": "11.32 / 15.19", "eps_ttm": 11.32, "gross_margin": 44.02, "gross_margin_qoq": 1.75, "gross_margin_yoy_diff": 5.99, "k": 11.8, "ma18": 881.83, "ma50": 878.1, "ma6": 820.5, "name": "\u65b0\u61c9\u6750", "net_margin": 24.17, "net_margin_qoq": -3.04, "net_margin_yoy_diff": 5.26, "operating_margin": 23.34, "operating_margin_qoq": -0.98, "operating_margin_yoy_diff": 8.04, "per_Y": 71.64, "per_est": 53.39, "per_estcombined": "71.64 / 71.64/ 53.39", "per_ttm": 71.64, "price": 811.0, "score": 23.75, "sig": 1, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 0.99}}, {"amp": 1.15, "bb_pct": 29.4, "bias18": -2.4, "bias50": -7.42, "bias6": 0.65, "chg": 0.25, "chgPct": 1.15, "code": 1532, "d": 20.4, "eps_Y": 0.99, "eps_est": 0.61, "eps_estcombined": "0.99 / 0.61", "eps_ttm": 0.99, "gross_margin": 24.21, "gross_margin_qoq": -0.34, "gross_margin_yoy_diff": 1.5, "k": 31.0, "ma18": 22.49, "ma50": 23.71, "ma6": 21.81, "name": "\u52e4\u7f8e", "net_margin": 3.64, "net_margin_qoq": -6.5, "net_margin_yoy_diff": 9.37, "operating_margin": 5.05, "operating_margin_qoq": -7.83, "operating_margin_yoy_diff": 5.48, "per_Y": 22.17, "per_est": 35.98, "per_estcombined": "22.17 / 22.17/ 35.98", "per_ttm": 22.17, "price": 21.95, "score": -6.3, "sig": 0, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 3.64}}, {"amp": 1.86, "bb_pct": 67.0, "bias18": 1.64, "bias50": 3.15, "bias6": -1.14, "chg": 1.0, "chgPct": 0.93, "code": 5871, "d": 64.4, "eps_Y": 11.24, "eps_est": 9.68, "eps_estcombined": "11.24 / 9.68", "eps_ttm": 11.24, "gross_margin": 65.76, "gross_margin_qoq": 0.07, "gross_margin_yoy_diff": -0.25, "k": 55.7, "ma18": 106.75, "ma50": 105.19, "ma6": 109.75, "name": "\u4e2d\u79df-", "net_margin": 20.9, "net_margin_qoq": 1.16, "net_margin_yoy_diff": 3.45, "operating_margin": 29.24, "operating_margin_qoq": 2.43, "operating_margin_yoy_diff": 6.62, "per_Y": 9.65, "per_est": 11.21, "per_estcombined": "9.65 / 9.65/ 11.21", "per_ttm": 9.65, "price": 108.5, "score": 12.71, "sig": 0, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 5.53}}, {"amp": 3.47, "bb_pct": 29.2, "bias18": -3.37, "bias50": -6.84, "bias6": -2.14, "chg": 2.0, "chgPct": 0.53, "code": 3680, "d": 26.6, "eps_Y": 9.43, "eps_est": 9.03, "eps_estcombined": "9.43 / 9.03", "eps_ttm": 9.43, "gross_margin": 43.28, "gross_margin_qoq": 4.22, "gross_margin_yoy_diff": 5.67, "k": 13.9, "ma18": 390.17, "ma50": 404.69, "ma6": 385.25, "name": "\u5bb6\u767b", "net_margin": 23.65, "net_margin_qoq": 12.78, "net_margin_yoy_diff": 3.62, "operating_margin": 17.47, "operating_margin_qoq": 8.32, "operating_margin_yoy_diff": 10.44, "per_Y": 39.98, "per_est": 41.75, "per_estcombined": "39.98 / 39.98/ 41.75", "per_ttm": 39.98, "price": 377.0, "score": 12.56, "sig": 1, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 1.83}}, {"amp": 3.41, "bb_pct": 11.5, "bias18": -9.57, "bias50": -12.77, "bias6": -1.84, "chg": 5.0, "chgPct": 0.34, "code": 2454, "d": 10.0, "eps_Y": 66.17, "eps_est": 77.28, "eps_estcombined": "66.17 / 77.28", "eps_ttm": 66.17, "gross_margin": 46.13, "gross_margin_qoq": -0.4, "gross_margin_yoy_diff": -2.41, "k": 10.2, "ma18": 1625.56, "ma50": 1685.2, "ma6": 1497.5, "name": "\u806f\u767c\u79d1", "net_margin": 15.36, "net_margin_qoq": -2.55, "net_margin_yoy_diff": -1.98, "operating_margin": 14.55, "operating_margin_qoq": -1.06, "operating_margin_yoy_diff": -0.96, "per_Y": 22.22, "per_est": 19.02, "per_estcombined": "22.22 / 22.22/ 19.02", "per_ttm": 22.22, "price": 1470.0, "score": 15.45, "sig": 1, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 3.64}}, {"amp": 0.83, "bb_pct": 95.9, "bias18": 2.19, "bias50": 0.1, "bias6": 0.76, "chg": 0.1, "chgPct": 0.14, "code": 1216, "d": 70.8, "eps_Y": 3.46, "eps_est": 3.58, "eps_estcombined": "3.46 / 3.58", "eps_ttm": 3.46, "gross_margin": 31.73, "gross_margin_qoq": -1.78, "gross_margin_yoy_diff": 0.12, "k": 79.4, "ma18": 70.94, "ma50": 72.42, "ma6": 71.95, "name": "\u7d71\u4e00", "net_margin": 3.15, "net_margin_qoq": -2.08, "net_margin_yoy_diff": -0.25, "operating_margin": 2.59, "operating_margin_qoq": -3.35, "operating_margin_yoy_diff": -0.6, "per_Y": 20.95, "per_est": 20.25, "per_estcombined": "20.95 / 20.95/ 20.25", "per_ttm": 20.95, "price": 72.5, "score": 6.5, "sig": -1, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 4.14}}, {"amp": 1.5, "bb_pct": 14.2, "bias18": -4.08, "bias50": -16.98, "bias6": -1.56, "chg": 0.0, "chgPct": 0.0, "code": 1319, "d": 22.6, "eps_Y": 6.43, "eps_est": 7.22, "eps_estcombined": "6.43 / 7.22", "eps_ttm": 6.43, "gross_margin": 33.68, "gross_margin_qoq": 5.68, "gross_margin_yoy_diff": -0.83, "k": 14.3, "ma18": 83.51, "ma50": 96.48, "ma6": 81.37, "name": "\u6771\u967d", "net_margin": 19.15, "net_margin_qoq": 6.75, "net_margin_yoy_diff": 0.38, "operating_margin": 18.07, "operating_margin_qoq": 6.62, "operating_margin_yoy_diff": -1.23, "per_Y": 12.46, "per_est": 11.09, "per_estcombined": "12.46 / 12.46/ 11.09", "per_ttm": 12.46, "price": 80.1, "score": 14.44, "sig": 1, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 6.24}}, {"amp": 0.88, "bb_pct": 27.8, "bias18": -1.5, "bias50": -5.43, "bias6": -0.47, "chg": 0.0, "chgPct": 0.0, "code": 9904, "d": 40.3, "eps_Y": 4.1, "eps_est": 4.37, "eps_estcombined": "4.1 / 4.37", "eps_ttm": 4.1, "gross_margin": 23.03, "gross_margin_qoq": -0.45, "gross_margin_yoy_diff": -2.03, "k": 41.5, "ma18": 28.88, "ma50": 30.08, "ma6": 28.58, "name": "\u5bf6\u6210", "net_margin": 7.68, "net_margin_qoq": -1.42, "net_margin_yoy_diff": 2.18, "operating_margin": 4.38, "operating_margin_qoq": -0.7, "operating_margin_yoy_diff": -2.52, "per_Y": 6.94, "per_est": 6.51, "per_estcombined": "6.94 / 6.94/ 6.51", "per_ttm": 6.94, "price": 28.45, "score": 6.98, "sig": 0, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 5.98}}, {"amp": 2.05, "bb_pct": 40.6, "bias18": -0.49, "bias50": -3.65, "bias6": 0.53, "chg": -0.1, "chgPct": -0.11, "code": 2881, "d": 46.5, "eps_Y": 8.37, "eps_est": 11.05, "eps_estcombined": "8.37 / 11.05", "eps_ttm": 8.37, "gross_margin": null, "gross_margin_qoq": null, "gross_margin_yoy_diff": null, "k": 51.3, "ma18": 88.13, "ma50": 91.02, "ma6": 87.23, "name": "\u5bcc\u90a6\u91d1", "net_margin": null, "net_margin_qoq": null, "net_margin_yoy_diff": null, "operating_margin": null, "operating_margin_qoq": null, "operating_margin_yoy_diff": null, "per_Y": 10.48, "per_est": 7.94, "per_estcombined": "10.48 / 10.48/ 7.94", "per_ttm": 10.48, "price": 87.7, "score": 9.61, "sig": 0, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 4.85}}, {"amp": 5.28, "bb_pct": 20.8, "bias18": -8.24, "bias50": -10.13, "bias6": 0.39, "chg": -15.0, "chgPct": -0.44, "code": 6669, "d": 14.6, "eps_Y": 275.06, "eps_est": 549.66, "eps_estcombined": "275.06 / 549.66", "eps_ttm": 275.06, "gross_margin": 7.23, "gross_margin_qoq": -1.59, "gross_margin_yoy_diff": -2.18, "k": 16.7, "ma18": 3699.72, "ma50": 3777.7, "ma6": 3381.67, "name": "\u7def\u7a4e", "net_margin": 4.72, "net_margin_qoq": -1.06, "net_margin_yoy_diff": -1.38, "operating_margin": 5.63, "operating_margin_qoq": -1.71, "operating_margin_yoy_diff": -1.4, "per_Y": 12.34, "per_est": 6.18, "per_estcombined": "12.34 / 12.34/ 6.18", "per_ttm": 12.34, "price": 3395.0, "score": 31.88, "sig": 1, "strategy": "\u53cd\u5f48\ud83d\udd25", "yield": {"dividend": null, "yield": 4.86}}, {"amp": 3.11, "bb_pct": 19.3, "bias18": -5.29, "bias50": -11.41, "bias6": -0.95, "chg": -1.0, "chgPct": -0.52, "code": 2317, "d": 22.2, "eps_Y": 13.6, "eps_est": 15.67, "eps_estcombined": "13.6 / 15.67", "eps_ttm": 13.6, "gross_margin": 5.88, "gross_margin_qoq": -0.47, "gross_margin_yoy_diff": -0.27, "k": 25.4, "ma18": 202.72, "ma50": 216.74, "ma6": 193.83, "name": "\u9d3b\u6d77", "net_margin": 2.06, "net_margin_qoq": -1.15, "net_margin_yoy_diff": -0.4, "operating_margin": 3.28, "operating_margin_qoq": -0.15, "operating_margin_yoy_diff": 0.25, "per_Y": 14.12, "per_est": 12.25, "per_estcombined": "14.12 / 14.12/ 12.25", "per_ttm": 14.12, "price": 192.0, "score": 5.98, "sig": 1, "strategy": "\u89c0\u5bdf", "yield": {"dividend": null, "yield": 3.75}}, {"amp": 1.6, "bb_pct": 14.2, "bias18": -4.04, "bias50": -6.08, "bias6": -1.27, "chg": -1.5, "chgPct": -1.2, "code": 3231, "d": 21.3, "eps_Y": 9.02, "eps_est": 13.43, "eps_estcombined": "9.02 / 13.43", "eps_ttm": 9.02, "gross_margin": 5.62, "gross_margin_qoq": -1.77, "gross_margin_yoy_diff": -2.47, "k": 19.2, "ma18": 128.69, "ma50": 131.5, "ma6": 125.08, "name": "\u7def\u5275", "net_margin": 2.27, "net_margin_qoq": -0.64, "net_margin_yoy_diff": -0.91, "operating_margin": 3.53, "operating_margin_qoq": -1.25, "operating_margin_yoy_diff": -0.46, "per_Y": 13.69, "per_est": 9.2, "per_estcombined": "13.69 / 13.69/ 9.2", "per_ttm": 13.69, "price": 123.5, "score": 15.83, "sig": 1, "strategy": "\u6574\u7406", "yield": {"dividend": null, "yield": 4.45}}, {"amp": 6.65, "bb_pct": 42.4, "bias18": -3.31, "bias50": -2.86, "bias6": -0.07, "chg": -16.0, "chgPct": -2.17, "code": 7728, "d": 22.2, "eps_Y": 4.95, "eps_est": 3.28, "eps_estcombined": "4.95 / 3.28", "eps_ttm": 4.95, "gross_margin": 70.34, "gross_margin_qoq": 4.68, "gross_margin_yoy_diff": 2.98, "k": 17.1, "ma18": 745.67, "ma50": 742.24, "ma6": 721.5, "name": "\u5149\u7131\u79d1", "net_margin": 32.41, "net_margin_qoq": 18.3, "net_margin_yoy_diff": 11.06, "operating_margin": 34.34, "operating_margin_qoq": 29.72, "operating_margin_yoy_diff": 7.77, "per_Y": 145.66, "per_est": 219.82, "per_estcombined": "145.66 / 145.66/ 219.82", "per_ttm": 145.66, "price": 721.0, "score": 11.92, "sig": 1, "strategy": "\u53cd\u5f48\ud83d\udd25", "yield": {"dividend": null, "yield": 0.71}}];
+
+function renderMetric(value, qoq, yoy) {
+  const fmt = (v) => (v === null || v === undefined ? "-" : v);
+
+  const arrow = (v) => {
+    if (v === null || v === undefined) return "";
+    return v > 0 ? "↑" : v < 0 ? "↓" : "";
+  };
+
+  const colorClass = (v) => {
+    if (v === null || v === undefined) return "";
+    return v > 0 ? "text-red" : v < 0 ? "text-green" : "";
+  };
+  return `
+   
+  <div class="metric">
+    <div class="metric-main">${fmt(value)}</div>
+    <div class="metric-sub">
+      <small class="${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</small>
+      <small class="${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</small>
+    </div>
+  </div>
+  `;
+}
+
+function distClass(val) {
+  if (!val) return "";
+  return val > 0 ? "up" : "dn";
+}
+
+function kdColor(k){
+  if(k > 75) return "#f85149";
+  if(k < 25) return "#3fb950";
+  return "#d29922";
+}
+
+function bbPosition(bb){
+  if(!bb) return 50;
+  if(bb.includes("上")) return 80;
+  if(bb.includes("下")) return 20;
+  return 50;
+}
+
+function renderRow(s){
+  const chgClass = s.chgPct >= 0 ? "up":"dn";
+  const chgSign = s.chgPct >= 0 ? "+" : "";
+  const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+  const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
+
+  return `
+  <tr>
+    <td class="name">${s.name}</td>
+    <td>${s.code}</td>
+    <td>${s.price}</td>
+    <td class="${chgClass}">${chgSign}${s.chg}</td>
+    <td class="${chgClass}">${chgSign}${s.chgPct}%</td>
+    <td>${s.amp ?? 0}%</td>
+    <td>${s.eps_Y ?? "-"}</td>
+
+    <td>
+      <small>TTM:</small> ${s.eps_ttm ?? "-"} <br>
+      <small>預估:</small> ${s.eps_est ?? "-"}
+    </td>
+
+    <td>
+      ${renderMetric(
+        s.gross_margin,
+        s.gross_margin_qoq,
+        s.gross_margin_yoy_diff
+      )}
+    </td>
+
+    <td>
+      ${renderMetric(
+        s.operating_margin,
+        s.operating_margin_qoq,
+        s.operating_margin_yoy_diff
+      )}
+    </td>
+
+    <td>
+      ${renderMetric(
+        s.net_margin,
+        s.net_margin_qoq,
+        s.net_margin_yoy_diff
+      )}
+    </td>
+    <td>${s.score?.score ?? "-"}%</td>
+    <td>${s.yield?.yield ?? "-"}%</td>
+
+    <td>
+      <small>TTM:</small> ${s.per_ttm ?? "-"} <br>
+      <small>預估:</small> ${s.per_est ?? "-"}
+    </td>
+
+    <td>
+      ${s.k}/${s.d}
+      <div class="kd-bar">
+        <div class="kd-dot" style="left:${s.k}%; background:${kdColor(s.k)}"></div>
+      </div>
+    </td>
+
+    <td>
+      ${s.bb_pct ?? "-"}%
+      <div class="bb-bar">
+        <div class="bb-dot"
+         style="left:${s.bb_pct ?? 50}%; background:#58a6ff">
+        </div>
+      </div>
+    </td>
+
+    <td class="${distClass(s.bias6)}">${s.bias6 ?? ""}%</td>
+    <td class="${distClass(s.bias18)}">${s.bias18 ?? ""}%</td>
+    <td class="${distClass(s.bias50)}">${s.bias50 ?? ""}%</td>
+    <td> <span class="sig ${sigClass[s.sig]}">${sigLabel[s.sig]}</span></td>
+    <td>${s.strategy}</td>
+  </tr>`;
+}
+
+// ✅ 統計（放外面）
+const rebound = stocks.filter(s => s.strategy?.includes("反彈")).length;
+const sell = stocks.filter(s => s.strategy?.includes("出貨")).length;
+const watch = stocks.filter(s => s.strategy === "觀察").length;
+const hold = stocks.filter(s => s.strategy === "整理").length;
+
+// render
+document.getElementById("stockBody").innerHTML =
+  stocks.map(renderRow).join("");
+
+// summary
+document.getElementById("buyCount").innerText = rebound;
+document.getElementById("sellCount").innerText = sell;
+document.getElementById("watchCount").innerText = watch;
+document.getElementById("holdCount").innerText = hold;
+</script>
+
+</body>
+</html>
