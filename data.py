@@ -34,7 +34,7 @@ def get_stock_data(stock_id):
         df = pd.DataFrame(data["data"])
         required_cols = ["open", "close", "max", "min"]
         df = df[required_cols].dropna()
-        print("df:", df)
+        #   print("df:", df)
         return df
     except Exception as e:
         print(f"❌ get_stock_data error {stock_id}: {e}")
@@ -491,14 +491,16 @@ def process_stock(s):
             return None
         df = add_indicators(df)
         latest, prev = df.iloc[-1], df.iloc[-2]
-        print("df; ", df)
 
         # 2. 計算漲跌幅與震幅
-        chg = latest["close"] - prev["close"]
+        chg = latest["close"] - latest["open"]
+        chgamp = latest["max"] - latest["min"]
         chgPct = round((chg / prev["close"]) * 100, 2)
+        print("chg: ", latest["close"], prev["open"])
+        print("chgamp: ", latest["max"], latest["min"])
         amp = round(
-            ((latest["max"] - latest["min"]) / prev["close"]) * 100, 2)
-
+            # ((latest["max"] - latest["min"]) / prev["close"]) * 100, 2)
+            (chgamp / prev["close"]) * 100, 2)
         # 3. 呼叫各項分析函式 (結構化資料)
         # EPS 分析回傳: (last_year_eps, ttm_eps, est_eps, per_last, per_ttm, per_est)
         eps_res = get_eps_analysis(s["stock_id"], latest["close"])
