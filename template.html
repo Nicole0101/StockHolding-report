@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>(持股)台股技術分析報告</title>
+
+<style>
+body {
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+.container {
+  max-width: 1400px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 15px;
+  overflow: auto;
+  max-height: 600px;
+}
+
+table {
+  width: 100%;
+  min-width: 1000px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: #1c2330;
+  z-index: 100;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 2px 0 #30363d;
+}
+
+thead th:hover {
+  background: #263041;
+}
+
+tbody td {
+  background: #161b22;
+}
+
+tbody td:first-child {
+  position: sticky;
+  left: 0;
+  background: #161b22;
+  z-index: 10;
+}
+
+thead th:first-child {
+  position: sticky;
+  top: 0;
+  left: 0;
+  background: #1c2330;
+  z-index: 110;
+}
+
+th,
+td {
+  padding: 8px;
+  border-bottom: 1px solid #30363d;
+  border-right: 1px solid #30363d;
+  white-space: nowrap;
+}
+
+thead th,
+tbody td:first-child {
+  background-clip: padding-box;
+}
+
+.name {
+  text-align: left;
+  font-weight: bold;
+}
+
+.up {
+  color: #f85149;
+}
+
+.dn {
+  color: #3fb950;
+}
+
+.kd-bar {
+  width: 80px;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  margin: auto;
+  position: relative;
+}
+
+.kd-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  top: -1px;
+  transform: translateX(-50%);
+}
+
+.bb-bar {
+  width: 80px;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  margin: auto;
+  position: relative;
+}
+
+.bb-dot {
+  width: 6px;
+  height: 10px;
+  position: absolute;
+  top: -2px;
+  transform: translateX(-50%);
+}
+
+.sig {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.sig.up {
+  background: #3fb95022;
+  color: #3fb950;
+}
+
+.sig.dn {
+  background: #f8514922;
+  color: #f85149;
+}
+
+.sig.watch {
+  background: #d2992222;
+  color: #d29922;
+}
+
+.summary {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.box {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.buy {
+  background: #3fb95022;
+}
+
+.sell {
+  background: #f8514922;
+}
+
+.watch {
+  background: #d2992222;
+}
+
+.hold {
+  background: #8b949e22;
+}
+
+.metric {
+  text-align: center;
+  line-height: 1.2;
+}
+
+.metric-main {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.metric-sub {
+  font-size: 11px;
+}
+
+.text-red {
+  color: #ff4d4f;
+}
+
+.text-green {
+  color: #00b050;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>(持股)台股技術分析報告</h2>
+
+<div class="summary">
+  <div class="box buy"><b id="buyCount"></b><br>反彈</div>
+  <div class="box sell"><b id="sellCount"></b><br>出貨</div>
+  <div class="box watch"><b id="watchCount"></b><br>觀察</div>
+  <div class="box hold"><b id="holdCount"></b><br>整理</div>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th data-key="name">名稱</th>
+        <th data-key="code">代碼</th>
+        <th data-key="price">價格</th>
+        <th data-key="chg">漲跌</th>
+        <th data-key="chgPct">漲跌%</th>
+        <th data-key="amp">震幅%</th>
+        <th data-key="eps_Y">去年EPS</th>
+        <th data-key="eps_est">估EPS</th>
+        <th data-key="gross_margin">毛利率%<br><small>QoQ YoY</small></th>
+        <th data-key="operating_margin">營益率%<br><small>QoQ YoY</small></th>
+        <th data-key="net_margin">淨利率%<br><small>QoQ YoY</small></th>
+        <th data-key="scoreValue">評分</th>
+        <th data-key="yieldValue">殖利率</th>
+        <th data-key="per_ttm">本益比</th>
+        <th data-key="k">KD</th>
+        <th data-key="bb_pct">布林</th>
+        <th data-key="bias6">Bias6</th>
+        <th data-key="bias18">Bias18</th>
+        <th data-key="bias50">Bias50</th>
+        <th data-key="sig">訊號</th>
+        <th data-key="strategy">策略</th>
+      </tr>
+    </thead>
+    <tbody id="stockBody"></tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+const stocks = {{ stocks | tojson }};
+let sortedStocks = [...stocks];
+let currentSortKey = "";
+let currentSortDirection = "asc";
+
+function renderMetric(value, qoq, yoy) {
+  const fmt = (v) => (v === null || v === undefined ? "-" : v);
+
+  const arrow = (v) => {
+    if (v === null || v === undefined) return "";
+    return v > 0 ? "↑" : v < 0 ? "↓" : "";
+  };
+
+  const colorClass = (v) => {
+    if (v === null || v === undefined) return "";
+    return v > 0 ? "text-red" : v < 0 ? "text-green" : "";
+  };
+
+  return `
+  <div class="metric">
+    <div class="metric-main">${fmt(value)}</div>
+    <div class="metric-sub">
+      <small class="${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</small>
+      <small class="${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</small>
+    </div>
+  </div>
+  `;
+}
+
+function distClass(val) {
+  if (val === null || val === undefined || val === "") return "";
+  return Number(val) > 0 ? "up" : "dn";
+}
+
+function kdColor(k) {
+  if (k > 75) return "#f85149";
+  if (k < 25) return "#3fb950";
+  return "#d29922";
+}
+
+function renderRow(s) {
+  const chgPct = Number(s.chgPct ?? 0);
+  const chgClass = chgPct >= 0 ? "up" : "dn";
+  const chgSign = chgPct >= 0 ? "+" : "";
+  const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+  const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
+
+  return `
+  <tr>
+    <td class="name">${s.name ?? ""}</td>
+    <td>${s.code ?? ""}</td>
+    <td>${s.price ?? ""}</td>
+    <td class="${chgClass}">${chgSign}${s.chg ?? ""}</td>
+    <td class="${chgClass}">${chgSign}${s.chgPct ?? ""}%</td>
+    <td>${s.amp ?? 0}%</td>
+    <td>${s.eps_Y ?? "-"}</td>
+
+    <td>
+      <small>TTM:</small> ${s.eps_ttm ?? "-"} <br>
+      <small>預估:</small> ${s.eps_est ?? "-"}
+    </td>
+
+    <td>
+      ${renderMetric(
+        s.gross_margin,
+        s.gross_margin_qoq,
+        s.gross_margin_yoy_diff
+      )}
+    </td>
+
+    <td>
+      ${renderMetric(
+        s.operating_margin,
+        s.operating_margin_qoq,
+        s.operating_margin_yoy_diff
+      )}
+    </td>
+
+    <td>
+      ${renderMetric(
+        s.net_margin,
+        s.net_margin_qoq,
+        s.net_margin_yoy_diff
+      )}
+    </td>
+
+    <td>${s.score?.score ?? "-"}%</td>
+    <td>${s.yield?.yield ?? "-"}%</td>
+
+    <td>
+      <small>TTM:</small> ${s.per_ttm ?? "-"} <br>
+      <small>預估:</small> ${s.per_est ?? "-"}
+    </td>
+
+    <td>
+      ${s.k ?? "-"}/${s.d ?? "-"}
+      <div class="kd-bar">
+        <div class="kd-dot" style="left:${s.k ?? 50}%; background:${kdColor(Number(s.k ?? 50))}"></div>
+      </div>
+    </td>
+
+    <td>
+      ${s.bb_pct ?? "-"}%
+      <div class="bb-bar">
+        <div class="bb-dot" style="left:${s.bb_pct ?? 50}%; background:#58a6ff"></div>
+      </div>
+    </td>
+
+    <td class="${distClass(s.bias6)}">${s.bias6 ?? ""}%</td>
+    <td class="${distClass(s.bias18)}">${s.bias18 ?? ""}%</td>
+    <td class="${distClass(s.bias50)}">${s.bias50 ?? ""}%</td>
+    <td><span class="sig ${sigClass[s.sig] ?? "watch"}">${sigLabel[s.sig] ?? "觀望"}</span></td>
+    <td>${s.strategy ?? ""}</td>
+  </tr>`;
+}
+
+function renderTable(data) {
+  document.getElementById("stockBody").innerHTML = data.map(renderRow).join("");
+}
+
+function getSortValue(s, key) {
+  switch (key) {
+    case "scoreValue":
+      return Number(s.score?.score ?? -999999);
+    case "yieldValue":
+      return Number(s.yield?.yield ?? -999999);
+    case "name":
+      return s.name ?? "";
+    case "code":
+      return s.code ?? "";
+    case "strategy":
+      return s.strategy ?? "";
+    case "sig":
+      return Number(s.sig ?? -999999);
+    default: {
+      const value = s[key];
+      if (value === null || value === undefined || value === "") return -999999;
+      const num = Number(value);
+      return Number.isNaN(num) ? String(value) : num;
+    }
+  }
+}
+
+function sortStocks(key) {
+  if (currentSortKey === key) {
+    currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+  } else {
+    currentSortKey = key;
+    currentSortDirection = "asc";
+  }
+
+  sortedStocks.sort((a, b) => {
+    const aVal = getSortValue(a, key);
+    const bVal = getSortValue(b, key);
+
+    const bothNumbers = typeof aVal === "number" && typeof bVal === "number";
+
+    if (bothNumbers) {
+      return currentSortDirection === "asc" ? aVal - bVal : bVal - aVal;
+    }
+
+    const result = String(aVal).localeCompare(String(bVal), "zh-Hant");
+    return currentSortDirection === "asc" ? result : -result;
+  });
+
+  renderTable(sortedStocks);
+  updateSortIndicators();
+}
+
+function updateSortIndicators() {
+  document.querySelectorAll("thead th").forEach((th) => {
+    const key = th.dataset.key;
+    if (!key) return;
+
+    if (!th.dataset.label) {
+      th.dataset.label = th.innerHTML.replace(/\s*[▲▼]$/, "");
+    }
+
+    if (key === currentSortKey) {
+      th.innerHTML = `${th.dataset.label} ${currentSortDirection === "asc" ? "▲" : "▼"}`;
+    } else {
+      th.innerHTML = th.dataset.label;
+    }
+  });
+}
+
+function bindSorting() {
+  document.querySelectorAll("thead th[data-key]").forEach((th) => {
+    th.addEventListener("click", () => {
+      sortStocks(th.dataset.key);
+    });
+  });
+}
+
+const rebound = stocks.filter(s => s.strategy?.includes("反彈")).length;
+const sell = stocks.filter(s => s.strategy?.includes("出貨")).length;
+const watch = stocks.filter(s => s.strategy === "觀察").length;
+const hold = stocks.filter(s => s.strategy === "整理").length;
+
+renderTable(sortedStocks);
+bindSorting();
+
+document.getElementById("buyCount").innerText = rebound;
+document.getElementById("sellCount").innerText = sell;
+document.getElementById("watchCount").innerText = watch;
+document.getElementById("holdCount").innerText = hold;
+</script>
+
+</body>
+</html>
