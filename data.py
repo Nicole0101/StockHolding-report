@@ -31,11 +31,34 @@ def get_stock_data(stock_id):
 
         if "data" not in data or len(data["data"]) == 0:
             return pd.DataFrame()
+
         df = pd.DataFrame(data["data"])
-        required_cols = ["open", "close", "max", "min"]
-        df = df[required_cols].dropna()
-        #   print("df:", df)
+
+        # FinMind 股價資料常見成交量欄位
+        volume_col = None
+        for c in ["Trading_Volume", "trading_volume", "Trading_Volume_1000"]:
+            if c in df.columns:
+                volume_col = c
+                break
+
+        required_cols = ["date", "open", "close", "max", "min"]
+        if volume_col:
+            required_cols.append(volume_col)
+
+        df = df[required_cols].copy()
+        df["date"] = pd.to_datetime(df["date"])
+
+        if volume_col:
+            df["volume"] = pd.to_numeric(df[volume_col], errors="coerce")
+            # 股數轉成張
+            if df["volume"].max() > 100000:
+                df["volume"] = df["volume"] / 1000
+        else:
+            df["volume"] = None
+
+        df = df.dropna(subset=["open", "close", "max", "min"]).sort_values("date")
         return df
+
     except Exception as e:
         print(f"❌ get_stock_data error {stock_id}: {e}")
         return pd.DataFrame()
@@ -404,15 +427,23 @@ def add_indicators(df):
     try:
         low_min = df["min"].rolling(9).min()
         high_max = df["max"].rolling(9).max()
-        denom = (high_max - low_min)
-        denom = denom.replace(0, pd.NA)
+        denom = (high_max - low_min).replace(0, pd.NA)
+
         rsv = (df["close"] - low_min) / denom * 100
         df["K"] = rsv.ewm(com=2).mean()
         df["D"] = df["K"].ewm(com=2).mean()
-        ma20 = df["close"].rolling(20).mean()
+
+        # 月線 / 均線
+        df["MA5"] = df["close"].rolling(5).mean()
+        df["MA10"] = df["close"].rolling(10).mean()
+        df["MA20"] = df["close"].rolling(20).mean()   # 月線
+        df["MA60"] = df["close"].rolling(60).mean()
+
+        # 布林
         std = df["close"].rolling(20).std()
-        df["BB_upper"] = ma20 + 2 * std
-        df["BB_lower"] = ma20 - 2 * std
+        df["BB_upper"] = df["MA20"] + 2 * std
+        df["BB_lower"] = df["MA20"] - 2 * std
+
         return df
     except Exception as e:
         print(f"❌ indicator error: {e}")
@@ -485,31 +516,23 @@ def calc_trend_score(qoq_g, yoy_g, qoq_n, yoy_n):
 
 def process_stock(s):
     try:
-        # 1. 基礎資料獲取與技術指標計算
         df = get_stock_data(s["stock_id"])
         if df.empty or len(df) < 60:
             return None
+
         df = add_indicators(df)
         latest, prev = df.iloc[-1], df.iloc[-2]
 
-        # 2. 計算漲跌幅與震幅
         chg = latest["close"] - prev["close"]
-        chgamp = latest["max"] - latest["min"]
         chgPct = round((chg / prev["close"]) * 100, 2)
-        print("stock_id: ", s["stock_id"],
-              "chg: ", latest["close"], prev["open"])
-        print("stock_id: ", s["stock_id"],
-              "chgamp: ", latest["max"], latest["min"])
-        amp = round(
-            # ((latest["max"] - latest["min"]) / prev["close"]) * 100, 2)
-            (chgamp / prev["close"]) * 100, 2)
-        # 3. 呼叫各項分析函式 (結構化資料)
-        # EPS 分析回傳: (last_year_eps, ttm_eps, est_eps, per_last, per_ttm, per_est)
+        chgamp = latest["max"] - latest["min"]
+        amp = round((chgamp / prev["close"]) * 100, 2)
+
+        # ===== EPS / 財務 / 殖利率 =====
         eps_res = get_eps_analysis(s["stock_id"], latest["close"])
         if not eps_res or not isinstance(eps_res, tuple):
             eps_res = (None,) * 6
-        # 獲取毛利與淨利率
-        # 毛利率（避免 0 被吃掉）
+
         profit_res = get_profit_ratio(s["stock_id"]) or {
             "current": {},
             "qoq": {},
@@ -519,42 +542,93 @@ def process_stock(s):
         cur_o, qoq_o, yoy_o = extract_metric(profit_res, "op")
         cur_n, qoq_n, yoy_n = extract_metric(profit_res, "net")
 
-        # 獲取殖利率
         yield_pct = get_dividend_yield(s["stock_id"], latest["close"])
-
-        # 獲取均線與乖離率
         ma_stats = get_MABias(df)
 
-        # 4. 策略邏輯判斷
+        # ===== 技術值 =====
         k = latest["K"] if pd.notna(latest["K"]) else 50
         d = latest["D"] if pd.notna(latest["D"]) else 50
+        prev_k = prev["K"] if pd.notna(prev["K"]) else 50
+        prev_d = prev["D"] if pd.notna(prev["D"]) else 50
 
+        ma20 = latest["MA20"] if pd.notna(latest["MA20"]) else None
+        prev_ma20 = prev["MA20"] if pd.notna(prev["MA20"]) else None
+
+        close = latest["close"]
+        prev_close = prev["close"]
+
+        # ===== KD 買點 =====
+        kd_buy = (prev_k <= prev_d) and (k > d)
+        kd_low_buy = kd_buy and k < 35
+
+        # ===== 月線買點 =====
+        ma20_break = (
+            ma20 is not None and prev_ma20 is not None and
+            prev_close <= prev_ma20 and close > ma20
+        )
+
+        # ===== 成交量條件 =====
+        volume = latest.get("volume", None)
+        prev_volume = prev.get("volume", None)
+        volume_ratio = None
+        volume_add = None
+        volume_ok = False
+
+        if pd.notna(volume) and pd.notna(prev_volume) and prev_volume > 0:
+            volume_ratio = round((volume / prev_volume - 1) * 100, 2)
+            volume_add = round(volume - prev_volume, 0)
+            volume_ok = (volume >= prev_volume * 1.1) or ((volume - prev_volume) >= 500)
+
+        # ===== 布林位置 =====
         bb_upper = latest["BB_upper"]
         bb_lower = latest["BB_lower"]
-        close = latest["close"]
         bb_pct = None
         if pd.notna(bb_upper) and pd.notna(bb_lower) and bb_upper != bb_lower:
             bb_pct = round((close - bb_lower) / (bb_upper - bb_lower) * 100, 1)
 
-        strategy = (
-            "反彈🔥" if amp > 5 and k < 30 else
-            "出貨⚠" if amp > 5 and k > 70 else
-            "整理" if amp < 2 else
-            "觀察"
-        )
-        sig = (
-            1 if k < 30 else
-            -1 if k > 70 else
-            0
-        )
+        # ===== 訊號判斷 =====
+        signal_tags = []
 
-        #   評分公司成長
+        if kd_buy:
+            signal_tags.append("KD買點")
+
+        if ma20_break:
+            signal_tags.append("站上月線")
+
+        if volume_ok:
+            signal_tags.append("量增")
+        else:
+            signal_tags.append("量不足")
+
+        entry_note = ""
+        if kd_low_buy and ma20_break:
+            entry_note = "抄底"
+        elif ma20_break and chgPct >= 3:
+            entry_note = "追漲"
+
+        if entry_note:
+            signal_tags.append(entry_note)
+
+        # 最終訊號
+        if kd_buy and ma20_break and volume_ok:
+            sig = 1
+            strategy = "買入"
+        elif k > 75 and d > 70 and chgPct < 0:
+            sig = -1
+            strategy = "出貨⚠"
+        elif amp < 2:
+            sig = 0
+            strategy = "整理"
+        else:
+            sig = 0
+            strategy = "觀察"
+
+        signal_text = " / ".join(signal_tags) if signal_tags else "觀望"
+
+        # ===== 評分 =====
         margin_score = calc_margin_score(cur_g, cur_o, cur_n)
         eps_score = calc_eps_score(eps_res[1], eps_res[2])
-        trend_score = calc_trend_score(
-            qoq_g, yoy_g,
-            qoq_n, yoy_n
-        )
+        trend_score = calc_trend_score(qoq_g, yoy_g, qoq_n, yoy_n)
         score = round(
             margin_score * 0.4 +
             eps_score * 0.3 +
@@ -562,53 +636,59 @@ def process_stock(s):
             2
         )
 
-        # 5. 回傳結構化字典
         return {
             "name": s["name"][:3],
             "code": s["stock_id"],
-            "price": round(latest["close"], 2),
+            "price": round(close, 2),
             "chg": round(chg, 2),
             "chgPct": chgPct,
             "amp": amp,
 
-            # 毛利率
             "gross_margin": cur_g,
             "gross_margin_qoq": qoq_g,
             "gross_margin_yoy_diff": yoy_g,
 
-            # 營益率
             "operating_margin": cur_o,
             "operating_margin_qoq": qoq_o,
             "operating_margin_yoy_diff": yoy_o,
 
-            # 淨利率
             "net_margin": cur_n,
             "net_margin_qoq": qoq_n,
             "net_margin_yoy_diff": yoy_n,
 
-            # EPS 與 PER 相關資料 (從元組中取值)
             "eps_Y": eps_res[0] if eps_res[0] is not None else "-",
             "eps_ttm": eps_res[1] if eps_res[1] is not None else "-",
             "eps_est": eps_res[2] if eps_res[2] is not None else "-",
-            "eps_estcombined": f"{eps_res[1] if eps_res[1] is not None else '-'} / {eps_res[2] if eps_res[2] is not None else '-'}",
             "yield": yield_pct,
             "per_Y": eps_res[3] if eps_res[3] is not None else "-",
             "per_ttm": eps_res[4] if eps_res[4] is not None else "-",
             "per_est": eps_res[5] if eps_res[5] is not None else "-",
-            "per_estcombined": f"{eps_res[3] if eps_res[3] is not None else '-'} / {eps_res[4] if eps_res[4] is not None else '-'}/ {eps_res[5] if eps_res[5] is not None else '-'}",
+
             "k": round(k, 1),
             "d": round(d, 1),
+            "ma20": round(ma20, 2) if ma20 is not None else "-",
+            "ma20_break": ma20_break,
+            "kd_buy": kd_buy,
             "bb_pct": bb_pct,
-            # 自動展開 ma6, bias6, ma18, bias18, ma50, bias50 等欄位
+
+            "volume": round(volume, 0) if pd.notna(volume) else "-",
+            "prev_volume": round(prev_volume, 0) if pd.notna(prev_volume) else "-",
+            "volume_ratio": volume_ratio,
+            "volume_add": volume_add,
+            "volume_ok": volume_ok,
+
             **ma_stats,
             "sig": sig,
             "score": score,
-            "strategy": strategy
+            "strategy": strategy,
+            "signal_text": signal_text,
+            "entry_note": entry_note
         }
 
     except Exception as e:
         print(f"❌ process error {s['stock_id']}: {e}")
         return None
+
 
 # ========================
 # 6️⃣ 全部股票
