@@ -26,6 +26,7 @@ body {
 h2 {
   margin: 0 0 12px 0;
   font-size: clamp(20px, 2.4vw, 30px);
+  line-height: 1.25;
 }
 
 .card {
@@ -45,7 +46,6 @@ h2 {
 
 table {
   width: 100%;
-  min-width: 1200px;
   border-collapse: separate;
   border-spacing: 0;
   font-size: clamp(11px, 1vw, 13px);
@@ -200,12 +200,12 @@ tbody td:first-child {
 }
 
 .metric-main {
-  font-size: 12px;
+  font-size: clamp(11px, 1vw, 12px);
   font-weight: normal;
 }
 
 .metric-sub {
-  font-size: 11px;
+  font-size: clamp(10px, 0.9vw, 11px);
 }
 
 .text-red {
@@ -226,14 +226,18 @@ tbody td:first-child {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  table {
-    min-width: 1000px;
-    font-size: 11px;
-  }
-
   th,
   td {
     padding: 6px;
+    font-size: 11px;
+  }
+
+  .col-lg {
+    display: none;
+  }
+
+  .table-scroll {
+    max-height: 65vh;
   }
 }
 
@@ -255,16 +259,18 @@ tbody td:first-child {
 
   .table-scroll {
     max-height: 68vh;
-  }
-
-  table {
-    min-width: 900px;
-    font-size: 10px;
+    overflow-x: auto;
   }
 
   th,
   td {
     padding: 5px;
+    font-size: 10px;
+  }
+
+  .col-lg,
+  .col-md {
+    display: none;
   }
 
   .metric-main,
@@ -280,7 +286,6 @@ tbody td:first-child {
   }
 }
 </style>
-
 </head>
 
 <body>
@@ -306,23 +311,23 @@ tbody td:first-child {
             <th data-key="price">價格</th>
             <th data-key="chg">漲跌</th>
             <th data-key="chgPct">漲跌%</th>
-            <th data-key="amp">震幅%</th>
-            <th data-key="eps_Y">去年EPS</th>
-            <th data-key="eps_est">估EPS</th>
-            <th data-key="gross_margin">毛利率%<br><small>QoQ YoY</small></th>
-            <th data-key="operating_margin">營益率%<br><small>QoQ YoY</small></th>
-            <th data-key="net_margin">淨利率%<br><small>QoQ YoY</small></th>
-            <th data-key="score">評分</th>
-            <th data-key="yield">殖利率</th>
-            <th data-key="per_ttm">本益比</th>
+            <th class="col-md" data-key="amp">震幅%</th>
+            <th class="col-lg" data-key="eps_Y">去年EPS</th>
+            <th class="col-lg" data-key="eps_est">估EPS</th>
+            <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ YoY</small></th>
+            <th class="col-lg" data-key="operating_margin">營益率%<br><small>QoQ YoY</small></th>
+            <th class="col-lg" data-key="net_margin">淨利率%<br><small>QoQ YoY</small></th>
+            <th class="col-md" data-key="score">評分</th>
+            <th class="col-md" data-key="yield">殖利率</th>
+            <th class="col-lg" data-key="per_ttm">本益比</th>
             <th data-key="k">KD</th>
-            <th data-key="bb_pct">布林</th>
-            <th data-key="bias6">Bias6</th>
-            <th data-key="bias18">Bias18</th>
-            <th data-key="bias50">Bias50</th>
-            <th data-key="ma20">月線</th>
-            <th data-key="volume">成交量</th>
-            <th data-key="volume_ratio">量增%</th>
+            <th class="col-md" data-key="bb_pct">布林</th>
+            <th class="col-lg" data-key="bias6">Bias6</th>
+            <th class="col-lg" data-key="bias18">Bias18</th>
+            <th class="col-lg" data-key="bias50">Bias50</th>
+            <th class="col-md" data-key="ma20">月線</th>
+            <th class="col-md" data-key="volume">成交量</th>
+            <th class="col-md" data-key="volume_ratio">量增%</th>
             <th data-key="sig">訊號</th>
             <th data-key="strategy">策略</th>
           </tr>
@@ -389,22 +394,23 @@ function renderRow(s) {
     <td>${s.price ?? ""}</td>
     <td class="${chgClass}">${chgSign}${s.chg ?? ""}</td>
     <td class="${chgClass}">${chgSign}${s.chgPct ?? ""}%</td>
-    <td>${s.amp ?? 0}%</td>
-    <td>${s.eps_Y ?? "-"}</td>
 
-    <td>
+    <td class="col-md">${s.amp ?? 0}%</td>
+    <td class="col-lg">${s.eps_Y ?? "-"}</td>
+
+    <td class="col-lg">
       <small>TTM:</small> ${s.eps_ttm ?? "-"} <br>
       <small>預估:</small> ${s.eps_est ?? "-"}
     </td>
 
-    <td>${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
-    <td>${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
-    <td>${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
+    <td class="col-lg">${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
+    <td class="col-lg">${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
+    <td class="col-lg">${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
 
-    <td>${s.score ?? "-"}%</td>
-    <td>${s.yield?.yield ?? s.yield ?? "-"}%</td>
+    <td class="col-md">${s.score ?? "-"}%</td>
+    <td class="col-md">${s.yield?.yield ?? s.yield ?? "-"}%</td>
 
-    <td>
+    <td class="col-lg">
       <small>TTM:</small> ${s.per_ttm ?? "-"} <br>
       <small>預估:</small> ${s.per_est ?? "-"}
     </td>
@@ -416,30 +422,30 @@ function renderRow(s) {
       </div>
     </td>
 
-    <td>
+    <td class="col-md">
       ${s.bb_pct ?? "-"}%
       <div class="bb-bar">
         <div class="bb-dot" style="left:${s.bb_pct ?? 50}%; background:#58a6ff"></div>
       </div>
     </td>
 
-    <td class="${distClass(s.bias6)}">${s.bias6 ?? ""}%</td>
-    <td class="${distClass(s.bias18)}">${s.bias18 ?? ""}%</td>
-    <td class="${distClass(s.bias50)}">${s.bias50 ?? ""}%</td>
+    <td class="col-lg ${distClass(s.bias6)}">${s.bias6 ?? ""}%</td>
+    <td class="col-lg ${distClass(s.bias18)}">${s.bias18 ?? ""}%</td>
+    <td class="col-lg ${distClass(s.bias50)}">${s.bias50 ?? ""}%</td>
 
-    <td>
+    <td class="col-md">
       ${s.ma20 ?? "-"}<br>
       <small class="${s.ma20_break ? 'text-red' : ''}">
         ${s.ma20_break ? '站上月線' : ''}
       </small>
     </td>
 
-    <td>
+    <td class="col-md">
       ${s.volume ?? "-"} 張<br>
       <small>昨:${s.prev_volume ?? "-"}</small>
     </td>
 
-    <td class="${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
+    <td class="col-md ${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
       ${s.volume_ratio ?? "-"}%
       <br>
       <small>${s.volume_add ?? "-"} 張</small>
