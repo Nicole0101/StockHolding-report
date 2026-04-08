@@ -619,8 +619,16 @@ def process_stock(s):
         if entry_note:
             signal_tags.append(entry_note)
 
-        # 最終訊號
-        if kd_buy and ma20_break and volume_ok:
+        # ===== 最終訊號：放寬條件 =====
+        buy_score = 0
+        if kd_buy:
+            buy_score += 1
+        if ma20_break:
+            buy_score += 1
+        if volume_ok:
+            buy_score += 1
+
+        if buy_score >= 2:
             sig = 1
             strategy = "買入"
         elif k > 75 and d > 70 and chgPct < 0:

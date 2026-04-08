@@ -24,16 +24,18 @@ body {
   border: 1px solid #30363d;
   border-radius: 10px;
   padding: 15px;
+  overflow: hidden;
 }
 
 .table-scroll {
   overflow: auto;
   max-height: 600px;
+  position: relative;
 }
 
 table {
   width: 100%;
-  min-width: 1000px;
+  min-width: 1200px;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 12px;
@@ -43,7 +45,7 @@ thead th {
   position: sticky;
   top: 0;
   background: #1c2330;
-  z-index: 100;
+  z-index: 200;
   cursor: pointer;
   user-select: none;
   box-shadow: 0 2px 0 #30363d;
@@ -55,13 +57,15 @@ thead th:hover {
 
 tbody td {
   background: #161b22;
+  position: relative;
+  z-index: 1;
 }
 
 tbody td:first-child {
   position: sticky;
   left: 0;
   background: #161b22;
-  z-index: 10;
+  z-index: 150;
 }
 
 thead th:first-child {
@@ -69,7 +73,7 @@ thead th:first-child {
   top: 0;
   left: 0;
   background: #1c2330;
-  z-index: 110;
+  z-index: 250;
 }
 
 th,
@@ -214,7 +218,7 @@ tbody td:first-child {
   <h2>(持股)台股技術分析報告</h2>
 
   <div class="summary">
-    <div class="box buy"><b id="buyCount"></b><br>反彈</div>
+    <div class="box buy"><b id="buyCount"></b><br>買入</div>
     <div class="box sell"><b id="sellCount"></b><br>出貨</div>
     <div class="box watch"><b id="watchCount"></b><br>觀察</div>
     <div class="box hold"><b id="holdCount"></b><br>整理</div>
@@ -236,17 +240,17 @@ tbody td:first-child {
             <th data-key="gross_margin">毛利率%<br><small>QoQ YoY</small></th>
             <th data-key="operating_margin">營益率%<br><small>QoQ YoY</small></th>
             <th data-key="net_margin">淨利率%<br><small>QoQ YoY</small></th>
-            <th data-key="scoreValue">評分</th>
-            <th data-key="yieldValue">殖利率</th>
+            <th data-key="score">評分</th>
+            <th data-key="yield">殖利率</th>
             <th data-key="per_ttm">本益比</th>
             <th data-key="k">KD</th>
             <th data-key="bb_pct">布林</th>
             <th data-key="bias6">Bias6</th>
             <th data-key="bias18">Bias18</th>
             <th data-key="bias50">Bias50</th>
-            <th>月線</th>
-            <th>成交量</th>
-            <th>量增%</th>  
+            <th data-key="ma20">月線</th>
+            <th data-key="volume">成交量</th>
+            <th data-key="volume_ratio">量增%</th>
             <th data-key="sig">訊號</th>
             <th data-key="strategy">策略</th>
           </tr>
@@ -321,32 +325,12 @@ function renderRow(s) {
       <small>預估:</small> ${s.eps_est ?? "-"}
     </td>
 
-    <td>
-      ${renderMetric(
-        s.gross_margin,
-        s.gross_margin_qoq,
-        s.gross_margin_yoy_diff
-      )}
-    </td>
+    <td>${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
+    <td>${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
+    <td>${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
 
-    <td>
-      ${renderMetric(
-        s.operating_margin,
-        s.operating_margin_qoq,
-        s.operating_margin_yoy_diff
-      )}
-    </td>
-
-    <td>
-      ${renderMetric(
-        s.net_margin,
-        s.net_margin_qoq,
-        s.net_margin_yoy_diff
-      )}
-    </td>
-
-    <td>${s.score?.score ?? "-"}%</td>
-    <td>${s.yield?.yield ?? "-"}%</td>
+    <td>${s.score ?? "-"}%</td>
+    <td>${s.yield?.yield ?? s.yield ?? "-"}%</td>
 
     <td>
       <small>TTM:</small> ${s.per_ttm ?? "-"} <br>
@@ -392,14 +376,10 @@ function renderRow(s) {
     <td>
       <span class="sig ${sigClass[s.sig] ?? 'watch'}">${sigLabel[s.sig] ?? '觀望'}</span>
       <br>
-      <small>${s.signal_text ?? ""}</small>
+      <small>${s.signal_text ?? ''}</small>
     </td>
 
-    <td>${s.strategy}${s.entry_note ? ` / ${s.entry_note}` : ""}</td> 
-
-
-    <td><span class="sig ${sigClass[s.sig] ?? "watch"}">${sigLabel[s.sig] ?? "觀望"}</span></td>
-    <td>${s.strategy ?? ""}</td>
+    <td>${s.strategy}${s.entry_note ? ` / ${s.entry_note}` : ""}</td>
   </tr>`;
 }
 
@@ -409,10 +389,6 @@ function renderTable(data) {
 
 function getSortValue(s, key) {
   switch (key) {
-    case "scoreValue":
-      return Number(s.score?.score ?? -999999);
-    case "yieldValue":
-      return Number(s.yield?.yield ?? -999999);
     case "name":
       return s.name ?? "";
     case "code":
@@ -421,6 +397,10 @@ function getSortValue(s, key) {
       return s.strategy ?? "";
     case "sig":
       return Number(s.sig ?? -999999);
+    case "yield":
+      return Number(s.yield?.yield ?? s.yield ?? -999999);
+    case "score":
+      return Number(s.score ?? -999999);
     default: {
       const value = s[key];
       if (value === null || value === undefined || value === "") return -999999;
@@ -481,15 +461,15 @@ function bindSorting() {
   });
 }
 
-const rebound = stocks.filter(s => s.strategy?.includes("反彈")).length;
-const sell = stocks.filter(s => s.strategy?.includes("出貨")).length;
+const buy = stocks.filter(s => s.sig === 1).length;
+const sell = stocks.filter(s => s.sig === -1).length;
 const watch = stocks.filter(s => s.strategy === "觀察").length;
 const hold = stocks.filter(s => s.strategy === "整理").length;
 
 renderTable(sortedStocks);
 bindSorting();
 
-document.getElementById("buyCount").innerText = rebound;
+document.getElementById("buyCount").innerText = buy;
 document.getElementById("sellCount").innerText = sell;
 document.getElementById("watchCount").innerText = watch;
 document.getElementById("holdCount").innerText = hold;
