@@ -31,21 +31,6 @@ thead th {
   top:0;
   background:#1c2330;
   z-index:10;
-  cursor:pointer;
-  user-select:none;
-  white-space:nowrap;
-}
-
-thead th.sort-asc::after {
-  content:" ▲";
-  font-size:10px;
-  color:#58a6ff;
-}
-
-thead th.sort-desc::after {
-  content:" ▼";
-  font-size:10px;
-  color:#58a6ff;
 }
 
 thead th:first-child,
@@ -90,7 +75,7 @@ th, td {
   line-height: 1.2;
 }
 
-.metric-main {
+..metric-main {
   font-size: 12px;
   font-weight: normal;
 }
@@ -127,38 +112,38 @@ th, td {
 <table>
 <thead>
 <tr>
-<th data-sort-key="name" data-sort-type="string" onclick="sortStocks('name','string')">名稱</th>
-<th data-sort-key="code" data-sort-type="string" onclick="sortStocks('code','string')">代碼</th>
-<th data-sort-key="price" data-sort-type="number" onclick="sortStocks('price','number')">價格</th>
-<th data-sort-key="chg" data-sort-type="number" onclick="sortStocks('chg','number')">漲跌</th>
-<th data-sort-key="chgPct" data-sort-type="number" onclick="sortStocks('chgPct','number')">漲跌%</th>
-<th data-sort-key="amp" data-sort-type="number" onclick="sortStocks('amp','number')">震幅%</th>
-<th data-sort-key="eps_Y" data-sort-type="number" onclick="sortStocks('eps_Y','number')">去年EPS</th>
-<th data-sort-key="eps_est" data-sort-type="number" onclick="sortStocks('eps_est','number')">估EPS</th>
-<th data-sort-key="gross_margin" data-sort-type="number" onclick="sortStocks('gross_margin','number')">
+<th>名稱</th>
+<th>代碼</th>
+<th>價格</th>
+<th>漲跌</th>
+<th>漲跌%</th>
+<th>震幅%</th>
+<th>去年EPS</th>
+<th>估EPS</th>
+<th>
   毛利率%<br>
   <small>QoQ YoY</small>
 </th>
 
-<th data-sort-key="operating_margin" data-sort-type="number" onclick="sortStocks('operating_margin','number')">
+<th>
   營益率%<br>
   <small>QoQ YoY</small>
 </th>
 
-<th data-sort-key="net_margin" data-sort-type="number" onclick="sortStocks('net_margin','number')">
+<th>
   淨利率%<br>
   <small>QoQ YoY</small>
 </th>
-<th data-sort-key="scoreValue" data-sort-type="number" onclick="sortStocks('scoreValue','number')">評分</th>
-<th data-sort-key="yieldValue" data-sort-type="number" onclick="sortStocks('yieldValue','number')">殖利率</th>
-<th data-sort-key="per_est" data-sort-type="number" onclick="sortStocks('per_est','number')">本益比</th>
-<th data-sort-key="k" data-sort-type="number" onclick="sortStocks('k','number')">KD</th>
-<th data-sort-key="bb_pct" data-sort-type="number" onclick="sortStocks('bb_pct','number')">布林</th>
-<th data-sort-key="bias6" data-sort-type="number" onclick="sortStocks('bias6','number')">Bias6</th>
-<th data-sort-key="bias18" data-sort-type="number" onclick="sortStocks('bias18','number')">Bias18</th>
-<th data-sort-key="bias50" data-sort-type="number" onclick="sortStocks('bias50','number')">Bias50</th>
-<th data-sort-key="sig" data-sort-type="number" onclick="sortStocks('sig','number')">訊號</th>
-<th data-sort-key="strategy" data-sort-type="string" onclick="sortStocks('strategy','string')">策略</th>
+<th>評分</th>
+<th>殖利率</th>
+<th>本益比</th>
+<th>KD</th>
+<th>布林</th>
+<th>Bias6</th>
+<th>Bias18</th>
+<th>Bias50</th>
+<th>訊號</th>
+<th>策略</th>
 </tr>
 </thead>
 <tbody id="stockBody"></tbody>
@@ -169,7 +154,6 @@ th, td {
 
 <script>
 const stocks = {{ stocks | tojson }};
-let state;
 
 function renderMetric(value, qoq, yoy) {
   const fmt = (v) => (v === null || v === undefined ? "-" : v);
@@ -289,88 +273,21 @@ function renderRow(s){
   </tr>`;
 }
 
-function toNumber(value) {
-  if (value === null || value === undefined || value === "") return null;
-  if (typeof value === "number") return Number.isNaN(value) ? null : value;
-  const cleaned = String(value).replace(/[%,$\s,]/g, "");
-  const num = Number(cleaned);
-  return Number.isNaN(num) ? null : num;
-}
+// ✅ 統計（放外面）
+const rebound = stocks.filter(s => s.strategy?.includes("反彈")).length;
+const sell = stocks.filter(s => s.strategy?.includes("出貨")).length;
+const watch = stocks.filter(s => s.strategy === "觀察").length;
+const hold = stocks.filter(s => s.strategy === "整理").length;
 
-function getSortValue(stock, key, type) {
-  const valueMap = {
-    scoreValue: stock.score?.score,
-    yieldValue: stock.yield?.yield,
-  };
+// render
+document.getElementById("stockBody").innerHTML =
+  stocks.map(renderRow).join("");
 
-  const rawValue = key in valueMap ? valueMap[key] : stock[key];
-
-  if (type === "number") {
-    const num = toNumber(rawValue);
-    return num === null ? Number.NEGATIVE_INFINITY : num;
-  }
-
-  return String(rawValue ?? "").trim().toLowerCase();
-}
-
-function updateSummary(data) {
-  const rebound = data.filter(s => s.strategy?.includes("反彈")).length;
-  const sell = data.filter(s => s.strategy?.includes("出貨")).length;
-  const watch = data.filter(s => s.strategy === "觀察").length;
-  const hold = data.filter(s => s.strategy === "整理").length;
-
-  document.getElementById("buyCount").innerText = rebound;
-  document.getElementById("sellCount").innerText = sell;
-  document.getElementById("watchCount").innerText = watch;
-  document.getElementById("holdCount").innerText = hold;
-}
-
-function renderTable(data) {
-  document.getElementById("stockBody").innerHTML = data.map(renderRow).join("");
-  updateSummary(data);
-}
-
-function initState() {
-  state = {
-    data: [...stocks],
-    sortKey: null,
-    sortDirection: "asc",
-  };
-}
-
-function sortStocks(key, type) {
-  if (state.sortKey === key) {
-    state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
-  } else {
-    state.sortKey = key;
-    state.sortDirection = "asc";
-  }
-
-  const direction = state.sortDirection === "asc" ? 1 : -1;
-
-  state.data.sort((a, b) => {
-    const aVal = getSortValue(a, key, type);
-    const bVal = getSortValue(b, key, type);
-
-    if (aVal < bVal) return -1 * direction;
-    if (aVal > bVal) return 1 * direction;
-    return String(a.code ?? "").localeCompare(String(b.code ?? ""));
-  });
-
-  document.querySelectorAll("thead th").forEach(th => {
-    th.classList.remove("sort-asc", "sort-desc");
-  });
-
-  const activeTh = document.querySelector(`thead th[data-sort-key="${key}"]`);
-  if (activeTh) {
-    activeTh.classList.add(state.sortDirection === "asc" ? "sort-asc" : "sort-desc");
-  }
-
-  renderTable(state.data);
-}
-
-initState();
-renderTable(state.data);
+// summary
+document.getElementById("buyCount").innerText = rebound;
+document.getElementById("sellCount").innerText = sell;
+document.getElementById("watchCount").innerText = watch;
+document.getElementById("holdCount").innerText = hold;
 </script>
 
 </body>
