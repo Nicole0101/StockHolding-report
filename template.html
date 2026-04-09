@@ -164,6 +164,33 @@ tbody td:first-child {
   color: #d29922;
 }
 
+.signal-cell {
+  min-width: 110px;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.signal-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.signal-sub {
+  font-size: 11px;
+  color: #8b949e;
+  word-break: break-word;
+}
+
+.strategy-cell {
+  min-width: 140px;
+  max-width: 220px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.45;
+}
+
 .summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -369,9 +396,9 @@ tbody td:first-child {
             <th class="col-lg" data-key="per_ttm">本益比</th>
             <th data-key="k">KD</th>
             <th class="col-md" data-key="bb_pct">布林</th>
-            <th class="col-lg" data-key="bias6">Bias6<br><small>cur / min / max</small></th>
-            <th class="col-lg" data-key="bias18">Bias18<br><small>cur / min / max</small></th>
-            <th class="col-lg" data-key="bias50">Bias50<br><small>cur / min / max</small></th>
+            <th class="col-lg" data-key="bias6">Bias6<br><small> min / max</small></th>
+            <th class="col-lg" data-key="bias18">Bias18<br><small> min / max</small></th>
+            <th class="col-lg" data-key="bias50">Bias50<br><small> min / max</small></th>
             <th class="col-md" data-key="ma18">月線</th>
             <th class="col-md" data-key="volume">成交量</th>
             <th class="col-md" data-key="volume_ratio">量增%</th>
@@ -514,13 +541,17 @@ function renderRow(s) {
       <small>${s.volume_add ?? "-"} 張</small>
     </td>
 
-    <td>
-      <span class="sig ${sigClass[s.sig] ?? 'watch'}">${sigLabel[s.sig] ?? '觀望'}</span>
-      <br>
-      <small>${s.signal_text ?? ''}</small>
+    <td class="signal-cell">
+    <div class="signal-wrap">
+      <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
+      <div class="signal-sub">${s.signal_text ?? ''}</div>
+    </div>
     </td>
 
-    <td>${s.strategy}${s.entry_note ? ` / ${s.entry_note}` : ""}</td>
+    <td class="strategy-cell">
+      ${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}
+    </td>
+
   </tr>`;
 }
 
@@ -548,17 +579,17 @@ function renderMobileCard(s) {
       </div>
 
       <div class="stock-item">
-        <div class="stock-label">Bias6</div>
+        <div class="stock-label">Cur Bias6</div>
         <div class="stock-value">${s.bias6 ?? "-"}% / min ${s.bias6_min ?? "-"} / max ${s.bias6_max ?? "-"}</div>
       </div>
 
       <div class="stock-item">
-        <div class="stock-label">Bias18</div>
+        <div class="stock-label">Cur Bias18</div>
         <div class="stock-value">${s.bias18 ?? "-"}% / min ${s.bias18_min ?? "-"} / max ${s.bias18_max ?? "-"}</div>
       </div>
 
       <div class="stock-item">
-        <div class="stock-label">Bias50</div>
+        <div class="stock-label">Cur Bias50</div>
         <div class="stock-value">${s.bias50 ?? "-"}% / min ${s.bias50_min ?? "-"} / max ${s.bias50_max ?? "-"}</div>
       </div>  
 
@@ -585,9 +616,9 @@ function renderMobileCard(s) {
     </div>
 
     <div class="stock-signal">
-      <div><span class="sig ${sigClass[s.sig] ?? 'watch'}">${sigLabel[s.sig] ?? '觀望'}</span></div>
-      <div>${s.signal_text ?? ""}</div>
-      <div>${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
+      <div><span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span></div>
+      <div class="signal-sub">${s.signal_text ?? ""}</div>
+      <div class="strategy-cell">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
     </div>
   </div>`;
 }
