@@ -471,6 +471,177 @@ def calc_trend_score(qoq_g, yoy_g, qoq_n, yoy_n):
 # ========================
 # 7️⃣ 單支股票分析
 # ========================
+
+def safe_pos(value, low, high):
+    """計算 value 在 [low, high] 區間中的相對位置，回傳 0~1"""
+    if value is None or low is None or high is None or high == low:
+        return None
+    return (value - low) / (high - low)
+
+
+def get_tech_signal(
+    close, chgPct, amp, volume_ok,
+    k, d, prev_k, prev_d,
+    bb_pct,
+    bias6, bias18, bias50,
+    bias6_min, bias6_max,
+    bias18_min, bias18_max,
+    bias50_min, bias50_max,
+    ma18, prev_ma18, prev_close
+):
+    """
+    回傳:
+    {
+        "signal_result": "買進訊號 / 賣出訊號 / 觀望訊號",
+        "strategy": "買入 / 觀察 / 整理 / 出貨 / 減碼",
+        "reason": "...",
+        "signal_text": "條件摘要"
+    }
+    """
+    reasons = []
+
+    kd_gold_cross = prev_k <= prev_d and k > d
+    kd_dead_cross = prev_k >= prev_d and k < d
+
+    ma18_break = (
+        ma18 is not None and prev_ma18 is not None
+        and prev_close <= prev_ma18 and close > ma18
+    )
+
+    bias6_pos = safe_pos(bias6, bias6_min, bias6_max)
+    bias18_pos = safe_pos(bias18, bias18_min, bias18_max)
+    bias50_pos = safe_pos(bias50, bias50_min, bias50_max)
+
+    # ===== 1) KD 分數 =====
+    kd_score = 0
+    if kd_gold_cross and k < 35:
+        kd_score = 2
+        reasons.append("KD低檔黃金交叉")
+    elif kd_gold_cross:
+        kd_score = 1
+        reasons.append("KD黃金交叉")
+    elif kd_dead_cross and k > 75:
+        kd_score = -2
+        reasons.append("KD高檔死亡交叉")
+    elif kd_dead_cross:
+        kd_score = -1
+        reasons.append("KD死亡交叉")
+
+    # ===== 2) 價量分數 =====
+    vol_price_score = 0
+    if chgPct > 0 and volume_ok:
+        vol_price_score = 2
+        reasons.append("價漲量增")
+    elif chgPct > 0 and not volume_ok:
+        vol_price_score = 1
+        reasons.append("上漲但量能普通")
+    elif chgPct < 0 and volume_ok:
+        vol_price_score = -2
+        reasons.append("價跌量增")
+    elif chgPct < 0:
+        vol_price_score = -1
+        reasons.append("股價走弱")
+
+    # ===== 3) 布林分數 =====
+    bb_score = 0
+    if bb_pct is not None:
+        if bb_pct < 20:
+            bb_score = 1
+            reasons.append("接近布林下緣")
+        elif bb_pct > 95:
+            bb_score = -1
+            reasons.append("接近布林上緣過熱")
+        elif bb_pct > 80:
+            bb_score = -0.5
+            reasons.append("位於布林高檔區")
+
+    # ===== 4) Bias 分數 =====
+    bias_score = 0
+
+    if bias6_pos is not None:
+        if bias6_pos < 0.2:
+            bias_score += 1
+            reasons.append("Bias6接近90日低點")
+        elif bias6_pos > 0.8:
+            bias_score -= 1
+            reasons.append("Bias6接近90日高點")
+
+    if bias18_pos is not None:
+        if bias18_pos < 0.2:
+            bias_score += 1
+            reasons.append("Bias18接近90日低點")
+        elif bias18_pos > 0.8:
+            bias_score -= 1
+            reasons.append("Bias18接近90日高點")
+
+    if bias50_pos is not None:
+        if bias50_pos < 0.2:
+            bias_score += 0.5
+            reasons.append("Bias50偏低")
+        elif bias50_pos > 0.8:
+            bias_score -= 0.5
+            reasons.append("Bias50偏高")
+
+    # ===== 5) 趨勢分數 =====
+    trend_score = 0
+    if ma18 is not None and close > ma18:
+        trend_score += 1
+        reasons.append("股價站上月線")
+    if bias18 is not None and bias18 > 0:
+        trend_score += 0.5
+    if bias50 is not None and bias50 > 0:
+        trend_score += 0.5
+
+    total_score = kd_score + vol_price_score + bb_score + bias_score + trend_score
+
+    # ===== 訊號結果 =====
+    if total_score >= 3:
+        signal_result = "買進訊號"
+    elif total_score <= -3:
+        signal_result = "賣出訊號"
+    else:
+        signal_result = "觀望訊號"
+
+    # ===== 策略 =====
+    if signal_result == "買進訊號":
+        if (bias6_pos is not None and bias6_pos > 0.9) or (bb_pct is not None and bb_pct > 95):
+            strategy = "觀察"
+            reason = "雖然技術面轉強，但短線過熱，不宜追價。"
+        else:
+            strategy = "買入"
+            reason = "技術指標同步轉強，適合偏多操作。"
+
+    elif signal_result == "賣出訊號":
+        if kd_dead_cross and k > 75:
+            strategy = "出貨"
+            reason = "高檔轉弱且賣壓出現，應優先出貨。"
+        else:
+            strategy = "減碼"
+            reason = "技術面轉弱，但中期趨勢未完全破壞，先減碼控風險。"
+
+    else:
+        if amp < 2 and not volume_ok:
+            strategy = "整理"
+            reason = "量縮且波動不大，屬整理格局。"
+        else:
+            strategy = "觀察"
+            reason = "技術面方向不明，先觀察等待確認。"
+
+    # ===== 若訊號與策略不同，額外補充原因 =====
+    if signal_result == "買進訊號" and strategy != "買入":
+        reason = f"雖然出現買進訊號，但因短線過熱或追價風險偏高，所以策略改為{strategy}。"
+
+    if signal_result == "賣出訊號" and strategy != "出貨":
+        reason = f"雖然出現賣出訊號，但中期趨勢未完全破壞，所以策略先採{strategy}。"
+
+    return {
+        "signal_result": signal_result,
+        "strategy": strategy,
+        "reason": reason,
+        "signal_text": " / ".join(reasons) if reasons else "觀望"
+    }
+
+
 def process_stock(s):
     try:
         df = get_stock_data(s["stock_id"])
@@ -493,7 +664,7 @@ def process_stock(s):
         profit_res = get_profit_ratio(s["stock_id"]) or {
             "current": {},
             "qoq": {},
-            "yoy_diff": {},
+            "yoy_diff": {}
         }
         cur_g, qoq_g, yoy_g = extract_metric(profit_res, "gross")
         cur_o, qoq_o, yoy_o = extract_metric(profit_res, "op")
@@ -502,6 +673,7 @@ def process_stock(s):
         yield_pct = get_dividend_yield(s["stock_id"], latest["close"])
         ma_stats = get_MABias(df)
 
+        # ===== 把 ma_stats 轉成 Python 原生型別 =====
         safe_ma_stats = {}
         for k2, v2 in ma_stats.items():
             if v2 is None or pd.isna(v2):
@@ -520,18 +692,6 @@ def process_stock(s):
 
         close = latest["close"]
         prev_close = prev["close"]
-
-        # ===== KD 買點 =====
-        kd_buy = bool((prev_k <= prev_d) and (k > d))
-        kd_low_buy = bool(kd_buy and k < 35)
-
-        # ===== 月線買點 =====
-        ma18_break = bool(
-            ma18 is not None
-            and prev_ma18 is not None
-            and prev_close <= prev_ma18
-            and close > ma18
-        )
 
         # ===== 成交量條件 =====
         volume = latest.get("volume", None)
@@ -554,62 +714,80 @@ def process_stock(s):
         if pd.notna(bb_upper) and pd.notna(bb_lower) and bb_upper != bb_lower:
             bb_pct = round((close - bb_lower) / (bb_upper - bb_lower) * 100, 1)
 
-        # ===== 訊號判斷 =====
-        signal_tags = []
+        # ===== Bias 值 =====
+        bias6 = safe_ma_stats.get("bias6")
+        bias18 = safe_ma_stats.get("bias18")
+        bias50 = safe_ma_stats.get("bias50")
 
-        if kd_buy:
-            signal_tags.append("KD買點")
+        bias6_min = safe_ma_stats.get("bias6_min")
+        bias6_max = safe_ma_stats.get("bias6_max")
+        bias18_min = safe_ma_stats.get("bias18_min")
+        bias18_max = safe_ma_stats.get("bias18_max")
+        bias50_min = safe_ma_stats.get("bias50_min")
+        bias50_max = safe_ma_stats.get("bias50_max")
 
-        if ma18_break:
-            signal_tags.append("站上月線")
+        # ===== 技術訊號判斷 =====
+        signal_res = get_tech_signal(
+            close=close,
+            chgPct=chgPct,
+            amp=amp,
+            volume_ok=volume_ok,
+            k=k,
+            d=d,
+            prev_k=prev_k,
+            prev_d=prev_d,
+            bb_pct=bb_pct,
+            bias6=bias6,
+            bias18=bias18,
+            bias50=bias50,
+            bias6_min=bias6_min,
+            bias6_max=bias6_max,
+            bias18_min=bias18_min,
+            bias18_max=bias18_max,
+            bias50_min=bias50_min,
+            bias50_max=bias50_max,
+            ma18=ma18,
+            prev_ma18=prev_ma18,
+            prev_close=prev_close
+        )
 
-        if volume_ok:
-            signal_tags.append("量增")
+        signal_result = signal_res["signal_result"]
+        strategy = signal_res["strategy"]
+        reason = signal_res["reason"]
+        signal_text = signal_res["signal_text"]
+
+        # ===== 對應舊版 sig =====
+        if signal_result == "買進訊號":
+            sig = 1
+        elif signal_result == "賣出訊號":
+            sig = -1
         else:
-            signal_tags.append("量不足")
+            sig = 0
+
+        # ===== 額外操作標記 =====
+        kd_buy = bool((prev_k <= prev_d) and (k > d))
+        ma18_break = bool(
+            ma18 is not None and prev_ma18 is not None and
+            prev_close <= prev_ma18 and close > ma18
+        )
 
         entry_note = ""
-        if kd_low_buy and ma18_break:
+        if "短線過熱" in reason or "不宜追價" in reason:
+            entry_note = "不追價"
+        elif strategy == "買入" and kd_buy and ma18_break and k < 35:
             entry_note = "抄底"
-        elif ma18_break and chgPct >= 3:
+        elif strategy == "買入" and ma18_break and chgPct >= 3:
             entry_note = "追漲"
-
-        if entry_note:
-            signal_tags.append(entry_note)
-
-        # ===== 最終訊號 =====
-        buy_score = 0
-        if kd_buy:
-            buy_score += 1
-        if ma18_break:
-            buy_score += 1
-        if volume_ok:
-            buy_score += 1
-
-        if buy_score >= 2:
-            sig = 1
-            strategy = "買入"
-        elif k > 75 and d > 70 and chgPct < 0:
-            sig = -1
-            strategy = "出貨⚠"
-        elif amp < 2:
-            sig = 0
-            strategy = "整理"
-        else:
-            sig = 0
-            strategy = "觀察"
-
-        signal_text = " / ".join(signal_tags) if signal_tags else "觀望"
 
         # ===== 評分 =====
         margin_score = calc_margin_score(cur_g, cur_o, cur_n)
         eps_score = calc_eps_score(eps_res[1], eps_res[2])
         trend_score = calc_trend_score(qoq_g, yoy_g, qoq_n, yoy_n)
         score = round(
-            margin_score * 0.4
-            + eps_score * 0.3
-            + trend_score * 0.3,
-            2,
+            margin_score * 0.4 +
+            eps_score * 0.3 +
+            trend_score * 0.3,
+            2
         )
 
         return {
@@ -658,10 +836,12 @@ def process_stock(s):
             **safe_ma_stats,
 
             "sig": int(sig),
+            "signal_result": signal_result,
             "score": float(score),
             "strategy": strategy,
             "signal_text": signal_text,
-            "entry_note": entry_note,
+            "reason": reason,
+            "entry_note": entry_note
         }
 
     except Exception as e:

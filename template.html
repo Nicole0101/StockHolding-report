@@ -1,427 +1,428 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>(持股)台股技術分析報告</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>(持股)台股技術分析報告</title>
 
-<style>
-* {
-  box-sizing: border-box;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-body {
-  background: #0d1117;
-  color: #e6edf3;
-  font-family: Arial, sans-serif;
-  margin: 0;
-}
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
 
-.container {
-  width: 100%;
-  margin: 0;
-  padding: 16px;
-}
+    .container {
+      width: 100%;
+      margin: 0;
+      padding: 16px;
+    }
 
-h2 {
-  margin: 0 0 12px 0;
-  font-size: clamp(20px, 2.4vw, 30px);
-  line-height: 1.25;
-}
+    h2 {
+      margin: 0 0 12px 0;
+      font-size: clamp(20px, 2.4vw, 30px);
+      line-height: 1.25;
+    }
 
-.card {
-  width: 100%;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 10px;
-  padding: clamp(8px, 1vw, 15px);
-  overflow: hidden;
-}
+    .card {
+      width: 100%;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: clamp(8px, 1vw, 15px);
+      overflow: hidden;
+    }
 
-.table-scroll {
-  overflow: auto;
-  max-height: min(70vh, 700px);
-  position: relative;
-  -webkit-overflow-scrolling: touch;
-}
+    .table-scroll {
+      overflow: auto;
+      max-height: min(70vh, 700px);
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+    }
 
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: clamp(11px, 1vw, 13px);
-}
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: clamp(11px, 1vw, 13px);
+    }
 
-thead th {
-  position: sticky;
-  top: 0;
-  background: #1c2330;
-  z-index: 200;
-  cursor: pointer;
-  user-select: none;
-  box-shadow: 0 2px 0 #30363d;
-}
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #1c2330;
+      z-index: 200;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 2px 0 #30363d;
+    }
 
-thead th:hover {
-  background: #263041;
-}
+    thead th:hover {
+      background: #263041;
+    }
 
-tbody td {
-  background: #161b22;
-  position: relative;
-  z-index: 1;
-}
+    tbody td {
+      background: #161b22;
+      position: relative;
+      z-index: 1;
+    }
 
-tbody td:first-child {
-  position: sticky;
-  left: 0;
-  background: #161b22;
-  z-index: 150;
-}
+    tbody td:first-child {
+      position: sticky;
+      left: 0;
+      background: #161b22;
+      z-index: 150;
+    }
 
-thead th:first-child {
-  position: sticky;
-  top: 0;
-  left: 0;
-  background: #1c2330;
-  z-index: 250;
-}
+    thead th:first-child {
+      position: sticky;
+      top: 0;
+      left: 0;
+      background: #1c2330;
+      z-index: 250;
+    }
 
-th,
-td {
-  padding: clamp(6px, 0.8vw, 10px);
-  border-bottom: 1px solid #30363d;
-  border-right: 1px solid #30363d;
-  white-space: nowrap;
-  vertical-align: middle;
-}
+    th,
+    td {
+      padding: clamp(6px, 0.8vw, 10px);
+      border-bottom: 1px solid #30363d;
+      border-right: 1px solid #30363d;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
 
-thead th,
-tbody td:first-child {
-  background-clip: padding-box;
-}
+    thead th,
+    tbody td:first-child {
+      background-clip: padding-box;
+    }
 
-.name {
-  text-align: left;
-  font-weight: bold;
-}
+    .name {
+      text-align: left;
+      font-weight: bold;
+    }
 
-.up {
-  color: #f85149;
-}
+    .up {
+      color: #f85149;
+    }
 
-.dn {
-  color: #3fb950;
-}
+    .dn {
+      color: #3fb950;
+    }
 
-.kd-bar,
-.bb-bar {
-  width: min(80px, 18vw);
-  height: 6px;
-  background: #222;
-  border-radius: 3px;
-  margin: 4px auto 0;
-  position: relative;
-}
+    .kd-bar,
+    .bb-bar {
+      width: min(80px, 18vw);
+      height: 6px;
+      background: #222;
+      border-radius: 3px;
+      margin: 4px auto 0;
+      position: relative;
+    }
 
-.kd-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  position: absolute;
-  top: -1px;
-  transform: translateX(-50%);
-}
+    .kd-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      position: absolute;
+      top: -1px;
+      transform: translateX(-50%);
+    }
 
-.bb-dot {
-  width: 6px;
-  height: 10px;
-  position: absolute;
-  top: -2px;
-  transform: translateX(-50%);
-}
+    .bb-dot {
+      width: 6px;
+      height: 10px;
+      position: absolute;
+      top: -2px;
+      transform: translateX(-50%);
+    }
 
-.sig {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
-  line-height: 1.4;
-}
+    .sig {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      line-height: 1.4;
+    }
 
-.sig.up {
-  background: #3fb95022;
-  color: #3fb950;
-}
+    .sig.up {
+      background: #3fb95022;
+      color: #3fb950;
+    }
 
-.sig.dn {
-  background: #f8514922;
-  color: #f85149;
-}
+    .sig.dn {
+      background: #f8514922;
+      color: #f85149;
+    }
 
-.sig.watch {
-  background: #d2992222;
-  color: #d29922;
-}
+    .sig.watch {
+      background: #d2992222;
+      color: #d29922;
+    }
 
-.signal-cell {
-  min-width: 140px;
-  white-space: normal;
-  line-height: 1.4;
-}
+    .signal-cell {
+      min-width: 140px;
+      white-space: normal;
+      line-height: 1.4;
+    }
 
-.signal-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
+    .signal-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
 
-.signal-sub {
-  font-size: 11px;
-  color: #8b949e;
-  word-break: break-word;
-}
+    .signal-sub {
+      font-size: 11px;
+      color: #8b949e;
+      word-break: break-word;
+    }
 
-.summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
 
-.box {
-  padding: clamp(8px, 1.5vw, 12px);
-  border-radius: 8px;
-  text-align: center;
-  min-width: 0;
-  font-size: clamp(12px, 1vw, 14px);
-}
+    .box {
+      padding: clamp(8px, 1.5vw, 12px);
+      border-radius: 8px;
+      text-align: center;
+      min-width: 0;
+      font-size: clamp(12px, 1vw, 14px);
+    }
 
-.buy {
-  background: #3fb95022;
-}
+    .buy {
+      background: #3fb95022;
+    }
 
-.sell {
-  background: #f8514922;
-}
+    .sell {
+      background: #f8514922;
+    }
 
-.watch {
-  background: #d2992222;
-}
+    .watch {
+      background: #d2992222;
+    }
 
-.hold {
-  background: #8b949e22;
-}
+    .hold {
+      background: #8b949e22;
+    }
 
-.metric {
-  text-align: center;
-  line-height: 1.2;
-}
+    .metric {
+      text-align: center;
+      line-height: 1.2;
+    }
 
-.metric-main {
-  font-size: clamp(11px, 1vw, 12px);
-  font-weight: normal;
-}
+    .metric-main {
+      font-size: clamp(11px, 1vw, 12px);
+      font-weight: normal;
+    }
 
-.metric-sub {
-  font-size: clamp(10px, 0.9vw, 11px);
-}
+    .metric-sub {
+      font-size: clamp(10px, 0.9vw, 11px);
+    }
 
-.text-red {
-  color: #ff4d4f;
-}
+    .text-red {
+      color: #ff4d4f;
+    }
 
-.text-green {
-  color: #00b050;
-}
+    .text-green {
+      color: #00b050;
+    }
 
-/* 手機卡片區 */
-.mobile-list {
-  display: none;
-}
+    /* 手機卡片區 */
+    .mobile-list {
+      display: none;
+    }
 
-.stock-card {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 10px;
-}
+    .stock-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
 
-.stock-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
+    .stock-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
 
-.stock-title {
-  font-size: 15px;
-  font-weight: bold;
-}
+    .stock-title {
+      font-size: 15px;
+      font-weight: bold;
+    }
 
-.stock-price {
-  font-size: 18px;
-  font-weight: bold;
-}
+    .stock-price {
+      font-size: 18px;
+      font-weight: bold;
+    }
 
-.stock-change {
-  font-size: 13px;
-}
+    .stock-change {
+      font-size: 13px;
+    }
 
-.stock-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 10px;
-  font-size: 12px;
-}
+    .stock-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 10px;
+      font-size: 12px;
+    }
 
-.stock-item {
-  min-width: 0;
-}
+    .stock-item {
+      min-width: 0;
+    }
 
-.stock-label {
-  color: #8b949e;
-  font-size: 11px;
-  margin-bottom: 2px;
-}
+    .stock-label {
+      color: #8b949e;
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
 
-.stock-value {
-  word-break: break-word;
-}
+    .stock-value {
+      word-break: break-word;
+    }
 
-.stock-signal {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #30363d;
-  font-size: 12px;
-  line-height: 1.5;
-}
+    .stock-signal {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #30363d;
+      font-size: 12px;
+      line-height: 1.5;
+    }
 
-/* 平板 */
-@media (max-width: 1024px) {
-  .container {
-    padding: 12px;
-  }
+    /* 平板 */
+    @media (max-width: 1024px) {
+      .container {
+        padding: 12px;
+      }
 
-  .summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
 
-  th,
-  td {
-    padding: 6px;
-    font-size: 11px;
-  }
+      th,
+      td {
+        padding: 6px;
+        font-size: 11px;
+      }
 
-  .col-lg {
-    display: none;
-  }
+      .col-lg {
+        display: none;
+      }
 
-  .table-scroll {
-    max-height: 65vh;
-  }
-}
+      .table-scroll {
+        max-height: 65vh;
+      }
+    }
 
-/* 手機：改成卡片，不用表格 */
-@media (max-width: 640px) {
-  .container {
-    padding: 8px;
-  }
+    /* 手機：改成卡片，不用表格 */
+    @media (max-width: 640px) {
+      .container {
+        padding: 8px;
+      }
 
-  .summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
 
-  .card {
-    padding: 0;
-    border: none;
-    background: transparent;
-    overflow: visible;
-  }
+      .card {
+        padding: 0;
+        border: none;
+        background: transparent;
+        overflow: visible;
+      }
 
-  .table-scroll {
-    display: none;
-  }
+      .table-scroll {
+        display: none;
+      }
 
-  .mobile-list {
-    display: block;
-  }
-}
-</style>
+      .mobile-list {
+        display: block;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h2>(持股)台股技術分析報告</h2>
+  <div class="container">
+    <h2>(持股)台股技術分析報告</h2>
 
-  <div class="summary">
-    <div class="box buy"><b id="buyCount"></b><br>買入</div>
-    <div class="box sell"><b id="sellCount"></b><br>出貨</div>
-    <div class="box watch"><b id="watchCount"></b><br>觀察</div>
-    <div class="box hold"><b id="holdCount"></b><br>整理</div>
-  </div>
-
-  <div class="card">
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th data-key="name">名稱</th>
-            <th data-key="code">代碼</th>
-            <th data-key="price">價格</th>
-            <th data-key="chg">漲跌</th>
-            <th data-key="chgPct">漲跌%</th>
-            <th class="col-md" data-key="amp">震幅%</th>
-            <th class="col-lg" data-key="eps_Y">去年EPS</th>
-            <th class="col-lg" data-key="eps_est">估EPS</th>
-            <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ YoY</small></th>
-            <th class="col-lg" data-key="operating_margin">營益率%<br><small>QoQ YoY</small></th>
-            <th class="col-lg" data-key="net_margin">淨利率%<br><small>QoQ YoY</small></th>
-            <th class="col-md" data-key="score">評分</th>
-            <th class="col-md" data-key="yield">殖利率</th>
-            <th class="col-lg" data-key="per_ttm">本益比</th>
-            <th data-key="k">KD</th>
-            <th class="col-md" data-key="bb_pct">布林</th>
-            <th class="col-lg" data-key="bias6">Bias6<br><small>cur / min / max</small></th>
-            <th class="col-lg" data-key="bias18">Bias18<br><small>cur / min / max</small></th>
-            <th class="col-lg" data-key="bias50">Bias50<br><small>cur / min / max</small></th>
-            <th class="col-md" data-key="ma18">月線</th>
-            <th class="col-md" data-key="volume">成交量</th>
-            <th class="col-md" data-key="volume_ratio">量增%</th>
-            <th data-key="sig">訊號 / 策略</th>
-          </tr>
-        </thead>
-        <tbody id="stockBody"></tbody>
-      </table>
+    <div class="summary">
+      <div class="box buy"><b id="buyCount"></b><br>買入</div>
+      <div class="box sell"><b id="sellCount"></b><br>出貨</div>
+      <div class="box watch"><b id="watchCount"></b><br>觀察</div>
+      <div class="box hold"><b id="holdCount"></b><br>整理</div>
     </div>
 
-    <div class="mobile-list" id="mobileList"></div>
+    <div class="card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-key="name">名稱</th>
+              <th data-key="code">代碼</th>
+              <th data-key="price">價格</th>
+              <th data-key="chg">漲跌</th>
+              <th data-key="chgPct">漲跌%</th>
+              <th class="col-md" data-key="amp">震幅%</th>
+              <th class="col-lg" data-key="eps_Y">去年EPS</th>
+              <th class="col-lg" data-key="eps_est">估EPS</th>
+              <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ YoY</small></th>
+              <th class="col-lg" data-key="operating_margin">營益率%<br><small>QoQ YoY</small></th>
+              <th class="col-lg" data-key="net_margin">淨利率%<br><small>QoQ YoY</small></th>
+              <th class="col-md" data-key="score">評分</th>
+              <th class="col-md" data-key="yield">殖利率</th>
+              <th class="col-lg" data-key="per_ttm">本益比</th>
+              <th data-key="k">KD</th>
+              <th class="col-md" data-key="bb_pct">布林</th>
+              <th class="col-lg" data-key="bias6">Bias6<br><small> min / max</small></th>
+              <th class="col-lg" data-key="bias18">Bias18<br><small> min / max</small></th>
+              <th class="col-lg" data-key="bias50">Bias50<br><small> min / max</small></th>
+              <th class="col-md" data-key="ma18">月線</th>
+              <th class="col-md" data-key="volume">成交量</th>
+              <th class="col-md" data-key="volume_ratio">量增%</th>
+              <th data-key="sig">訊號 / 策略</th>
+            </tr>
+          </thead>
+          <tbody id="stockBody"></tbody>
+        </table>
+      </div>
+
+      <div class="mobile-list" id="mobileList"></div>
+    </div>
   </div>
-</div>
 
-<script>
-const stocks = {{ stocks | tojson }};
-let sortedStocks = [...stocks];
-let currentSortKey = "";
-let currentSortDirection = "asc";
+  <script>
+    const stocks = {{ stocks | tojson }};
+    let sortedStocks = [...stocks];
+    let currentSortKey = "";
+    let currentSortDirection = "asc";
 
-function renderMetric(value, qoq, yoy) {
-  const fmt = (v) => (v === null || v === undefined ? "-" : v);
-  const arrow = (v) => {
-    if (v === null || v === undefined) return "";
-    return v > 0 ? "↑" : v < 0 ? "↓" : "";
-  };
-  const colorClass = (v) => {
-    if (v === null || v === undefined) return "";
-    return v > 0 ? "text-red" : v < 0 ? "text-green" : "";
-  };
+    function renderMetric(value, qoq, yoy) {
+      const fmt = (v) => (v === null || v === undefined ? "-" : v);
+      const arrow = (v) => {
+        if (v === null || v === undefined) return "";
+        return v > 0 ? "↑" : v < 0 ? "↓" : "";
+      };
+      const colorClass = (v) => {
+        if (v === null || v === undefined) return "";
+        return v > 0 ? "text-red" : v < 0 ? "text-green" : "";
+      };
 
-  return `
+      return `
   <div class="metric">
     <div class="metric-main">${fmt(value)}</div>
     <div class="metric-sub">
@@ -429,27 +430,27 @@ function renderMetric(value, qoq, yoy) {
       <small class="${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</small>
     </div>
   </div>`;
-}
+    }
 
-function distClass(val) {
-  if (val === null || val === undefined || val === "") return "";
-  return Number(val) > 0 ? "up" : "dn";
-}
+    function distClass(val) {
+      if (val === null || val === undefined || val === "") return "";
+      return Number(val) > 0 ? "up" : "dn";
+    }
 
-function kdColor(k) {
-  if (k > 75) return "#f85149";
-  if (k < 25) return "#3fb950";
-  return "#d29922";
-}
+    function kdColor(k) {
+      if (k > 75) return "#f85149";
+      if (k < 25) return "#3fb950";
+      return "#d29922";
+    }
 
-function renderRow(s) {
-  const chgPct = Number(s.chgPct ?? 0);
-  const chgClass = chgPct >= 0 ? "up" : "dn";
-  const chgSign = chgPct >= 0 ? "+" : "";
-  const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
-  const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
+    function renderRow(s) {
+      const chgPct = Number(s.chgPct ?? 0);
+      const chgClass = chgPct >= 0 ? "up" : "dn";
+      const chgSign = chgPct >= 0 ? "+" : "";
+      const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+      const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
-  return `
+      return `
   <tr>
     <td class="name">${s.name ?? ""}</td>
     <td>${s.code ?? ""}</td>
@@ -533,11 +534,12 @@ function renderRow(s) {
     <td class="signal-cell">
       <div class="signal-wrap">
         <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
+        <div class="signal-sub"><b>${s.signal_result ?? ""}</b></div>
         <div class="signal-sub">${s.signal_text ?? ""}</div>
         <div class="signal-sub">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
+        <div class="signal-sub">${s.reason ?? ""}</div>
       </div>
     </td>
-  </tr>`;
 }
 
 function renderMobileCard(s) {
@@ -548,16 +550,16 @@ function renderMobileCard(s) {
   const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
   return `
-  <div class="stock-card">
-    <div class="stock-head">
+        < div class="stock-card" >
+  <div class="stock-head">
       <div>
         <div class="stock-title">${s.name ?? ""} (${s.code ?? ""})</div>
         <div class="stock-change ${chgClass}">${chgSign}${s.chg ?? ""} / ${chgSign}${s.chgPct ?? ""}%</div>
       </div>
-      <div class="stock-price">${s.price ?? ""}</div>
-    </div>
+  <div class="stock-price">${s.price ?? ""}</div>
+      </div>
 
-    <div class="stock-grid">
+      <div class="stock-grid">
       <div class="stock-item">
         <div class="stock-label">KD</div>
         <div class="stock-value">${s.k ?? "-"} / ${s.d ?? "-"}</div>
@@ -565,17 +567,17 @@ function renderMobileCard(s) {
 
       <div class="stock-item">
         <div class="stock-label">Bias6</div>
-        <div class="stock-value">${s.bias6 ?? "-"}% / min ${s.bias6_min ?? "-"} / max ${s.bias6_max ?? "-"}</div>
+        <div class="stock-value">${s.bias6 ?? "-"}% / ${s.bias6_min ?? "-"} / ${s.bias6_max ?? "-"}</div>
       </div>
 
       <div class="stock-item">
         <div class="stock-label">Bias18</div>
-        <div class="stock-value">${s.bias18 ?? "-"}% / min ${s.bias18_min ?? "-"} / max ${s.bias18_max ?? "-"}</div>
+        <div class="stock-value">${s.bias18 ?? "-"}% / ${s.bias18_min ?? "-"} / ${s.bias18_max ?? "-"}</div>
       </div>
 
       <div class="stock-item">
         <div class="stock-label">Bias50</div>
-        <div class="stock-value">${s.bias50 ?? "-"}% / min ${s.bias50_min ?? "-"} / max ${s.bias50_max ?? "-"}</div>
+        <div class="stock-value">${s.bias50 ?? "-"}% / ${s.bias50_min ?? "-"} / ${s.bias50_max ?? "-"}</div>
       </div>
 
       <div class="stock-item">
@@ -602,14 +604,16 @@ function renderMobileCard(s) {
         <div class="stock-label">殖利率</div>
         <div class="stock-value">${s.yield?.yield ?? s.yield ?? "-"}%</div>
       </div>
-    </div>
+    </div >
 
-    <div class="stock-signal">
-      <div><span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span></div>
-      <div class="signal-sub">${s.signal_text ?? ""}</div>
-      <div class="signal-sub">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
-    </div>
-  </div>`;
+        <div class="stock-signal">
+          <div><span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span></div>
+          <div class="signal-sub"><b>${s.signal_result ?? ""}</b></div>
+          <div class="signal-sub">${s.signal_text ?? ""}</div>
+          <div class="signal-sub">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
+          <div class="signal-sub">${s.reason ?? ""}</div>
+        </div>
+  </div > `;
 }
 
 function renderTable(data) {
@@ -677,7 +681,7 @@ function updateSortIndicators() {
     }
 
     if (key === currentSortKey) {
-      th.innerHTML = `${th.dataset.label} ${currentSortDirection === "asc" ? "▲" : "▼"}`;
+      th.innerHTML = `${ th.dataset.label } ${ currentSortDirection === "asc" ? "▲" : "▼" }`;
     } else {
       th.innerHTML = th.dataset.label;
     }
@@ -705,7 +709,8 @@ document.getElementById("buyCount").innerText = buy;
 document.getElementById("sellCount").innerText = sell;
 document.getElementById("watchCount").innerText = watch;
 document.getElementById("holdCount").innerText = hold;
-</script>
+  </script>
 
 </body>
+
 </html>
