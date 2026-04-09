@@ -468,29 +468,42 @@ def add_indicators(df):
         return df
 
 def get_MABias(df):
-    """  計算均線值與對應的乖離率    傳入: 包含 close 欄位的 DataFrame    回傳: 包含 ma 與 bias 的字典 """
-    if len(df) < 50:
+    """計算 MA6/18/50、最新乖離率、近90天乖離率 min/max"""
+    if len(df) < 90:
         return {
             "ma6": None, "ma18": None, "ma50": None,
-            "bias6": None, "bias18": None, "bias50": None
+            "bias6": None, "bias18": None, "bias50": None,
+            "bias6_min": None, "bias6_max": None,
+            "bias18_min": None, "bias18_max": None,
+            "bias50_min": None, "bias50_max": None,
         }
 
-    latest_close = df["close"].iloc[-1]
     periods = [6, 18, 50]
     stats = {}
 
     for p in periods:
-        ma_value = df["close"].rolling(p).mean().iloc[-1]
-        stats[f"ma{p}"] = round(ma_value, 2)
+        ma_series = df["close"].rolling(p).mean()
+        ma_value = ma_series.iloc[-1]
+
+        stats[f"ma{p}"] = round(ma_value, 2) if pd.notna(ma_value) else None
 
         if ma_value == 0 or pd.isna(ma_value):
             stats[f"bias{p}"] = None
-        else:
-            bias = (latest_close - ma_value) / ma_value * 100
-            stats[f"bias{p}"] = round(bias, 2)
+            stats[f"bias{p}_min"] = None
+            stats[f"bias{p}_max"] = None
+            continue
+
+        bias_series = (df["close"] - ma_series) / ma_series * 100
+        latest_bias = bias_series.iloc[-1]
+
+        # 取近90天乖離率高低點
+        bias_90 = bias_series.iloc[-90:]
+
+        stats[f"bias{p}"] = round(latest_bias, 2) if pd.notna(latest_bias) else None
+        stats[f"bias{p}_min"] = round(bias_90.min(), 2) if bias_90.notna().any() else None
+        stats[f"bias{p}_max"] = round(bias_90.max(), 2) if bias_90.notna().any() else None
 
     return stats
-
 
 #   margin_score（毛利品質）
 def calc_margin_score(gross, op, net):
