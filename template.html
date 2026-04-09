@@ -453,7 +453,7 @@ function renderRow(s) {
     <td class="col-lg">${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
     <td class="col-lg">${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
 
-    <td class="col-md">${s.score ?? "-"}%</td>
+    <td class="col-md">${s.score ?? "-"}</td>
     <td class="col-md">${s.yield?.yield ?? s.yield ?? "-"}%</td>
 
     <td class="col-lg">
@@ -477,20 +477,23 @@ function renderRow(s) {
 
     <td class="col-lg ${distClass(s.bias6)}">
       <div>${s.bias6 ?? "-"}%</div>
-      <small class="text-green">min: ${s.bias6_min ?? "-"}%</small><br>
-      <small class="text-red">max: ${s.bias6_max ?? "-"}%</small>
+      <small class="text-green">${s.bias6_min ?? "-"}</small>
+      &nbsp;&nbsp; 
+      <small class="text-red">${s.bias6_max ?? "-"}</small>
     </td>
 
     <td class="col-lg ${distClass(s.bias18)}">
       <div>${s.bias18 ?? "-"}%</div>
-      <small class="text-green">min: ${s.bias18_min ?? "-"}%</small><br>
-      <small class="text-red">max: ${s.bias18_max ?? "-"}%</small>
+      <small class="text-green">min: ${s.bias18_min ?? "-"}</small>
+      &nbsp;&nbsp; 
+      <small class="text-red">max: ${s.bias18_max ?? "-"}</small>
     </td>
 
     <td class="col-lg ${distClass(s.bias50)}">
       <div>${s.bias50 ?? "-"}%</div>
-      <small class="text-green">min: ${s.bias50_min ?? "-"}%</small><br>
-      <small class="text-red">max: ${s.bias50_max ?? "-"}%</small>
+      <small class="text-green">min: ${s.bias50_min ?? "-"}</small>
+      &nbsp;&nbsp; 
+      <small class="text-red">max: ${s.bias50_max ?? "-"}</small>
     </td>
 
     <td class="col-md">
@@ -573,7 +576,7 @@ function renderMobileCard(s) {
       </div>
       <div class="stock-item">
         <div class="stock-label">評分</div>
-        <div class="stock-value">${s.score ?? "-"}%</div>
+        <div class="stock-value">${s.score ?? "-"}</div>
       </div>
       <div class="stock-item">
         <div class="stock-label">殖利率</div>
