@@ -372,7 +372,7 @@ tbody td:first-child {
             <th class="col-lg" data-key="bias6">Bias6<br><small>cur / min / max</small></th>
             <th class="col-lg" data-key="bias18">Bias18<br><small>cur / min / max</small></th>
             <th class="col-lg" data-key="bias50">Bias50<br><small>cur / min / max</small></th>
-            <th class="col-md" data-key="ma20">月線</th>
+            <th class="col-md" data-key="ma18">月線</th>
             <th class="col-md" data-key="volume">成交量</th>
             <th class="col-md" data-key="volume_ratio">量增%</th>
             <th data-key="sig">訊號</th>
@@ -484,22 +484,22 @@ function renderRow(s) {
 
     <td class="col-lg ${distClass(s.bias18)}">
       <div>${s.bias18 ?? "-"}%</div>
-      <small class="text-green">min: ${s.bias18_min ?? "-"}</small>
+      <small class="text-green">${s.bias18_min ?? "-"}</small>
       &nbsp;&nbsp; 
-      <small class="text-red">max: ${s.bias18_max ?? "-"}</small>
+      <small class="text-red">${s.bias18_max ?? "-"}</small>
     </td>
 
     <td class="col-lg ${distClass(s.bias50)}">
       <div>${s.bias50 ?? "-"}%</div>
-      <small class="text-green">min: ${s.bias50_min ?? "-"}</small>
+      <small class="text-green">${s.bias50_min ?? "-"}</small>
       &nbsp;&nbsp; 
-      <small class="text-red">max: ${s.bias50_max ?? "-"}</small>
+      <small class="text-red">${s.bias50_max ?? "-"}</small>
     </td>
 
     <td class="col-md">
-      ${s.ma20 ?? "-"}<br>
-      <small class="${s.ma20_break ? 'text-red' : ''}">
-        ${s.ma20_break ? '站上月線' : ''}
+      ${s.ma18 ?? "-"}<br>
+      <small class="${s.ma18_break ? 'text-red' : ''}">
+        ${s.ma18_break ? '站上月線' : ''}
       </small>
     </td>
 
@@ -564,7 +564,7 @@ function renderMobileCard(s) {
 
       <div class="stock-item">
         <div class="stock-label">月線</div>
-        <div class="stock-value">${s.ma20 ?? "-"} ${s.ma20_break ? " / 站上月線" : ""}</div>
+        <div class="stock-value">${s.ma18 ?? "-"} ${s.ma18_break ? " / 站上月線" : ""}</div>
       </div>
       <div class="stock-item">
         <div class="stock-label">成交量</div>

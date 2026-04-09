@@ -424,8 +424,6 @@ def get_dividend_yield(stock_id, current_price=None):
 # ========================
 # 4️⃣ 技術指標
 # ========================
-
-
 def add_indicators(df):
     try:
         low_min = df["min"].rolling(9).min()
@@ -437,7 +435,7 @@ def add_indicators(df):
         df["D"] = df["K"].ewm(com=2).mean()
 
         # 均線
-        df["MA5"] = df["close"].rolling(5).mean()
+        df["MA6"] = df["close"].rolling(6).mean()
         df["MA18"] = df["close"].rolling(18).mean()
         df["MA50"] = df["close"].rolling(50).mean()
 
@@ -446,14 +444,14 @@ def add_indicators(df):
         df["BB_upper"] = df["MA18"] + 2 * std
         df["BB_lower"] = df["MA18"] - 2 * std
 
-        # ===== 乖離率 =====
-        df["BIAS5"] = (df["close"] - df["MA6"]) / df["MA5"] * 100
+        # 乖離率
+        df["BIAS6"] = (df["close"] - df["MA6"]) / df["MA6"] * 100
         df["BIAS18"] = (df["close"] - df["MA18"]) / df["MA18"] * 100
         df["BIAS50"] = (df["close"] - df["MA50"]) / df["MA50"] * 100
 
-        # ===== 近90天乖離率高低點 =====
-        df["BIAS5_90D_HIGH"] = df["BIAS6"].rolling(90).max()
-        df["BIAS5_90D_LOW"] = df["BIAS6"].rolling(90).min()
+        # 近90天乖離率高低點
+        df["BIAS6_90D_HIGH"] = df["BIAS6"].rolling(90).max()
+        df["BIAS6_90D_LOW"] = df["BIAS6"].rolling(90).min()
 
         df["BIAS18_90D_HIGH"] = df["BIAS18"].rolling(90).max()
         df["BIAS18_90D_LOW"] = df["BIAS18"].rolling(90).min()
@@ -499,13 +497,18 @@ def get_MABias(df):
         # 取近90天乖離率高低點
         bias_90 = bias_series.iloc[-90:]
 
-        stats[f"bias{p}"] = round(latest_bias, 2) if pd.notna(latest_bias) else None
-        stats[f"bias{p}_min"] = round(bias_90.min(), 2) if bias_90.notna().any() else None
-        stats[f"bias{p}_max"] = round(bias_90.max(), 2) if bias_90.notna().any() else None
+        stats[f"bias{p}"] = round(
+            latest_bias, 2) if pd.notna(latest_bias) else None
+        stats[f"bias{p}_min"] = round(
+            bias_90.min(), 2) if bias_90.notna().any() else None
+        stats[f"bias{p}_max"] = round(
+            bias_90.max(), 2) if bias_90.notna().any() else None
 
     return stats
 
 #   margin_score（毛利品質）
+
+
 def calc_margin_score(gross, op, net):
     score = 0
     if gross is not None:
