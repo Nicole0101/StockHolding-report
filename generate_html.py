@@ -1,4 +1,5 @@
 import pandas as pd
+import config
 from datetime import datetime, timedelta
 from jinja2 import Template
 import os
@@ -61,7 +62,17 @@ def build_strings(data):
 def main():
     # 1. 讀取清單與執行分析
     try:
-        df = pd.read_csv("stocks.csv", sep="\t", encoding="utf-8-sig")
+         with open("config.yml", "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+
+        report_type = config["REPORT_TYPE"]
+        csv_file = config["CSV_FILE"]
+        report_title = config["REPORT_TITLE"]
+        output_file = config["OUTPUT_FILE"]
+
+        df = pd.read_csv(csv_file, sep="\t", encoding="utf-8-sig")
+    
+
         stock_list = df.rename(
             columns={"Ticker": "stock_id", "Name": "name"}
         ).to_dict(orient="records")
@@ -79,14 +90,14 @@ def main():
     # 2. 格式化資料與時間處理
     data = format_output(results)
     text_data = build_strings(data)
-    print("sample stock keys:", data["stocks"][0].keys() if data["stocks"] else [])
+    print("stock keys:", data["stocks"][0].keys() if data["stocks"] else [])
     now_dt = datetime.utcnow() + timedelta(hours=8)
     now_str = now_dt.strftime("%m%d%H%M")
-    filename = f"持股_{now_str}.html"
+    filename = f"OUTPUT_FILE_{now_str}.html"
 
     # 3. 設定 GitHub Pages 連結
     repo_full = os.getenv("GITHUB_REPOSITORY",
-                          "nicole0101/StockHolding-report")
+                          "nicole0101/Holding")
     branch = os.getenv("GITHUB_REF_NAME", "main")
 
     # 拆 user / repo
@@ -94,7 +105,8 @@ def main():
 
     # ===== 檔名 =====
     now = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d%H%M")
-    filename = f"持股_{now}.html"
+    filename = f"{output_file}_{now_str}.html"
+
 
     # ===== URL =====
     if branch == "main":
@@ -113,7 +125,7 @@ def main():
             weak_stocks=text_data["weak_str"],
             rebound_list=text_data["rebound_str"],
             selloff_list=text_data["selloff_str"],
-            generated_time=now_dt.strftime("%Y-%m-%d %H:%M")
+            report_title=report_title
         )
         
         # 寫入當前檔案與 index.html
@@ -126,7 +138,7 @@ def main():
         print(f"❌ HTML 生成失敗: {e}")
 
     # 5. 發送 LINE 通知
-    send_line_notify(data, file_url)
+    send_line_notify(data, file_url, report_title, report_type)
 
 
 # ========================

@@ -1,4 +1,4 @@
-name: DailyStockRpt
+name: DailyHolding
 
 on:
   schedule:
@@ -8,7 +8,7 @@ on:
 env:
   FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
   LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
-  LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+  LINE_USER_ID: ${{ secrets.LINE_USER_ID }}  
 
 jobs:
   build:
