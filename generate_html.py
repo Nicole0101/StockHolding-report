@@ -62,7 +62,7 @@ def build_strings(data):
 def main():
     # 1. 讀取清單與執行分析
     try:
-         with open("config.yml", "r", encoding="utf-8") as f:
+        with open("config.yml", "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
 
         report_type = config["REPORT_TYPE"]
@@ -71,7 +71,6 @@ def main():
         output_file = config["OUTPUT_FILE"]
 
         df = pd.read_csv(csv_file, sep="\t", encoding="utf-8-sig")
-    
 
         stock_list = df.rename(
             columns={"Ticker": "stock_id", "Name": "name"}
@@ -107,7 +106,6 @@ def main():
     now = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d%H%M")
     filename = f"{output_file}_{now_str}.html"
 
-
     # ===== URL =====
     if branch == "main":
         file_url = f"https://{user}.github.io/{repo}/{filename}"
@@ -127,7 +125,7 @@ def main():
             selloff_list=text_data["selloff_str"],
             report_title=report_title
         )
-        
+
         # 寫入當前檔案與 index.html
         for f_name in [filename, "index.html"]:
             with open(f_name, "w", encoding="utf-8") as f:
