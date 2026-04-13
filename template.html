@@ -7,29 +7,23 @@
   <title>{{report_title}}</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       background: #0d1117;
       color: #e6edf3;
       font-family: Arial, sans-serif;
       margin: 0;
     }
-
     .container {
       width: 100%;
       margin: 0;
       padding: 16px;
     }
-
     h2 {
       margin: 0 0 12px 0;
       font-size: clamp(20px, 2.4vw, 30px);
       line-height: 1.25;
     }
-
     .card {
       width: 100%;
       background: #161b22;
@@ -38,21 +32,18 @@
       padding: clamp(8px, 1vw, 15px);
       overflow: hidden;
     }
-
     .table-scroll {
       overflow: auto;
       max-height: min(70vh, 700px);
       position: relative;
       -webkit-overflow-scrolling: touch;
     }
-
     table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
       font-size: clamp(11px, 1vw, 13px);
     }
-
     thead th {
       position: sticky;
       top: 0;
@@ -62,24 +53,18 @@
       user-select: none;
       box-shadow: 0 2px 0 #30363d;
     }
-
-    thead th:hover {
-      background: #263041;
-    }
-
+    thead th:hover { background: #263041; }
     tbody td {
       background: #161b22;
       position: relative;
       z-index: 1;
     }
-
     tbody td:first-child {
       position: sticky;
       left: 0;
       background: #161b22;
       z-index: 150;
     }
-
     thead th:first-child {
       position: sticky;
       top: 0;
@@ -87,29 +72,16 @@
       background: #1c2330;
       z-index: 250;
     }
-
-    th,
-    td {
+    th, td {
       padding: clamp(6px, 0.8vw, 10px);
       border-bottom: 1px solid #30363d;
       border-right: 1px solid #30363d;
       white-space: nowrap;
       vertical-align: middle;
     }
-
-    thead th,
-    tbody td:first-child {
-      background-clip: padding-box;
-    }
-
-    .up {
-      color: #f85149;
-    }
-
-    .dn {
-      color: #3fb950;
-    }
-
+    thead th, tbody td:first-child { background-clip: padding-box; }
+    .up { color: #f85149; }
+    .dn { color: #3fb950; }
     .sig {
       display: inline-block;
       padding: 2px 6px;
@@ -117,48 +89,31 @@
       font-size: 11px;
       line-height: 1.4;
     }
-
-    .sig.up {
-      background: #3fb95022;
-      color: #3fb950;
-    }
-
-    .sig.dn {
-      background: #f8514922;
-      color: #f85149;
-    }
-
-    .sig.watch {
-      background: #d2992222;
-      color: #d29922;
-    }
-
+    .sig.up { background: #3fb95022; color: #3fb950; }
+    .sig.dn { background: #f8514922; color: #f85149; }
+    .sig.watch { background: #d2992222; color: #d29922; }
     .signal-cell {
-      min-width: 140px;
+      min-width: 160px;
       white-space: normal;
       line-height: 1.4;
     }
-
     .signal-wrap {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 4px;
     }
-
     .signal-sub {
       font-size: 11px;
       color: #8b949e;
       word-break: break-word;
     }
-
     .summary {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 12px;
     }
-
     .box {
       padding: clamp(8px, 1.5vw, 12px);
       border-radius: 8px;
@@ -166,52 +121,35 @@
       min-width: 0;
       font-size: clamp(12px, 1vw, 14px);
     }
-
-    .buy {
-      background: #3fb95022;
-    }
-
-    .sell {
-      background: #f8514922;
-    }
-
-    .watch {
-      background: #d2992222;
-    }
-
-    .hold {
-      background: #8b949e22;
-    }
-
+    .buy { background: #3fb95022; }
+    .sell { background: #f8514922; }
+    .watch { background: #d2992222; }
+    .hold { background: #8b949e22; }
     .metric {
       text-align: center;
       line-height: 1.2;
     }
-
     .metric-main {
       font-size: clamp(11px, 1vw, 12px);
       font-weight: normal;
     }
-
     .metric-sub {
       font-size: clamp(10px, 0.9vw, 11px);
       display: flex;
       justify-content: center;
       gap: 6px;
     }
-
-    .text-red {
-      color: #ff4d4f;
+    .metric-2line { line-height: 1.4; }
+    .metric-note {
+      display: block;
+      margin-top: 2px;
+      font-size: 10px;
+      color: #8b949e;
+      white-space: normal;
     }
-
-    .text-green {
-      color: #00b050;
-    }
-
-    .mobile-list {
-      display: none;
-    }
-
+    .text-red { color: #ff4d4f; }
+    .text-green { color: #00b050; }
+    .mobile-list { display: none; }
     .stock-card {
       background: #161b22;
       border: 1px solid #30363d;
@@ -219,7 +157,6 @@
       padding: 12px;
       margin-bottom: 10px;
     }
-
     .stock-head {
       display: flex;
       justify-content: space-between;
@@ -227,42 +164,28 @@
       gap: 8px;
       margin-bottom: 10px;
     }
-
     .stock-title {
       font-size: 15px;
       font-weight: bold;
     }
-
     .stock-price {
       font-size: 18px;
       font-weight: bold;
     }
-
-    .stock-change {
-      font-size: 13px;
-    }
-
+    .stock-change { font-size: 13px; }
     .stock-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px 10px;
       font-size: 12px;
     }
-
-    .stock-item {
-      min-width: 0;
-    }
-
+    .stock-item { min-width: 0; }
     .stock-label {
       color: #8b949e;
       font-size: 11px;
       margin-bottom: 2px;
     }
-
-    .stock-value {
-      word-break: break-word;
-    }
-
+    .stock-value { word-break: break-word; }
     .stock-signal {
       margin-top: 10px;
       padding-top: 10px;
@@ -272,63 +195,40 @@
     }
 
     @media (max-width: 1024px) {
-      .container {
-        padding: 12px;
-      }
-
-      .summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      th,
-      td {
+      .container { padding: 12px; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      th, td {
         padding: 6px;
         font-size: 11px;
       }
-
-      .col-lg {
-        display: none;
-      }
-
-      .table-scroll {
-        max-height: 65vh;
-      }
+      .col-lg { display: none; }
+      .table-scroll { max-height: 65vh; }
     }
 
     @media (max-width: 640px) {
-      .container {
-        padding: 8px;
-      }
-
+      .container { padding: 8px; }
       .summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
       }
-
       .card {
         padding: 0;
         border: none;
         background: transparent;
         overflow: visible;
       }
-
-      .table-scroll {
-        display: none;
-      }
-
-      .mobile-list {
-        display: block;
-      }
+      .table-scroll { display: none; }
+      .mobile-list { display: block; }
     }
   </style>
 </head>
 
 <body>
-
   <div class="container">
     <h2>{{report_title}}</h2>
     <p>{{ report_subtitle }}</p>
     <p>產生時間：{{ generated_time }}</p>
+
     <div class="summary">
       <div class="box buy"><b id="buyCount"></b><br>買入</div>
       <div class="box sell"><b id="sellCount"></b><br>出貨</div>
@@ -347,12 +247,13 @@
               <th data-key="chgPct">漲跌%</th>
               <th class="col-md" data-key="amp">震幅%</th>
               <th class="col-lg" data-key="eps_Y">EPS<br><small>去年 / TTM / 預估</small></th>
-              <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ YoY</small></th>
-              <th class="col-lg" data-key="operating_margin">營益率%<br><small>QoQ YoY</small></th>
-              <th class="col-lg" data-key="net_margin">淨利率%<br><small>QoQ YoY</small></th>
+              <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ / YoY</small></th>
+              <th class="col-lg" data-key="operating_margin">營益率%<br><small>QoQ / YoY</small></th>
+              <th class="col-lg" data-key="net_margin">淨利率%<br><small>QoQ / YoY</small></th>
               <th class="col-md" data-key="score">評分</th>
               <th class="col-md" data-key="yield">殖利率</th>
-              <th class="col-lg" data-key="per_ttm">本益比 / 淨值比</th>
+              <th class="col-lg" data-key="per_latest">PER</th>
+              <th class="col-lg" data-key="pbr_latest">PBR</th>
               <th data-key="k">KD</th>
               <th class="col-md" data-key="bb_pct">布林</th>
               <th class="col-lg" data-key="bias6">Bias6<br><small>min / max</small></th>
@@ -406,6 +307,14 @@
         </div>`;
     }
 
+    function renderRangeMetric(current, low, high) {
+      return `
+        <div class="metric metric-2line">
+          <div class="metric-main">${fmt(current)}</div>
+          <small class="metric-note">90天低/高：${fmt(low)} / ${fmt(high)}</small>
+        </div>`;
+    }
+
     function distClass(val) {
       if (isNil(val) || val === "") return "";
       return Number(val) > 0 ? "up" : "dn";
@@ -427,9 +336,9 @@
           <td class="col-md">${fmt(s.amp, "%")}</td>
 
           <td class="col-lg">
-            <div><small>去年:</small> ${fmt(s.eps_Y)}</div>
-            <div><small>TTM:</small> ${fmt(s.eps_ttm)}</div>
-            <div><small>預估:</small> ${fmt(s.eps_est)}</div>
+            <div>${fmt(s.eps_Y)}</div>
+            <small>TTM: ${fmt(s.eps_ttm)}</small><br>
+            <small>預估: ${fmt(s.eps_est)}</small>
           </td>
 
           <td class="col-lg">${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
@@ -439,14 +348,8 @@
           <td class="col-md">${fmt(s.score)}</td>
           <td class="col-md">${fmt(s.yield?.yield ?? s.yield, "%")}</td>
 
-          <td class="col-lg">
-            <div><small>TTM:</small> ${fmt(s.per_ttm)}</div>
-            <div><small>預估:</small> ${fmt(s.per_est)}</div>
-            <div><small>PER 目前:</small> ${fmt(s.per_latest)}</div>
-            <div><small>PER 90天低/高:</small> ${fmt(s.per_90d_low)} / ${fmt(s.per_90d_high)}</div>
-            <div><small>PBR 目前:</small> ${fmt(s.pbr_latest)}</div>
-            <div><small>PBR 90天低/高:</small> ${fmt(s.pbr_90d_low)} / ${fmt(s.pbr_90d_high)}</div>
-          </td>
+          <td class="col-lg">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</td>
+          <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
 
           <td>${fmt(s.k)}/${fmt(s.d)}</td>
           <td class="col-md">${fmt(s.bb_pct, "%")}</td>
@@ -474,14 +377,12 @@
 
           <td class="col-md">
             ${fmt(s.ma18)}<br>
-            <small class="${s.ma18_break ? 'text-red' : ''}">
-              ${s.ma18_break ? '站上月線' : ''}
-            </small>
+            <small class="${s.ma18_break ? 'text-red' : ''}">${s.ma18_break ? '站上月線' : ''}</small>
           </td>
 
           <td class="col-md">
             ${fmt(s.volume)} 張<br>
-            <small>昨:${fmt(s.prev_volume)}</small>
+            <small>昨: ${fmt(s.prev_volume)}</small>
           </td>
 
           <td class="col-md ${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
@@ -520,23 +421,13 @@
 
           <div class="stock-grid">
             <div class="stock-item">
-              <div class="stock-label">EPS</div>
-              <div class="stock-value">去年 ${fmt(s.eps_Y)} / TTM ${fmt(s.eps_ttm)} / 估 ${fmt(s.eps_est)}</div>
+              <div class="stock-label">PER</div>
+              <div class="stock-value">${fmt(s.per_latest)}<br><small>90天低/高：${fmt(s.per_90d_low)} / ${fmt(s.per_90d_high)}</small></div>
             </div>
 
             <div class="stock-item">
-              <div class="stock-label">殖利率</div>
-              <div class="stock-value">${fmt(s.yield?.yield ?? s.yield, "%")}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">PER / PBR</div>
-              <div class="stock-value">PER ${fmt(s.per_latest)} / PBR ${fmt(s.pbr_latest)}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">90天 PER / PBR</div>
-              <div class="stock-value">PER ${fmt(s.per_90d_low)} ~ ${fmt(s.per_90d_high)} / PBR ${fmt(s.pbr_90d_low)} ~ ${fmt(s.pbr_90d_high)}</div>
+              <div class="stock-label">PBR</div>
+              <div class="stock-value">${fmt(s.pbr_latest)}<br><small>90天低/高：${fmt(s.pbr_90d_low)} / ${fmt(s.pbr_90d_high)}</small></div>
             </div>
 
             <div class="stock-item">
@@ -546,17 +437,17 @@
 
             <div class="stock-item">
               <div class="stock-label">Bias6</div>
-              <div class="stock-value">${fmt(s.bias6, "%")} / ${fmt(s.bias6_min, "%")} / ${fmt(s.bias6_max, "%")}</div>
+              <div class="stock-value">${fmt(s.bias6, "%")} / ${fmt(s.bias6_min)} / ${fmt(s.bias6_max)}</div>
             </div>
 
             <div class="stock-item">
               <div class="stock-label">Bias18</div>
-              <div class="stock-value">${fmt(s.bias18, "%")} / ${fmt(s.bias18_min, "%")} / ${fmt(s.bias18_max, "%")}</div>
+              <div class="stock-value">${fmt(s.bias18, "%")} / ${fmt(s.bias18_min)} / ${fmt(s.bias18_max)}</div>
             </div>
 
             <div class="stock-item">
               <div class="stock-label">Bias50</div>
-              <div class="stock-value">${fmt(s.bias50, "%")} / ${fmt(s.bias50_min, "%")} / ${fmt(s.bias50_max, "%")}</div>
+              <div class="stock-value">${fmt(s.bias50, "%")} / ${fmt(s.bias50_min)} / ${fmt(s.bias50_max)}</div>
             </div>
 
             <div class="stock-item">
@@ -577,6 +468,11 @@
             <div class="stock-item">
               <div class="stock-label">評分</div>
               <div class="stock-value">${fmt(s.score)}</div>
+            </div>
+
+            <div class="stock-item">
+              <div class="stock-label">殖利率</div>
+              <div class="stock-value">${fmt(s.yield?.yield ?? s.yield, "%")}</div>
             </div>
           </div>
 
@@ -609,7 +505,9 @@
         case "yield":
           return Number(s.yield?.yield ?? s.yield ?? -999999);
         case "score":
-          return Number(s.score ?? -999999);
+        case "per_latest":
+        case "pbr_latest":
+          return Number(s[key] ?? -999999);
         default: {
           const value = s[key];
           if (isNil(value) || value === "") return -999999;
@@ -682,7 +580,6 @@
     document.getElementById("watchCount").innerText = watch;
     document.getElementById("holdCount").innerText = hold;
   </script>
-
 </body>
 
 </html>
