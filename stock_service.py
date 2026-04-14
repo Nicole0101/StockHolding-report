@@ -13,6 +13,34 @@ from signals import get_tech_signal
 from technical_indicators import add_indicators, get_MABias
 
 
+def get_price_90d_high_low(df):
+    df_90 = df.tail(90)
+
+    max_price = pd.to_numeric(df_90["max"], errors="coerce").max()
+    min_price = pd.to_numeric(df_90["min"], errors="coerce").min()
+
+    if pd.isna(max_price) or pd.isna(min_price):
+        return {
+            "price_90d_high": None,
+            "price_90d_low": None,
+        }
+
+    return {
+        "price_90d_high": float(max_price),
+        "price_90d_low": float(min_price),
+    }
+
+
+PER_PBR_CACHE = {}
+
+
+def get_per_pbr_cached(stock_id):
+    if stock_id not in PER_PBR_CACHE:
+        if len(PER_PBR_CACHE) > 500:  # 限制大小
+            PER_PBR_CACHE.clear()
+        PER_PBR_CACHE[stock_id] = get_per_pbr_90d_stats(stock_id)
+    return PER_PBR_CACHE[stock_id]
+
 def process_stock(s):
     try:
         df = get_stock_data(s['stock_id'])
@@ -21,6 +49,7 @@ def process_stock(s):
 
         df = add_indicators(df)
         latest, prev = df.iloc[-1], df.iloc[-2]
+        price_stats = get_price_90d_high_low(df)
 
         chg = latest['close'] - prev['close']
         chgPct = round((chg / prev['close']) * 100, 2)
@@ -42,14 +71,14 @@ def process_stock(s):
 
         yield_raw = get_dividend_yield(s['stock_id'], latest['close'])
         dividend = None
-        yield_value = None      
+        yield_value = None
         if isinstance(yield_raw, dict):
             dividend = yield_raw.get('dividend')
             yield_value = yield_raw.get('yield')
         elif isinstance(yield_raw, (int, float)):
             yield_value = float(yield_raw)
-            
-        per_pbr_stats = get_per_pbr_90d_stats(s['stock_id'], days=90)
+
+        per_pbr_stats = get_per_pbr_cached(s['stock_id']) or {}
         ma_stats = get_MABias(df)
 
         safe_ma_stats = {}
@@ -150,12 +179,15 @@ def process_stock(s):
         margin_score = calc_margin_score(cur_g, cur_o, cur_n)
         eps_score = calc_eps_score(eps_res[1], eps_res[2])
         trend_score = calc_trend_score(qoq_g, yoy_g, qoq_n, yoy_n)
-        score = round(margin_score * 0.4 + eps_score * 0.3 + trend_score * 0.3, 2)
+        score = round(margin_score * 0.4 + eps_score *
+                      0.3 + trend_score * 0.3, 2)
 
         return {
             'name': s['name'],
             'code': s['stock_id'],
             'price': float(round(close, 2)),
+            'price_90d_high': price_stats.get('price_90d_high'),
+            'price_90d_low': price_stats.get('price_90d_low'),
             'chg': float(round(chg, 2)),
             'chgPct': float(chgPct),
             'amp': float(amp),
