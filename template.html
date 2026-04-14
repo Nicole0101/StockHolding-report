@@ -373,7 +373,7 @@
           <thead>
             <tr>
               <th data-key="code">代碼<br><small>名稱</small></th>
-              <th data-key="price">價格</th>
+              <th data-key="price">價格<br><small>90天低/高</small></th>
               <th data-key="chg">漲跌</th>
               <th data-key="chgPct">漲跌%</th>
               <th class="col-md" data-key="amp">震幅%</th>
@@ -558,7 +558,10 @@
             <div class="table-lv1"><b>${s.name ?? ""} (${s.code ?? ""})</b></div>
             <div class="table-lv2 ${chgClass}">${chgSign}${fmt(s.chg)} / ${chgSign}${fmt(s.chgPct, "%")}</div>
           </div>
-          <div class="table-lv1"><b>${fmt(s.price)}</b></div>
+          <div class="stock-label">價格 90天低/高</div>
+            <div class="stock-value">
+              ${renderRangeMetric(s.price_latest, s.per_90d_low, s.per_90d_high)}
+            </div>
         </div>
 
         <div class="stock-grid">
