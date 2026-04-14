@@ -417,8 +417,6 @@
       return isNil(v) ? "-" : `${v}${suffix}`;
     }
 
-
-
     function renderMetric(value, qoq, yoy) {
       const arrow = (v) => {
         if (isNil(v)) return "";
@@ -431,22 +429,22 @@
       };
 
       return `
-        <div class="metric">
-          <div class="table-lv1">${fmt(value)}</div>
-          <div class="metric-sub">
-            <div class="table-lv2 ${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</div>
-            <div class="table-lv3 ${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</div>
-          </div>
-        </div>`;
+      <div class="metric">
+        <div class="table-lv1">${fmt(value)}</div>
+        <div class="metric-sub">
+          <div class="table-lv2 ${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</div>
+          <div class="table-lv3 ${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</div>
+        </div>
+      </div>`;
     }
 
     function renderRangeMetric(current, low, high, suffix = "") {
       return `
-        <div class="metric metric-2line">
-          <div class="table-lv1">${fmt(current, suffix)}</div>
-          <div class="table-lv2">${fmt(low, suffix)}</div>
-          <div class="table-lv3">${fmt(high, suffix)}</div>
-        </div>`;
+      <div class="metric metric-2line">
+        <div class="table-lv1">${fmt(current, suffix)}</div>
+        <div class="table-lv2">${fmt(low, suffix)}</div>
+        <div class="table-lv3">${fmt(high, suffix)}</div>
+      </div>`;
     }
 
     function distClass(val) {
@@ -462,91 +460,90 @@
       const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
       return `
-    <tr>
-      <td>
-        <div class="table-lv1">${s.code ?? ""}</div>
-        <div class="table-lv2">${fmt(s.name)}</div>
-      </td>
+      <tr>
+        <td>
+          <div class="table-lv1">${s.code ?? ""}</div>
+          <div class="table-lv2">${fmt(s.name)}</div>
+        </td>
 
-      <td>
-        <div class="table-lv1">${fmt(s.price)}</div>
-      </td>
+        <td>
+          <div class="table-lv1">${fmt(s.price)}</div>
+        </td>
 
-      <td class="${chgClass}">
-        <div class="table-lv1">${chgSign}${fmt(s.chg)}</div>
-      </td>
+        <td class="${chgClass}">
+          <div class="table-lv1">${chgSign}${fmt(s.chg)}</div>
+        </td>
 
-      <td class="${chgClass}">
-        <div class="table-lv1">${chgSign}${fmt(s.chgPct, "%")}</div>
-      </td>
+        <td class="${chgClass}">
+          <div class="table-lv1">${chgSign}${fmt(s.chgPct, "%")}</div>
+        </td>
 
-      <td class="col-md">
-        <div class="table-lv1">${fmt(s.amp, "%")}</div>
-      </td>
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.amp, "%")}</div>
+        </td>
 
-      <td class="col-lg">
-        <div class="table-lv1">${fmt(s.eps_Y)}</div>
-        <div class="table-lv2">TTM: ${fmt(s.eps_ttm)}</div>
-        <div class="table-lv3">預估: ${fmt(s.eps_est)}</div>
-      </td>
+        <td class="col-lg">
+          <div class="table-lv1">${fmt(s.eps_Y)}</div>
+          <div class="table-lv2">TTM: ${fmt(s.eps_ttm)}</div>
+          <div class="table-lv3">預估: ${fmt(s.eps_est)}</div>
+        </td>
 
-      <td class="col-lg">${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
-      <td class="col-lg">${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
-      <td class="col-lg">${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
+        <td class="col-lg">${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
+        <td class="col-lg">${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
+        <td class="col-lg">${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
 
-      <td class="col-md">
-        <div class="table-lv1">${fmt(s.score)}</div>
-      </td>
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.score)}</div>
+        </td>
 
-      <td class="col-md">
-        <div class="table-lv1">${fmt(s.yield_value, "%")}</div>
-      </td>
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.yield_value, "%")}</div>
+        </td>
 
-      <td class="col-lg">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</td>
-      <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
+        <td class="col-lg">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</td>
+        <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
 
-      <td>
-        <div class="table-lv1">${fmt(s.k)}</div>
-        <div class="table-lv2">${fmt(s.d)}</div>
-      </td>
+        <td>
+          <div class="table-lv1">${fmt(s.k)}</div>
+          <div class="table-lv2">${fmt(s.d)}</div>
+        </td>
 
-      <td class="col-md">
-        <div class="table-lv1">${fmt(s.bb_pct, "%")}</div>
-      </td>
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.bb_pct, "%")}</div>
+        </td>
 
-      <td class="col-lg ${distClass(s.bias6)}">${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}</td>
-      <td class="col-lg ${distClass(s.bias18)}">${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}</td>
-      <td class="col-lg ${distClass(s.bias50)}">${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}</td>
+        <td class="col-lg ${distClass(s.bias6)}">${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}</td>
+        <td class="col-lg ${distClass(s.bias18)}">${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}</td>
+        <td class="col-lg ${distClass(s.bias50)}">${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}</td>
 
-      <td class="col-md">
-        <div class="table-lv1">${fmt(s.ma18)}</div>
-        <div class="table-lv2 ${s.ma18_break ? 'text-red' : ''}">
-          ${s.ma18_break ? '站上月線' : '-'}
-        </div>
-      </td>
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.ma18)}</div>
+          <div class="table-lv2 ${s.ma18_break ? 'text-red' : ''}">
+            ${s.ma18_break ? '站上月線' : '-'}
+          </div>
+        </td>
 
-      <td class="col-md">
-        <div class="table-lv1">${fmt(s.volume)} 張</div>
-        <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
-      </td>
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.volume)} 張</div>
+          <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
+        </td>
 
-      <td class="col-md ${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
-        <div class="table-lv1">${fmt(s.volume_ratio, "%")}</div>
-        <div class="table-lv2">${fmt(s.volume_add)} 張</div>
-      </td>
+        <td class="col-md ${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
+          <div class="table-lv1">${fmt(s.volume_ratio, "%")}</div>
+          <div class="table-lv2">${fmt(s.volume_add)} 張</div>
+        </td>
 
-      <td class="signal-cell">
-        <div class="signal-wrap">
-          <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
-          <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
-          <div class="table-lv2">${s.signal_text ?? ""}</div>
-          <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
-          <div class="table-lv3">${s.reason ?? ""}</div>
-        </div>
-      </td>
-    </tr>`;
+        <td class="signal-cell">
+          <div class="signal-wrap">
+            <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
+            <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
+            <div class="table-lv2">${s.signal_text ?? ""}</div>
+            <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
+            <div class="table-lv3">${s.reason ?? ""}</div>
+          </div>
+        </td>
+      </tr>`;
     }
-
 
     function renderMobileCard(s) {
       const chgPct = Number(s.chgPct ?? 0);
@@ -556,194 +553,110 @@
       const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
       return `
-    <div class="stock-card">
-      <div class="stock-head">
-        <div>
-          <div class="table-lv1"><b>${s.name ?? ""} (${s.code ?? ""})</b></div>
-          <div class="table-lv2 ${chgClass}">${chgSign}${fmt(s.chg)} / ${chgSign}${fmt(s.chgPct, "%")}</div>
-        </div>
-        <div class="table-lv1"><b>${fmt(s.price)}</b></div>
-      </div>
-
-      <div class="stock-grid">
-        <div class="stock-item">
-          <div class="stock-label">PER</div>
-          <div class="stock-value">
-            ${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}
+      <div class="stock-card">
+        <div class="stock-head">
+          <div>
+            <div class="table-lv1"><b>${s.name ?? ""} (${s.code ?? ""})</b></div>
+            <div class="table-lv2 ${chgClass}">${chgSign}${fmt(s.chg)} / ${chgSign}${fmt(s.chgPct, "%")}</div>
           </div>
+          <div class="table-lv1"><b>${fmt(s.price)}</b></div>
         </div>
 
-        <div class="stock-item">
-          <div class="stock-label">PBR</div>
-          <div class="stock-value">
-            ${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}
+        <div class="stock-grid">
+          <div class="stock-item">
+            <div class="stock-label">PER</div>
+            <div class="stock-value">
+              ${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}
+            </div>
           </div>
-        </div>
 
-        <div class="stock-item">
-          <div class="stock-label">KD</div>
-          <div class="stock-value">
-            <div class="table-lv1">${fmt(s.k)}</div>
-            <div class="table-lv2">${fmt(s.d)}</div>
+          <div class="stock-item">
+            <div class="stock-label">PBR</div>
+            <div class="stock-value">
+              ${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}
+            </div>
           </div>
-        </div>
 
-        <div class="stock-item">
-          <div class="stock-label">Bias6</div>
-          <div class="stock-value ${distClass(s.bias6)}">
-            ${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}
+          <div class="stock-item">
+            <div class="stock-label">KD</div>
+            <div class="stock-value">
+              <div class="table-lv1">${fmt(s.k)}</div>
+              <div class="table-lv2">${fmt(s.d)}</div>
+            </div>
           </div>
-        </div>
 
-        <div class="stock-item">
-          <div class="stock-label">Bias18</div>
-          <div class="stock-value ${distClass(s.bias18)}">
-            ${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}
+          <div class="stock-item">
+            <div class="stock-label">Bias6</div>
+            <div class="stock-value ${distClass(s.bias6)}">
+              ${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}
+            </div>
           </div>
-        </div>
 
-        <div class="stock-item">
-          <div class="stock-label">Bias50</div>
-          <div class="stock-value ${distClass(s.bias50)}">
-            ${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}
+          <div class="stock-item">
+            <div class="stock-label">Bias18</div>
+            <div class="stock-value ${distClass(s.bias18)}">
+              ${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}
+            </div>
           </div>
-        </div>
 
-        <div class="stock-item">
-          <div class="stock-label">月線</div>
-          <div class="stock-value">
-            <div class="table-lv1">${fmt(s.ma18)}</div>
-            <div class="table-lv2 ${s.ma18_break ? 'text-red' : ''}">
-              ${s.ma18_break ? '站上月線' : '-'}
+          <div class="stock-item">
+            <div class="stock-label">Bias50</div>
+            <div class="stock-value ${distClass(s.bias50)}">
+              ${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}
+            </div>
+          </div>
+
+          <div class="stock-item">
+            <div class="stock-label">月線</div>
+            <div class="stock-value">
+              <div class="table-lv1">${fmt(s.ma18)}</div>
+              <div class="table-lv2 ${s.ma18_break ? 'text-red' : ''}">
+                ${s.ma18_break ? '站上月線' : '-'}
+              </div>
+            </div>
+          </div>
+
+          <div class="stock-item">
+            <div class="stock-label">成交量</div>
+            <div class="stock-value">
+              <div class="table-lv1">${fmt(s.volume)} 張</div>
+              <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
+            </div>
+          </div>
+
+          <div class="stock-item">
+            <div class="stock-label">量增%</div>
+            <div class="stock-value ${((s.volume_ratio ?? 0) > 0) ? 'up' : 'dn'}">
+              <div class="table-lv1">${fmt(s.volume_ratio, "%")}</div>
+              <div class="table-lv2">${fmt(s.volume_add)} 張</div>
+            </div>
+          </div>
+
+          <div class="stock-item">
+            <div class="stock-label">評分</div>
+            <div class="stock-value">
+              <div class="table-lv1">${fmt(s.score)}</div>
+            </div>
+          </div>
+
+          <div class="stock-item">
+            <div class="stock-label">殖利率</div>
+            <div class="stock-value">
+              <div class="table-lv1">${fmt(s.yield_value, "%")}</div>
             </div>
           </div>
         </div>
 
-        <div class="stock-item">
-          <div class="stock-label">成交量</div>
-          <div class="stock-value">
-            <div class="table-lv1">${fmt(s.volume)} 張</div>
-            <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
+        <div class="stock-signal">
+          <div>
+            <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
           </div>
+          <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
+          <div class="table-lv2">${s.signal_text ?? ""}</div>
+          <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
+          <div class="table-lv3">${s.reason ?? ""}</div>
         </div>
-
-        <div class="stock-item">
-          <div class="stock-label">量增%</div>
-          <div class="stock-value ${((s.volume_ratio ?? 0) > 0) ? 'up' : 'dn'}">
-            <div class="table-lv1">${fmt(s.volume_ratio, "%")}</div>
-            <div class="table-lv2">${fmt(s.volume_add)} 張</div>
-          </div>
-        </div>
-
-        <div class="stock-item">
-          <div class="stock-label">評分</div>
-          <div class="stock-value">
-            <div class="table-lv1">${fmt(s.score)}</div>
-          </div>
-        </div>
-
-        <div class="stock-item">
-          <div class="stock-label">殖利率</div>
-          <div class="stock-value">
-            <div class="table-lv1">${fmt(s.yield_value, "%")}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="stock-signal">
-        <div>
-          <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
-        </div>
-        <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
-        <div class="table-lv2">${s.signal_text ?? ""}</div>
-        <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
-        <div class="table-lv3">${s.reason ?? ""}</div>
-      </div>
-    </div>`;
-    }
-
-    const chgPct = Number(s.chgPct ?? 0);
-    const chgClass = chgPct >= 0 ? "up" : "dn";
-    const chgSign = chgPct >= 0 ? "+" : "";
-    const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
-    const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
-    const yieldValue = s.yield_value;
-
-    return `
-        <div class="stock-card">
-          <div class="stock-head">
-            <div>
-              <div class="stock-title">${s.name ?? ""} (${s.code ?? ""})</div>
-              <div class="stock-change ${chgClass}">${chgSign}${fmt(s.chg)} / ${chgSign}${fmt(s.chgPct, "%")}</div>
-            </div>
-            <div class="stock-price">${fmt(s.price)}</div>
-          </div>
-
-          <div class="stock-grid">
-            <div class="stock-item">
-              <div class="stock-label">PER</div>
-              <div class="stock-value">${fmt(s.per_latest)}<br><small>${fmt(s.per_90d_low)} <br> ${fmt(s.per_90d_high)}</small></div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">PBR</div>
-              <div class="stock-value">${fmt(s.pbr_latest)}<br><small>${fmt(s.pbr_90d_low)} <br> ${fmt(s.pbr_90d_high)}</small></div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">KD</div>
-              <div class="stock-value">${fmt(s.k)}<br>${fmt(s.d)}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">Bias6</div>
-              <div class="stock-value">${fmt(s.bias6, "%")} <br> ${fmt(s.bias6_min)} <br> ${fmt(s.bias6_max)}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">Bias18</div>
-              <div class="stock-value">${fmt(s.bias18, "%")} <br> ${fmt(s.bias18_min)} <br> ${fmt(s.bias18_max)}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">Bias50</div>
-              <div class="stock-value">${fmt(s.bias50, "%")} <br> ${fmt(s.bias50_min)} <br> ${fmt(s.bias50_max)}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">月線</div>
-              <div class="stock-value">${fmt(s.ma18)}${s.ma18_break ? ' / 站上月線' : ''}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">成交量</div>
-              <div class="stock-value">${fmt(s.volume)} 張</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">量增%</div>
-              <div class="stock-value ${((s.volume_ratio ?? 0) > 0) ? 'up' : 'dn'}">${fmt(s.volume_ratio, "%")}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">評分</div>
-              <div class="stock-value">${fmt(s.score)}</div>
-            </div>
-
-            <div class="stock-item">
-              <div class="stock-label">殖利率</div>
-              <div class="stock-value">${fmt(s.yield_value, "%")}</div>
-            </div>
-          </div>
-
-          <div class="stock-signal">
-            <div><span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span></div>
-            <div class="signal-sub"><b>${s.signal_result ?? ""}</b></div>
-            <div class="signal-sub">${s.signal_text ?? ""}</div>
-            <div class="signal-sub">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
-            <div class="signal-sub">${s.reason ?? ""}</div>
-          </div>
-        </div>`;
+      </div>`;
     }
 
     function renderTable(data) {
@@ -839,7 +752,8 @@
     document.getElementById("sellCount").innerText = sell;
     document.getElementById("watchCount").innerText = watch;
     document.getElementById("holdCount").innerText = hold;
-  </script>
+  </script>S
+
 </body>
 
 </html>
