@@ -447,20 +447,21 @@
           <div class="table-lv2">${fmt(low, suffix)}</div>
           <div class="table-lv3">${fmt(high, suffix)}</div>
         </div>`;
+    }
 
-      function distClass(val) {
-        if (isNil(val) || val === "") return "";
-        return Number(val) > 0 ? "up" : "dn";
-      }
+    function distClass(val) {
+      if (isNil(val) || val === "") return "";
+      return Number(val) > 0 ? "up" : "dn";
+    }
 
-      function renderRow(s) {
-        const chgPct = Number(s.chgPct ?? 0);
-        const chgClass = chgPct >= 0 ? "up" : "dn";
-        const chgSign = chgPct >= 0 ? "+" : "";
-        const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
-        const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
+    function renderRow(s) {
+      const chgPct = Number(s.chgPct ?? 0);
+      const chgClass = chgPct >= 0 ? "up" : "dn";
+      const chgSign = chgPct >= 0 ? "+" : "";
+      const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+      const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
-        return `
+      return `
     <tr>
       <td>
         <div class="table-lv1">${s.code ?? ""}</div>
@@ -544,18 +545,131 @@
         </div>
       </td>
     </tr>`;
-      }
+    }
 
 
-      function renderMobileCard(s) {
-        const chgPct = Number(s.chgPct ?? 0);
-        const chgClass = chgPct >= 0 ? "up" : "dn";
-        const chgSign = chgPct >= 0 ? "+" : "";
-        const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
-        const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
-        const yieldValue = s.yield_value;
+    function renderMobileCard(s) {
+      const chgPct = Number(s.chgPct ?? 0);
+      const chgClass = chgPct >= 0 ? "up" : "dn";
+      const chgSign = chgPct >= 0 ? "+" : "";
+      const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+      const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
-        return `
+      return `
+    <div class="stock-card">
+      <div class="stock-head">
+        <div>
+          <div class="table-lv1"><b>${s.name ?? ""} (${s.code ?? ""})</b></div>
+          <div class="table-lv2 ${chgClass}">${chgSign}${fmt(s.chg)} / ${chgSign}${fmt(s.chgPct, "%")}</div>
+        </div>
+        <div class="table-lv1"><b>${fmt(s.price)}</b></div>
+      </div>
+
+      <div class="stock-grid">
+        <div class="stock-item">
+          <div class="stock-label">PER</div>
+          <div class="stock-value">
+            ${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">PBR</div>
+          <div class="stock-value">
+            ${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">KD</div>
+          <div class="stock-value">
+            <div class="table-lv1">${fmt(s.k)}</div>
+            <div class="table-lv2">${fmt(s.d)}</div>
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">Bias6</div>
+          <div class="stock-value ${distClass(s.bias6)}">
+            ${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">Bias18</div>
+          <div class="stock-value ${distClass(s.bias18)}">
+            ${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">Bias50</div>
+          <div class="stock-value ${distClass(s.bias50)}">
+            ${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">月線</div>
+          <div class="stock-value">
+            <div class="table-lv1">${fmt(s.ma18)}</div>
+            <div class="table-lv2 ${s.ma18_break ? 'text-red' : ''}">
+              ${s.ma18_break ? '站上月線' : '-'}
+            </div>
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">成交量</div>
+          <div class="stock-value">
+            <div class="table-lv1">${fmt(s.volume)} 張</div>
+            <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">量增%</div>
+          <div class="stock-value ${((s.volume_ratio ?? 0) > 0) ? 'up' : 'dn'}">
+            <div class="table-lv1">${fmt(s.volume_ratio, "%")}</div>
+            <div class="table-lv2">${fmt(s.volume_add)} 張</div>
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">評分</div>
+          <div class="stock-value">
+            <div class="table-lv1">${fmt(s.score)}</div>
+          </div>
+        </div>
+
+        <div class="stock-item">
+          <div class="stock-label">殖利率</div>
+          <div class="stock-value">
+            <div class="table-lv1">${fmt(s.yield_value, "%")}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stock-signal">
+        <div>
+          <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
+        </div>
+        <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
+        <div class="table-lv2">${s.signal_text ?? ""}</div>
+        <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
+        <div class="table-lv3">${s.reason ?? ""}</div>
+      </div>
+    </div>`;
+    }
+
+    const chgPct = Number(s.chgPct ?? 0);
+    const chgClass = chgPct >= 0 ? "up" : "dn";
+    const chgSign = chgPct >= 0 ? "+" : "";
+    const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+    const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
+    const yieldValue = s.yield_value;
+
+    return `
         <div class="stock-card">
           <div class="stock-head">
             <div>
@@ -630,101 +744,101 @@
             <div class="signal-sub">${s.reason ?? ""}</div>
           </div>
         </div>`;
-      }
+    }
 
-      function renderTable(data) {
-        document.getElementById("stockBody").innerHTML = data.map(renderRow).join("");
-      }
+    function renderTable(data) {
+      document.getElementById("stockBody").innerHTML = data.map(renderRow).join("");
+    }
 
-      function renderMobileCards(data) {
-        document.getElementById("mobileList").innerHTML = data.map(renderMobileCard).join("");
-      }
+    function renderMobileCards(data) {
+      document.getElementById("mobileList").innerHTML = data.map(renderMobileCard).join("");
+    }
 
-      function getSortValue(s, key) {
-        switch (key) {
-          case "name":
-            return s.name ?? "";
-          case "code":
-            return s.code ?? "";
-          case "sig":
-            return Number(s.sig ?? -999999);
-          case "yield_value":
-            return Number(s.yield_value ?? -999999);
-          case "score":
-          case "per_latest":
-          case "pbr_latest":
-            return Number(s[key] ?? -999999);
-          default: {
-            const value = s[key];
-            if (isNil(value) || value === "") return -999999;
-            const num = Number(value);
-            return Number.isNaN(num) ? String(value) : num;
-          }
+    function getSortValue(s, key) {
+      switch (key) {
+        case "name":
+          return s.name ?? "";
+        case "code":
+          return s.code ?? "";
+        case "sig":
+          return Number(s.sig ?? -999999);
+        case "yield_value":
+          return Number(s.yield_value ?? -999999);
+        case "score":
+        case "per_latest":
+        case "pbr_latest":
+          return Number(s[key] ?? -999999);
+        default: {
+          const value = s[key];
+          if (isNil(value) || value === "") return -999999;
+          const num = Number(value);
+          return Number.isNaN(num) ? String(value) : num;
         }
       }
+    }
 
-      function sortStocks(key) {
-        if (currentSortKey === key) {
-          currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
-        } else {
-          currentSortKey = key;
-          currentSortDirection = "asc";
+    function sortStocks(key) {
+      if (currentSortKey === key) {
+        currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+      } else {
+        currentSortKey = key;
+        currentSortDirection = "asc";
+      }
+
+      sortedStocks.sort((a, b) => {
+        const aVal = getSortValue(a, key);
+        const bVal = getSortValue(b, key);
+        const bothNumbers = typeof aVal === "number" && typeof bVal === "number";
+
+        if (bothNumbers) {
+          return currentSortDirection === "asc" ? aVal - bVal : bVal - aVal;
         }
 
-        sortedStocks.sort((a, b) => {
-          const aVal = getSortValue(a, key);
-          const bVal = getSortValue(b, key);
-          const bothNumbers = typeof aVal === "number" && typeof bVal === "number";
-
-          if (bothNumbers) {
-            return currentSortDirection === "asc" ? aVal - bVal : bVal - aVal;
-          }
-
-          const result = String(aVal).localeCompare(String(bVal), "zh-Hant");
-          return currentSortDirection === "asc" ? result : -result;
-        });
-
-        renderTable(sortedStocks);
-        renderMobileCards(sortedStocks);
-        updateSortIndicators();
-      }
-
-      function updateSortIndicators() {
-        document.querySelectorAll("thead th").forEach((th) => {
-          const key = th.dataset.key;
-          if (!key) return;
-
-          if (!th.dataset.label) {
-            th.dataset.label = th.innerHTML.replace(/\s*[▲▼]$/, "");
-          }
-
-          th.innerHTML = key === currentSortKey
-            ? `${th.dataset.label} ${currentSortDirection === "asc" ? "▲" : "▼"}`
-            : th.dataset.label;
-        });
-      }
-
-      function bindSorting() {
-        document.querySelectorAll("thead th[data-key]").forEach((th) => {
-          th.addEventListener("click", () => {
-            sortStocks(th.dataset.key);
-          });
-        });
-      }
-
-      const buy = sortedStocks.filter(s => s.strategy === "買入").length;
-      const sell = sortedStocks.filter(s => (s.strategy ?? "").includes("出貨")).length;
-      const watch = sortedStocks.filter(s => s.strategy === "觀察").length;
-      const hold = sortedStocks.filter(s => s.strategy === "整理").length;
+        const result = String(aVal).localeCompare(String(bVal), "zh-Hant");
+        return currentSortDirection === "asc" ? result : -result;
+      });
 
       renderTable(sortedStocks);
       renderMobileCards(sortedStocks);
-      bindSorting();
+      updateSortIndicators();
+    }
 
-      document.getElementById("buyCount").innerText = buy;
-      document.getElementById("sellCount").innerText = sell;
-      document.getElementById("watchCount").innerText = watch;
-      document.getElementById("holdCount").innerText = hold;
+    function updateSortIndicators() {
+      document.querySelectorAll("thead th").forEach((th) => {
+        const key = th.dataset.key;
+        if (!key) return;
+
+        if (!th.dataset.label) {
+          th.dataset.label = th.innerHTML.replace(/\s*[▲▼]$/, "");
+        }
+
+        th.innerHTML = key === currentSortKey
+          ? `${th.dataset.label} ${currentSortDirection === "asc" ? "▲" : "▼"}`
+          : th.dataset.label;
+      });
+    }
+
+    function bindSorting() {
+      document.querySelectorAll("thead th[data-key]").forEach((th) => {
+        th.addEventListener("click", () => {
+          sortStocks(th.dataset.key);
+        });
+      });
+    }
+
+    const buy = sortedStocks.filter(s => s.strategy === "買入").length;
+    const sell = sortedStocks.filter(s => (s.strategy ?? "").includes("出貨")).length;
+    const watch = sortedStocks.filter(s => s.strategy === "觀察").length;
+    const hold = sortedStocks.filter(s => s.strategy === "整理").length;
+
+    renderTable(sortedStocks);
+    renderMobileCards(sortedStocks);
+    bindSorting();
+
+    document.getElementById("buyCount").innerText = buy;
+    document.getElementById("sellCount").innerText = sell;
+    document.getElementById("watchCount").innerText = watch;
+    document.getElementById("holdCount").innerText = hold;
   </script>
 </body>
 
