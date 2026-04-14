@@ -102,6 +102,23 @@
       background-clip: padding-box;
     }
 
+  .table-lv1 {
+    font-size: clamp(11px, 1vw, 13px);
+    line-height: 1.25;
+  }
+  
+  .table-lv2 {
+    font-size: clamp(10px, 0.9vw, 11px);
+    line-height: 1.2;
+  }
+  
+  .table-lv3 {
+    font-size: clamp(9px, 0.85vw, 10px);
+    line-height: 1.2;
+    color: #8b949e;
+  }
+
+    
     .up {
       color: #f85149;
     }
@@ -414,99 +431,127 @@
         if (isNil(v)) return "";
         return v > 0 ? "↑" : v < 0 ? "↓" : "";
       };
+    
       const colorClass = (v) => {
         if (isNil(v)) return "";
         return v > 0 ? "text-red" : v < 0 ? "text-green" : "";
       };
-
+    
       return `
         <div class="metric">
-          <div class="metric-main">${fmt(value)}</div>
+          <div class="table-lv1">${fmt(value)}</div>
           <div class="metric-sub">
-            <small class="${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</small>
-            <small class="${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</small>
+            <div class="table-lv2 ${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</div>
+            <div class="table-lv3 ${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</div>
           </div>
         </div>`;
     }
-
+    
     function renderRangeMetric(current, low, high, suffix = "") {
       return `
         <div class="metric metric-2line">
-          <div class="metric-main">${fmt(current, suffix)}</div>
-          <small class="metric-note">${fmt(low, suffix)} <br> ${fmt(high, suffix)}</small>
+          <div class="table-lv1">${fmt(current, suffix)}</div>
+          <div class="table-lv2">${fmt(low, suffix)}</div>
+          <div class="table-lv3">${fmt(high, suffix)}</div>
         </div>`;
-    }
 
     function distClass(val) {
       if (isNil(val) || val === "") return "";
       return Number(val) > 0 ? "up" : "dn";
     }
 
-    function renderRow(s) {
-      const chgPct = Number(s.chgPct ?? 0);
-      const chgClass = chgPct >= 0 ? "up" : "dn";
-      const chgSign = chgPct >= 0 ? "+" : "";
-      const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
-      const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
-      const yieldValue = getYieldValue(s);
-
-      return `
-        <tr>
-          <td>${s.code ?? ""}<br><small>${fmt(s.name)}</small></td>
-          <td>${fmt(s.price)}</td>
-          <td class="${chgClass}">${chgSign}${fmt(s.chg)}</td>
-          <td class="${chgClass}">${chgSign}${fmt(s.chgPct, "%")}</td>
-          <td class="col-md">${fmt(s.amp, "%")}</td>
-
-          <td class="col-lg">
-            <div>${fmt(s.eps_Y)}</div>
-            <small>TTM: ${fmt(s.eps_ttm)}</small><br>
-            <small>預估: ${fmt(s.eps_est)}</small>
-          </td>
-
-          <td class="col-lg">${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
-          <td class="col-lg">${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
-          <td class="col-lg">${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
-
-          <td class="col-md">${fmt(s.score)}</td>
-          <td class="col-md">${fmt(s.yield_value, "%")}</td>
-
-          <td class="col-lg">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</td>
-          <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
-
-          <td>${fmt(s.k)}/${fmt(s.d)}</td>
-          <td class="col-md">${fmt(s.bb_pct, "%")}</td>
-
-          <td class="col-lg ${distClass(s.bias6)}">${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}</td>
-          <td class="col-lg ${distClass(s.bias18)}">${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}</td>
-          <td class="col-lg ${distClass(s.bias50)}">${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}</td>
-
-          <td class="col-md">
-            ${fmt(s.ma18)}<br>
-            <small class="${s.ma18_break ? 'text-red' : ''}">${s.ma18_break ? '站上月線' : ''}</small>
-          </td>
-
-          <td class="col-md">
-            ${fmt(s.volume)} 張<br>
-            <small>昨: ${fmt(s.prev_volume)}</small>
-          </td>
-
-          <td class="col-md ${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
-            ${fmt(s.volume_ratio, "%")}<br>
-            <small>${fmt(s.volume_add)} 張</small>
-          </td>
-
-          <td class="signal-cell">
-            <div class="signal-wrap">
-              <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
-              <div class="signal-sub"><b>${s.signal_result ?? ""}</b></div>
-              <div class="signal-sub">${s.signal_text ?? ""}</div>
-              <div class="signal-sub">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
-              <div class="signal-sub">${s.reason ?? ""}</div>
-            </div>
-          </td>
-        </tr>`;
-    }
+   function renderRow(s) {
+    const chgPct = Number(s.chgPct ?? 0);
+    const chgClass = chgPct >= 0 ? "up" : "dn";
+    const chgSign = chgPct >= 0 ? "+" : "";
+    const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+    const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
+  
+    return `
+      <tr>
+        <td>
+          <div class="table-lv1">${s.code ?? ""}</div>
+          <div class="table-lv2">${fmt(s.name)}</div>
+        </td>
+  
+        <td>
+          <div class="table-lv1">${fmt(s.price)}</div>
+        </td>
+  
+        <td class="${chgClass}">
+          <div class="table-lv1">${chgSign}${fmt(s.chg)}</div>
+        </td>
+  
+        <td class="${chgClass}">
+          <div class="table-lv1">${chgSign}${fmt(s.chgPct, "%")}</div>
+        </td>
+  
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.amp, "%")}</div>
+        </td>
+  
+        <td class="col-lg">
+          <div class="table-lv1">${fmt(s.eps_Y)}</div>
+          <div class="table-lv2">TTM: ${fmt(s.eps_ttm)}</div>
+          <div class="table-lv3">預估: ${fmt(s.eps_est)}</div>
+        </td>
+  
+        <td class="col-lg">${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
+        <td class="col-lg">${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
+        <td class="col-lg">${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
+  
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.score)}</div>
+        </td>
+  
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.yield_value, "%")}</div>
+        </td>
+  
+        <td class="col-lg">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</td>
+        <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
+  
+        <td>
+          <div class="table-lv1">${fmt(s.k)}</div>
+          <div class="table-lv2">${fmt(s.d)}</div>
+        </td>
+  
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.bb_pct, "%")}</div>
+        </td>
+  
+        <td class="col-lg ${distClass(s.bias6)}">${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}</td>
+        <td class="col-lg ${distClass(s.bias18)}">${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}</td>
+        <td class="col-lg ${distClass(s.bias50)}">${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}</td>
+  
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.ma18)}</div>
+          <div class="table-lv2 ${s.ma18_break ? 'text-red' : ''}">
+            ${s.ma18_break ? '站上月線' : '-'}
+          </div>
+        </td>
+  
+        <td class="col-md">
+          <div class="table-lv1">${fmt(s.volume)} 張</div>
+          <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
+        </td>
+  
+        <td class="col-md ${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
+          <div class="table-lv1">${fmt(s.volume_ratio, "%")}</div>
+          <div class="table-lv2">${fmt(s.volume_add)} 張</div>
+        </td>
+  
+        <td class="signal-cell">
+          <div class="signal-wrap">
+            <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
+            <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
+            <div class="table-lv2">${s.signal_text ?? ""}</div>
+            <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
+            <div class="table-lv3">${s.reason ?? ""}</div>
+          </div>
+        </td>
+      </tr>`;
+  }
 
     function renderMobileCard(s) {
       const chgPct = Number(s.chgPct ?? 0);
