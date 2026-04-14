@@ -110,6 +110,7 @@
     .table-lv2 {
       font-size: clamp(10px, 0.9vw, 11px);
       line-height: 1.2;
+      color: #8b949e;
     }
 
     .table-lv3 {
@@ -385,7 +386,7 @@
               <th class="col-lg" data-key="per_latest">PER<br><small>90天低/高</small></th>
               <th class="col-lg" data-key="pbr_latest">PBR<br><small>90天低/高</small></th>
               <th data-key="k">KD</th>
-              <th class="col-md" data-key="bb_pct">布林</th>
+              <th class="col-md" data-key="bb_pct">布林%<br><small>價格低/高</small></th>
               <th class="col-lg" data-key="bias6">Bias6<br><small>低/高</small></th>
               <th class="col-lg" data-key="bias18">Bias18<br><small>低/高</small></th>
               <th class="col-lg" data-key="bias50">Bias50<br><small>低/高</small></th>
@@ -433,7 +434,7 @@
         <div class="table-lv1">${fmt(value)}</div>
         <div class="metric-sub">
           <div class="table-lv2 ${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</div>
-          <div class="table-lv3 ${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</div>
+          <div class="table-lv2 ${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</div>
         </div>
       </div>`;
     }
@@ -443,7 +444,7 @@
       <div class="metric metric-2line">
         <div class="table-lv1">${fmt(current, suffix)}</div>
         <div class="table-lv2">${fmt(low, suffix)}</div>
-        <div class="table-lv3">${fmt(high, suffix)}</div>
+        <div class="table-lv2">${fmt(high, suffix)}</div>
       </div>`;
     }
 
@@ -485,7 +486,7 @@
         <td class="col-lg">
           <div class="table-lv1">${fmt(s.eps_Y)}</div>
           <div class="table-lv2">TTM: ${fmt(s.eps_ttm)}</div>
-          <div class="table-lv3">預估: ${fmt(s.eps_est)}</div>
+          <div class="table-lv2">預估: ${fmt(s.eps_est)}</div>
         </td>
 
         <td class="col-lg">${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
@@ -508,9 +509,7 @@
           <div class="table-lv2">${fmt(s.d)}</div>
         </td>
 
-        <td class="col-md">
-          <div class="table-lv1">${fmt(s.bb_pct, "%")}</div>
-        </td>
+        <td class="col-lg">${renderRangeMetric(s.bb_pct, s.bb_lower, s.bb_upper)}</td>
 
         <td class="col-lg ${distClass(s.bias6)}">${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}</td>
         <td class="col-lg ${distClass(s.bias18)}">${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}</td>
@@ -564,14 +563,14 @@
 
         <div class="stock-grid">
           <div class="stock-item">
-            <div class="stock-label">PER</div>
+            <div class="stock-label">PER 90天低/高</div>
             <div class="stock-value">
               ${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}
             </div>
           </div>
 
           <div class="stock-item">
-            <div class="stock-label">PBR</div>
+            <div class="stock-label">PBR 90天低/高</div>
             <div class="stock-value">
               ${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}
             </div>
@@ -586,21 +585,30 @@
           </div>
 
           <div class="stock-item">
-            <div class="stock-label">Bias6</div>
+            <div class="stock-label">布林% 價格低/高</div>
+            <div class="stock-value">
+              <td class="col-lg">${renderRangeMetric(s.bb_pct, s.bb_lower, s.bb_upper)}</td>
+            </div>
+          </div>
+         
+
+
+          <div class="stock-item">
+            <div class="stock-label">Bias6 低/高</div>
             <div class="stock-value ${distClass(s.bias6)}">
               ${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}
             </div>
           </div>
 
           <div class="stock-item">
-            <div class="stock-label">Bias18</div>
+            <div class="stock-label">Bias18 低/高</div>
             <div class="stock-value ${distClass(s.bias18)}">
               ${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}
             </div>
           </div>
 
           <div class="stock-item">
-            <div class="stock-label">Bias50</div>
+            <div class="stock-label">Bias50 低/高</div>
             <div class="stock-value ${distClass(s.bias50)}">
               ${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}
             </div>
