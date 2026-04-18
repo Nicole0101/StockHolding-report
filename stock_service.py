@@ -139,6 +139,17 @@ def process_stock(s):
         prev_k = float(prev['K']) if pd.notna(prev['K']) else None
         prev_d = float(prev['D']) if pd.notna(prev['D']) else None
 
+        # KD score（統一趨勢數值）
+        kd_score = 0
+        if k > d and prev_k <= prev_d:
+            kd_score = 1   # 黃金交叉
+        elif k < d and prev_k >= prev_d:
+            kd_score = -1  # 死亡交叉
+        elif k > d:
+            kd_score = 0.5  # 多頭但未交叉
+        elif k < d:
+            kd_score = -0.5  # 空頭但未交叉
+
         if k is None or prev_k is None:
             k_trend = None
         else:
@@ -312,6 +323,7 @@ def process_stock(s):
             "kd_trend": kd_trend["kd_trend"],
             "k_trend": k_trend,
             "d_trend": d_trend,
+            'kd_score': float(kd_score),
             'ma18': float(round(ma18, 2)) if ma18 is not None else None,
             'ma18_break': bool(ma18_break),
             'kd_buy': bool(kd_buy),

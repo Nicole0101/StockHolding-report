@@ -432,15 +432,17 @@
     }
 
     function fmtTrend(v) {
-      if (isNil(v)) return "";
+      if (v >= 1) return "↑↑";
       if (v > 0) return "↑";
+      if (v <= -1) return "↓↓";
       if (v < 0) return "↓";
       return "→";
     }
 
     function trendClass(v) {
-      if (isNil(v)) return "";
+      if (v >= 1) return "up strong";
       if (v > 0) return "up";
+      if (v <= -1) return "dn strong";
       if (v < 0) return "dn";
       return "";
     }
@@ -544,20 +546,17 @@
         <td class="col-md">${fmt(s.yield_value * 0.65, "%")}</td>
         <td class="col-lg">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</td>
         <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
-
-        <td class="col-md">
-
-          <!-- KD 三日趨勢（統一邏輯） -->
+        <td>
+          <!-- KD 趨勢 -->
           <div class="table-lv1 ${trendClass(s.kd_score)}">
             ${fmtTrend(s.kd_score)}
           </div>
+
           <!-- KD 數值 -->
-          <div class="metric metric-2line">
-            <div class="table-lv1">K ${fmt(s.k)}</div>
-            <div class="table-lv2">D ${fmt(s.d)}</div>
+          <div class="table-lv2">
+            K ${fmt(s.k)} / D ${fmt(s.d)}
           </div>
-        </td>
-        
+        </td>   
         <td class="col-md">
           <div class="table-lv1 ${trendClass(s.bb_score)}">  ${fmtTrend(s.bb_score)}</div>
           
