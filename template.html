@@ -548,14 +548,10 @@
         <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
         <td>
           <!-- KD 趨勢 -->
-          <div class="table-lv1 ${trendClass(s.kd_score)}">
-            ${fmtTrend(s.kd_score)}
-          </div>
-
+          <div class="table-lv1 ${trendClass(s.kd_score)}">${fmtTrend(s.kd_score)}</div>
           <!-- KD 數值 -->
-          <div class="table-lv2">
-            K ${fmt(s.k)} / D ${fmt(s.d)}
-          </div>
+            <div class="table-lv2">K ${fmt(s.k)}}</div>
+            <div class="table-lv2">D ${fmt(s.d)}</div>
         </td>   
         <td class="col-md">
           <div class="table-lv1 ${trendClass(s.bb_score)}">  ${fmtTrend(s.bb_score)}</div>
