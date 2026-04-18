@@ -5,9 +5,8 @@ def add_indicators(df):
     try:
         low_min = df['min'].rolling(9).min()
         high_max = df['max'].rolling(9).max()
-        denom = (high_max - low_min).replace(0, pd.NA)
-
         rsv = (df['close'] - low_min) / denom * 100
+        rsv = rsv.fillna(method='ffill')
         df['K'] = rsv.ewm(com=2).mean()
         df['D'] = df['K'].ewm(com=2).mean()
 
@@ -23,12 +22,12 @@ def add_indicators(df):
         df['BIAS18'] = (df['close'] - df['MA18']) / df['MA18'] * 100
         df['BIAS50'] = (df['close'] - df['MA50']) / df['MA50'] * 100
 
-        df['BIAS6_90D_HIGH'] = df['BIAS6'].rolling(90).max()
-        df['BIAS6_90D_LOW'] = df['BIAS6'].rolling(90).min()
-        df['BIAS18_90D_HIGH'] = df['BIAS18'].rolling(90).max()
-        df['BIAS18_90D_LOW'] = df['BIAS18'].rolling(90).min()
-        df['BIAS50_90D_HIGH'] = df['BIAS50'].rolling(90).max()
-        df['BIAS50_90D_LOW'] = df['BIAS50'].rolling(90).min()
+        df['BIAS6_90D_HIGH'] = df['BIAS6'].rolling(90, min_periods=30).max()
+        df['BIAS6_90D_LOW'] = df['BIAS6'].rolling(90, min_periods=30).min()
+        df['BIAS18_90D_HIGH'] = df['BIAS18'].rolling(90, min_periods=30).max()
+        df['BIAS18_90D_LOW'] = df['BIAS18'].rolling(90, min_periods=30).min()
+        df['BIAS50_90D_HIGH'] = df['BIAS50'].rolling(90, min_periods=30).max()
+        df['BIAS50_90D_LOW'] = df['BIAS50'].rolling(90, min_periods=30).min()
 
         return df
     except Exception as e:
@@ -87,9 +86,9 @@ def get_kd_trend(df):
             score = 0
 
         return {
-            "kd_3d_up": bool(k_up),
+            "kd_3d_up": k_up if k_up is not None else None,
             "kd_trend": trend,
-            "kd_score": score
+            "kd_score": score,
         }
 
     except Exception as e:
@@ -143,7 +142,7 @@ def get_bb_trend(df):
     last3 = df.tail(3)
 
     if len(last3) < 3:
-        return {"bb_3d_up": None, "bb_trend": None}
+        return {"bb_3d_up": None, "bb_trend": None, "bb_score": None}
 
     def calc_pct(row):
         if pd.notna(row['BB_upper']) and pd.notna(row['BB_lower']) and row['BB_upper'] != row['BB_lower']:
@@ -153,7 +152,7 @@ def get_bb_trend(df):
     pcts = last3.apply(calc_pct, axis=1).values
 
     if pd.isna(pcts).any():
-        return {"bb_3d_up": None, "bb_trend": None}
+        return {"bb_3d_up": None, "bb_trend": None, "bb_score": None}
 
     up = pcts[2] > pcts[1] > pcts[0]
     down = pcts[2] < pcts[1] < pcts[0]
@@ -165,11 +164,11 @@ def get_bb_trend(df):
         trend = "↘"
         score = -1
     else:
-        trend = "→
-        score = 0"
+        trend = "→"
+        score = 0
 
     return {
-        "bb_3d_up": bool(up),
+        "bb_3d_up": up,
         "bb_trend": trend,
         "bb_score": score
     }
