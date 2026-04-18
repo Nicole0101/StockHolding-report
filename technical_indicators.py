@@ -5,8 +5,9 @@ def add_indicators(df):
     try:
         low_min = df['min'].rolling(9).min()
         high_max = df['max'].rolling(9).max()
+        denom = (high_max - low_min).replace(0, pd.NA)
         rsv = (df['close'] - low_min) / denom * 100
-        rsv = rsv.fillna(method='ffill')
+        rsv = rsv.ffill()
         df['K'] = rsv.ewm(com=2).mean()
         df['D'] = df['K'].ewm(com=2).mean()
 
@@ -36,6 +37,8 @@ def add_indicators(df):
 
 
 def get_kd_trend(df):
+    if 'K' not in df.columns or 'D' not in df.columns:
+        return {"kd_3d_up": None, "kd_trend": None, "kd_score": None}
     try:
         last3 = df.tail(3)
 
@@ -139,6 +142,9 @@ def get_MABias(df):
 
 
 def get_bb_trend(df):
+    if 'BB_upper' not in df.columns or 'BB_lower' not in df.columns:
+        return {"bb_3d_up": None, "bb_trend": None, "bb_score": None}
+
     last3 = df.tail(3)
 
     if len(last3) < 3:
