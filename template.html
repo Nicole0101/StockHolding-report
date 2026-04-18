@@ -387,7 +387,7 @@
               <th class="col-md" data-key="yield_value">殖利率<br><small>估65%</small></th>
               <th class="col-lg" data-key="per_latest">PER<br><small>90天低/高</small></th>
               <th class="col-lg" data-key="pbr_latest">PBR<br><small>90天低/高</small></th>
-              <th data-key="k">KD</th>
+              <th data-key="k">KD<br><small>3天趨勢</small></th>
               <th class="col-md" data-key="bb_pct">布林%<br><small>低/高</small></th>
               <th class="col-lg" data-key="bias6">Bias6<br><small>低/高</small></th>
               <th class="col-lg" data-key="bias18">Bias18<br><small>低/高</small></th>
@@ -545,11 +545,15 @@
         <td class="col-lg">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</td>
         <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
 
-        <td>  
-          <div>${fmt(s.k)}</div>  
-          <div class="table-lv2">${fmt(s.d)}</div>
+        <td class="col-md">
+          <!-- KD 三日趨勢 -->
+          <div class="table-lv2 ${trendClass(s.kd_score)}">${s.kd_trend ?? ""}</div>
+          <!-- KD 數值 -->
+          <div class="metric metric-2line">
+            <div class="table-lv1">K ${fmt(s.k)} </div>
+            <div class="table-lv1">D ${fmt(s.d)} </div>
+          </div>
         </td>
-
         
         <td class="col-md">
           <div class="table-lv1 ${trendClass(s.bb_trend)}">  ${fmtTrend(s.bb_trend)}</div>
@@ -636,7 +640,7 @@
             <div class="stock-value">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</div>
           </div>
           <div class="stock-item">
-            <div class="stock-label">KD</div>
+            <div class="stock-label">KD 3天趨勢</div>
             <div class="stock-value">
               <div class="table-lv1">${fmt(s.k)} / ${fmt(s.d)}</div>
             </div>

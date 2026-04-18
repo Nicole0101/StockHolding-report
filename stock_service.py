@@ -138,6 +138,8 @@ def process_stock(s):
         d = latest['D'] if pd.notna(latest['D']) else 50
         prev_k = prev['K'] if pd.notna(prev['K']) else 50
         prev_d = prev['D'] if pd.notna(prev['D']) else 50
+        
+
         kd_trend = get_kd_trend(df)
         bb_trend = get_bb_trend(df)
 
@@ -184,6 +186,8 @@ def process_stock(s):
             d=d,
             prev_k=prev_k,
             prev_d=prev_d,
+            k_trend = 1 if k > prev_k else -1 if k < prev_k else 0
+            d_trend = 1 if d > prev_d else -1 if d < prev_d else 0
             bb_pct=bb_pct,
             bias6=bias6,
             bias18=bias18,
@@ -292,6 +296,8 @@ def process_stock(s):
             'd': float(round(d, 1)),
             "kd_3d_up": kd_trend["kd_3d_up"],
             "kd_trend": kd_trend["kd_trend"],
+            "k_trend": k_trend,
+            "d_trend": d_trend,
             'ma18': float(round(ma18, 2)) if ma18 is not None else None,
             'ma18_break': bool(ma18_break),
             'kd_buy': bool(kd_buy),

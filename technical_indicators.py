@@ -36,37 +36,70 @@ def add_indicators(df):
         return df
 
 
+
 def get_kd_trend(df):
     try:
         last3 = df.tail(3)
 
+        # 資料不足
         if len(last3) < 3:
-            return {"kd_3d_up": None, "kd_trend": None}
+            return {
+                "kd_3d_up": None,
+                "kd_trend": None,
+                "kd_score": None
+            }
 
         k_vals = last3['K'].values
+        d_vals = last3['D'].values
 
         # 避免 NaN
-        if pd.isna(k_vals).any():
-            return {"kd_3d_up": None, "kd_trend": None}
+        if pd.isna(k_vals).any() or pd.isna(d_vals).any():
+            return {
+                "kd_3d_up": None,
+                "kd_trend": None,
+                "kd_score": None
+            }
 
-        up = k_vals[2] > k_vals[1] > k_vals[0]
-        down = k_vals[2] < k_vals[1] < k_vals[0]
+        # === K 三日趨勢 ===
+        k_up = k_vals[2] > k_vals[1] > k_vals[0]
+        k_down = k_vals[2] < k_vals[1] < k_vals[0]
 
-        if up:
+        # === KD 交叉（最重要）===
+        cross_up = (k_vals[1] <= d_vals[1]) and (k_vals[2] > d_vals[2])     # 黃金交叉
+        cross_down = (k_vals[1] >= d_vals[1]) and (k_vals[2] < d_vals[2])   # 死亡交叉
+
+        # === 趨勢判斷 ===
+        if cross_up:
+            trend = "↑"       # 強烈買訊
+            score = 2
+        elif cross_down:
+            trend = "↓"       # 強烈賣訊
+            score = -2
+        elif k_up:
             trend = "↗"
-        elif down:
+            score = 1
+        elif k_down:
             trend = "↘"
+            score = -1
         else:
             trend = "→"
+            score = 0
 
         return {
-            "kd_3d_up": bool(up) if up is not None else None,
-            "kd_trend": trend
+            "kd_3d_up": bool(k_up),
+            "kd_trend": trend,
+            "kd_score": score
         }
 
     except Exception as e:
         print(f"❌ KD trend error: {e}")
-        return {"kd_3d_up": None, "kd_trend": None}
+        return {
+            "kd_3d_up": None,
+            "kd_trend": None,
+            "kd_score": None
+        }
+
+
 
 
 def get_MABias(df):
