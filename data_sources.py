@@ -31,7 +31,6 @@ def get_stock_data(stock_id):
             return pd.DataFrame()
         
 
-
         df = pd.DataFrame(data['data'])
 
         volume_col = None
@@ -61,6 +60,28 @@ def get_stock_data(stock_id):
     except Exception as e:
         print(f'❌ get_stock_data error {stock_id}: {e}')
         return pd.DataFrame()
+    
+
+def get_revenue_raw(stock_id):
+    try:
+        params = {
+            'dataset': 'TaiwanStockMonthRevenue',  # 🔥 月營收
+            'data_id': stock_id,
+            'start_date': '2022-01-01',
+            'token': API_TOKEN,
+        }
+
+        res = requests.get(API_URL, params=params, timeout=10)
+
+        if res.status_code != 200:
+            return []
+
+        data = res.json().get('data', [])
+        return data
+
+    except Exception as e:
+        print(f'❌ revenue source error {stock_id}: {e}')
+        return []
 
 
 def get_profit_ratio(stock_id):
