@@ -36,7 +36,6 @@ def add_indicators(df):
         return df
 
 
-
 def get_kd_trend(df):
     try:
         last3 = df.tail(3)
@@ -65,8 +64,10 @@ def get_kd_trend(df):
         k_down = k_vals[2] < k_vals[1] < k_vals[0]
 
         # === KD 交叉（最重要）===
-        cross_up = (k_vals[1] <= d_vals[1]) and (k_vals[2] > d_vals[2])     # 黃金交叉
-        cross_down = (k_vals[1] >= d_vals[1]) and (k_vals[2] < d_vals[2])   # 死亡交叉
+        cross_up = (k_vals[1] <= d_vals[1]) and (
+            k_vals[2] > d_vals[2])     # 黃金交叉
+        cross_down = (k_vals[1] >= d_vals[1]) and (
+            k_vals[2] < d_vals[2])   # 死亡交叉
 
         # === 趨勢判斷 ===
         if cross_up:
@@ -98,8 +99,6 @@ def get_kd_trend(df):
             "kd_trend": None,
             "kd_score": None
         }
-
-
 
 
 def get_MABias(df):
@@ -161,14 +160,18 @@ def get_bb_trend(df):
 
     if up:
         trend = "↗"
+        score = 1
     elif down:
         trend = "↘"
+        score = -1
     else:
-        trend = "→"
+        trend = "→
+        score = 0"
 
     return {
-        "bb_3d_up": bool(up) if up is not None else None,
-        "bb_trend": trend
+        "bb_3d_up": bool(up),
+        "bb_trend": trend,
+        "bb_score": score
     }
 
 

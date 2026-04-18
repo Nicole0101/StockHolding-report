@@ -100,11 +100,10 @@ def process_stock(s):
         amp = round((chgamp / prev['close']) * 100, 2)
 
         eps_res = get_eps_analysis(s['stock_id'], latest['close'])
-        if not eps_res or not isinstance(eps_res, tuple):
-            eps_res = (None,) * 6
+        eps_res = tuple(eps_res) if isinstance(eps_res, tuple) else (None,) * 6
+        eps_res = eps_res + (None,) * (6 - len(eps_res))
 
         rev = get_revenue_trend(s['stock_id']) or {}
-
         profit_res = get_profit_ratio(s['stock_id']) or {
             'current': {},
             'qoq': {},
@@ -134,14 +133,24 @@ def process_stock(s):
             else:
                 safe_ma_stats[k2] = float(v2)
 
-        k = latest['K'] if pd.notna(latest['K']) else 50
-        d = latest['D'] if pd.notna(latest['D']) else 50
-        prev_k = prev['K'] if pd.notna(prev['K']) else 50
-        prev_d = prev['D'] if pd.notna(prev['D']) else 50
-        
+        k = float(latest['K']) if pd.notna(latest['K']) else None
+        d = float(latest['D']) if pd.notna(latest['D']) else None
 
-        kd_trend = get_kd_trend(df)
-        bb_trend = get_bb_trend(df)
+        prev_k = float(prev['K']) if pd.notna(prev['K']) else None
+        prev_d = float(prev['D']) if pd.notna(prev['D']) else None
+
+        if k is None or prev_k is None:
+            k_trend = None
+        else:
+            k_trend = 1 if k > prev_k else -1 if k < prev_k else 0
+
+        if d is None or prev_d is None:
+            d_trend = None
+        else:
+            d_trend = 1 if d > prev_d else -1 if d < prev_d else 0
+
+        kd_trend = get_kd_trend(df) or {"kd_3d_up": None, "kd_trend": None}
+        bb_trend = get_bb_trend(df) or {"bb_3d_up": None, "bb_trend": None}
 
         ma18 = latest['MA18'] if pd.notna(latest['MA18']) else None
         prev_ma18 = prev['MA18'] if pd.notna(prev['MA18']) else None
@@ -157,7 +166,7 @@ def process_stock(s):
 
         if pd.notna(volume) and pd.notna(prev_volume) and prev_volume > 0:
             volume_ratio = round((volume / prev_volume - 1) * 100, 2)
-            volume_add = round(volume - prev_volume, 0)
+            volume_add = int(volume - prev_volume)
             volume_ok = bool((volume >= prev_volume * 1.1)
                              or ((volume - prev_volume) >= 500))
 
@@ -166,6 +175,7 @@ def process_stock(s):
         bb_pct = None
         if pd.notna(bb_upper) and pd.notna(bb_lower) and bb_upper != bb_lower:
             bb_pct = round((close - bb_lower) / (bb_upper - bb_lower) * 100, 1)
+            bb_pct = float(bb_pct) if bb_pct is not None else None
 
         bias6 = safe_ma_stats.get('bias6')
         bias18 = safe_ma_stats.get('bias18')
@@ -186,8 +196,8 @@ def process_stock(s):
             d=d,
             prev_k=prev_k,
             prev_d=prev_d,
-            k_trend = 1 if k > prev_k else -1 if k < prev_k else 0
-            d_trend = 1 if d > prev_d else -1 if d < prev_d else 0
+            k_trend=k_trend,
+            d_trend=d_trend,
             bb_pct=bb_pct,
             bias6=bias6,
             bias18=bias18,
@@ -215,7 +225,11 @@ def process_stock(s):
         else:
             sig = 0
 
-        kd_buy = bool((prev_k <= prev_d) and (k > d))
+        if None in (k, d, prev_k, prev_d):
+            kd_buy = False
+        else:
+            kd_buy = bool((prev_k <= prev_d) and (k > d))
+
         ma18_break = bool(
             ma18 is not None and prev_ma18 is not None and prev_close <= prev_ma18 and close > ma18
         )
@@ -281,7 +295,7 @@ def process_stock(s):
             'eps_est': float(eps_res[2]) if eps_res[2] is not None else None,
 
             'dividend': float(dividend) if dividend is not None else None,
-            'yield_value': float(yield_value) if yield_value is not None else None,
+            'yield_value': float(yield_value) if yield_value is not None and not pd.isna(yield_value) else None,
 
             'per_Y': float(eps_res[3]) if eps_res[3] is not None else None,
             'per_latest': per_pbr_stats.get('per'),
@@ -292,8 +306,8 @@ def process_stock(s):
             'pbr_90d_high': per_pbr_stats.get('pbr_90d_high'),
             'pbr_90d_low': per_pbr_stats.get('pbr_90d_low'),
 
-            'k': float(round(k, 1)),
-            'd': float(round(d, 1)),
+            'k': float(round(k, 1)) if k is not None else None,
+            'd': float(round(d, 1)) if d is not None else None,
             "kd_3d_up": kd_trend["kd_3d_up"],
             "kd_trend": kd_trend["kd_trend"],
             "k_trend": k_trend,
@@ -304,14 +318,13 @@ def process_stock(s):
             'bb_pct': float(bb_pct) if bb_pct is not None else None,
             'bb_upper': float(round(bb_upper, 2)) if bb_upper is not None and pd.notna(bb_upper) else None,
             'bb_lower': float(round(bb_lower, 2)) if bb_lower is not None and pd.notna(bb_lower) else None,
-            "bb_3d_up": bb_trend["bb_3d_up"],
-            "bb_trend": bb_trend["bb_trend"],
-
-
+            "bb_3d_up": bb_trend.get("bb_3d_up"),
+            "bb_trend": bb_trend.get("bb_trend"),
+            "bb_score": bb_trend.get("bb_score"),
             'volume': int(round(volume, 0)) if pd.notna(volume) else None,
             'prev_volume': int(round(prev_volume, 0)) if pd.notna(prev_volume) else None,
             'volume_ratio': float(volume_ratio) if volume_ratio is not None else None,
-            'volume_add': int(round(volume_add, 0)) if volume_add is not None else None,
+            'volume_add': volume_add if volume_add is not None else None,
             'volume_ok': bool(volume_ok),
 
             **safe_ma_stats,
