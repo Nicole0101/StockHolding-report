@@ -24,6 +24,7 @@ def send_line(msg):
         }
 
         res = requests.post(url, headers=headers, json=data)
+        res = requests.post(url, headers=headers, data=data)
 
     except Exception as e:
         print("LINE error:", e)
