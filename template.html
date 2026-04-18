@@ -370,6 +370,7 @@
     <div class="card">
       <div class="table-scroll">
         <table>
+
           <thead>
             <tr>
               <th data-key="code">代碼<br><small>名稱</small></th>
@@ -378,24 +379,25 @@
               <th data-key="chgPct">漲跌%</th>
               <th class="col-md" data-key="amp">震幅%</th>
               <th class="col-lg" data-key="eps_Y">EPS<br><small>去年/預估</small></th>
+              <th class="col-lg" data-key="rev">營收(bn)<br><small>M / Q / Y</small></th>
               <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ / YoY</small></th>
               <th class="col-lg" data-key="operating_margin">營益率%<br><small>QoQ / YoY</small></th>
-              <th class="col-lg" data-key="net_margin">淨利率%<br><small>QoQ / YoY</small></th>
+              <th class="col-lg" data-key="net_margin">淨利率%<br><small>QoQ / Y</small></th>
               <th class="col-md" data-key="score">評分</th>
-              <th class="col-md" data-key="yield_value">殖利率</th>
+              <th class="col-md" data-key="yield_value">殖利率<br><small>估65%</small></th>
               <th class="col-lg" data-key="per_latest">PER<br><small>90天低/高</small></th>
               <th class="col-lg" data-key="pbr_latest">PBR<br><small>90天低/高</small></th>
               <th data-key="k">KD</th>
-              <th class="col-md" data-key="bb_pct">布林%<br><small>價格低/高</small></th>
+              <th class="col-md" data-key="bb_pct">布林%<br><small>低/高</small></th>
               <th class="col-lg" data-key="bias6">Bias6<br><small>低/高</small></th>
               <th class="col-lg" data-key="bias18">Bias18<br><small>低/高</small></th>
               <th class="col-lg" data-key="bias50">Bias50<br><small>低/高</small></th>
-              <th class="col-md" data-key="ma18">月線</th>
-              <th class="col-md" data-key="volume">成交量</th>
+              <th class="col-md" data-key="volume">成交量<br><small>昨量</small></th>
               <th class="col-md" data-key="volume_ratio">量增%</th>
-              <th data-key="sig">訊號 / 策略</th>
+              <th data-key="sig">訊號</th>
             </tr>
           </thead>
+
           <tbody id="stockBody"></tbody>
         </table>
       </div>
@@ -415,50 +417,76 @@
     }
 
     function fmt(v, suffix = "") {
-      return isNil(v) ? "-" : `${v}${suffix}`;
+      if (v === null || v === undefined || v === "" || Number.isNaN(v)) return "-";
+      const num = Number(v);
+      if (num === 0) return "0" + suffix;
+      // 判斷是否為整數
+      const isInteger = Number.isInteger(num);
+      const formatted = isInteger
+        ? num.toLocaleString("en-US")               // 1,234
+        : num.toLocaleString("en-US", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        });                                       // 1,234.5
+      return formatted + suffix;
     }
 
-    function renderMetric(value, qoq, yoy) {
-      const arrow = (v) => {
-        if (isNil(v)) return "";
-        return v > 0 ? "↑" : v < 0 ? "↓" : "";
-      };
+    function fmtTrend(v) {
+      if (isNil(v)) return "";
+      if (v > 0) return "↑";
+      if (v < 0) return "↓";
+      return "→";
+    }
 
-      const colorClass = (v) => {
-        if (isNil(v)) return "";
-        return v > 0 ? "text-red" : v < 0 ? "text-green" : "";
-      };
+    function trendClass(v) {
+      if (isNil(v)) return "";
+      if (v > 0) return "up";
+      if (v < 0) return "dn";
+      return "";
+    }
 
+    function renderMetric3(value, m, q, y, suffix = "") {
+      const renderLine = (label, v) => {
+        if (isNil(v)) {
+          return `<div>${label} -</div>`;
+        }
+        return `
+      <div class="${trendClass(v)}">
+        ${label} ${fmtTrend(v)} ${fmt(v, "%")}
+      </div>
+    `;
+      };
       return `
-      <div class="metric">
-        <div class="table-lv1">${fmt(value)}</div>
-        <div class="metric-sub">
-          <div class="table-lv2 ${colorClass(qoq)}">${arrow(qoq)}${fmt(qoq)}</div>
-          <div class="table-lv2 ${colorClass(yoy)}">${arrow(yoy)}${fmt(yoy)}</div>
-        </div>
-      </div>`;
+  <div class="metric">
+    <div class="table-lv1">${fmt(value, suffix)}</div>
+    <div class="metric-sub">
+      ${renderLine("M", m)}
+      ${renderLine("Q", q)}
+      ${renderLine("Y", y)}
+    </div>
+  </div>`;
     }
 
-    function renderRangeMetric(current, low, high, suffix = "") {
+    function renderRangeMetric(current, low, high, suffix = "", cls = "") {
       return `
       <div class="metric metric-2line">
-        <div class="table-lv1">${fmt(current, suffix)}</div>
+        <div class="table-lv1 ${cls}">${fmt(current, suffix)}</div>
         <div class="table-lv2">${fmt(low, suffix)}</div>
         <div class="table-lv2">${fmt(high, suffix)}</div>
       </div>`;
     }
 
     function distClass(val) {
-      if (isNil(val) || val === "") return "";
-      return Number(val) > 0 ? "up" : "dn";
+      if (isNil(val)) return "";
+      if (Number(val) > 0) return "up";
+      if (Number(val) < 0) return "dn";
+      return "";
     }
 
     function renderRow(s) {
       const chgPct = Number(s.chgPct ?? 0);
       const chgClass = chgPct >= 0 ? "up" : "dn";
       const chgSign = chgPct >= 0 ? "+" : "";
-      const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
-      const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
       return `
       <tr>
@@ -466,86 +494,110 @@
           <div class="table-lv1">${s.code ?? ""}</div>
           <div class="table-lv2">${fmt(s.name)}</div>
         </td>
-        <td class="col-lg">${renderRangeMetric(s.price, s.price_90d_low, s.price_90d_high)}
 
-        <td class="${chgClass}">
-          <div class="table-lv1">${chgSign}${fmt(s.chg)}</div>
-        </td>
+        <td class="col-lg">${renderRangeMetric(s.price, s.price_90d_low, s.price_90d_high)}</td>
 
-        <td class="${chgClass}">
-          <div class="table-lv1">${chgSign}${fmt(s.chgPct, "%")}</div>
-        </td>
+        <td class="${chgClass}">${chgSign}${fmt(s.chg)}</td>
+        <td class="${chgClass}">${chgSign}${fmt(s.chgPct, "%")}</td>
 
-        <td class="col-md">
-          <div class="table-lv1">${fmt(s.amp, "%")}</div>
-        </td>
+        <td class="col-md">${fmt(s.amp, "%")}</td>
 
         <td class="col-lg">
           <div class="table-lv1">${fmt(s.eps_Y)}</div>
           <div class="table-lv2">TTM: ${fmt(s.eps_ttm)}</div>
-          <div class="table-lv2">預估: ${fmt(s.eps_est)}</div>
         </td>
 
-        <td class="col-lg">${renderMetric(s.gross_margin, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</td>
-        <td class="col-lg">${renderMetric(s.operating_margin, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</td>
-        <td class="col-lg">${renderMetric(s.net_margin, s.net_margin_qoq, s.net_margin_yoy_diff)}</td>
+        <!-- 營收 -->
+        <td class="col-lg">${renderMetric3(s.rev, s.rev_mom, s.rev_qoq, s.rev_yoy)}</td>
 
-        <td class="col-md">
-          <div class="table-lv1">${fmt(s.score)}</div>
+        <!-- 毛利 -->
+        <td class="col-lg">
+          ${renderMetric3(
+        s.gross_margin,
+        null,   // M
+        s.gross_margin_qoq,
+        s.gross_margin_yoy_diff
+      )}
         </td>
 
-        <td class="col-md">
-          <div class="table-lv1">${fmt(s.yield_value, "%")}</div>
+        <!-- 營益 -->
+        <td class="col-lg">
+          ${renderMetric3(
+        s.operating_margin,
+        null,   // M,
+        s.operating_margin_qoq,
+        s.operating_margin_yoy_diff
+      )}
         </td>
 
+        <!-- 淨利 -->
+        <td class="col-lg">
+          ${renderMetric3(
+        s.net_margin,
+        null,   // M
+        s.net_margin_qoq,
+        s.net_margin_yoy_diff
+      )}
+        </td>
+
+        <td class="col-md">${fmt(s.score)}</td>
+        <td class="col-md">${fmt(s.yield_value * 0.65, "%")}</td>
         <td class="col-lg">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</td>
         <td class="col-lg">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</td>
 
-        <td>
-          <div class="table-lv1">${fmt(s.k)}</div>
+        <td>  
+          <div>${fmt(s.k)}</div>  
           <div class="table-lv2">${fmt(s.d)}</div>
         </td>
 
-        <td class="col-lg">${renderRangeMetric(s.bb_pct, s.bb_lower, s.bb_upper)}</td>
-
-        <td class="col-lg ${distClass(s.bias6)}">${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}</td>
-        <td class="col-lg ${distClass(s.bias18)}">${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}</td>
-        <td class="col-lg ${distClass(s.bias50)}">${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}</td>
-
+        
         <td class="col-md">
-          <div class="table-lv1">${fmt(s.ma18)}</div>
-          <div class="table-lv2 ${s.ma18_break ? 'text-red' : ''}">
-            ${s.ma18_break ? '站上月線' : '-'}
-          </div>
+          <div class="table-lv1 ${trendClass(s.bb_trend)}">  ${fmtTrend(s.bb_trend)}</div>
+          ${renderRangeMetric(s.bb_pct, s.bb_lower, s.bb_upper)}
         </td>
 
+        <td class="col-lg">
+          ${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%", distClass(s.bias6))}
+        </td>
+
+        <td class="col-lg">
+          ${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%", distClass(s.bias18))}
+        </td>
+
+        <td class="col-lg">
+          ${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%", distClass(s.bias50))}
+        </td>
+             
         <td class="col-md">
-          <div class="table-lv1">${fmt(s.volume)} 張</div>
+          <div class="table-lv1">${fmt(s.volume)}</div>
           <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
         </td>
 
-        <td class="col-md ${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
-          <div class="table-lv1">${fmt(s.volume_ratio, "%")}</div>
-          <div class="table-lv2">${fmt(s.volume_add)} 張</div>
+        <td class="col-md ${trendClass(s.volume_ratio)}">
+          <div class="table-lv1">${isNil(s.volume_ratio) ? "-" : `${fmtTrend(s.volume_ratio)} ${fmt(s.volume_ratio, "%")}`}</div>
+          <div class="table-lv2">${isNil(s.volume_add) ? "-" : `${fmt(s.volume_add)} 張`}</div>
         </td>
 
         <td class="signal-cell">
           <div class="signal-wrap">
-            <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
+            <div class="sig ${s.sig == 1 ? 'up' : s.sig == -1 ? 'dn' : 'watch'}">${s.sig == 1 ? '買入' : s.sig == -1 ? '賣出' : '觀察'}</div>
             <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
-            <div class="table-lv2">${s.signal_text ?? ""}</div>
-            <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
-            <div class="table-lv3">${s.reason ?? ""}</div>
+                <div class="table-lv2">${s.signal_text ?? ""}</div>
+                <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
+                <div class="table-lv3">${s.reason ?? ""}</div>
           </div>
         </td>
-      </tr>`;
+
+
+        </tr>
+        `;
     }
 
     function renderMobileCard(s) {
       const chgPct = Number(s.chgPct ?? 0);
       const chgClass = chgPct >= 0 ? "up" : "dn";
       const chgSign = chgPct >= 0 ? "+" : "";
-      const sigClass = { 1: "up", 0: "watch", "-1": "dn" };
+      const sigClass = { 1: 'up', 0: 'watch', '-1': 'dn' }[s.sig] || 'watch';
       const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
       return `
@@ -555,114 +607,104 @@
             <div class="table-lv1"><b>${s.name ?? ""} (${s.code ?? ""})</b></div>
             <div class="table-lv2 ${chgClass}">${chgSign}${fmt(s.chg)} / ${chgSign}${fmt(s.chgPct, "%")}</div>
           </div>
-          <div class="stock-value">${renderRangeMetric(s.price, s.price_90d_low, s.price_90d_high)}
+          <div class="stock-value">${renderRangeMetric(s.price, s.price_90d_low, s.price_90d_high)}</div>
         </div>
-
+        
         <div class="stock-grid">
           <div class="stock-item">
             <div class="stock-label">PER 90天低/高</div>
-            <div class="stock-value">
-              ${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}
-            </div>
+            <div class="stock-value">${renderRangeMetric(s.per_latest, s.per_90d_low, s.per_90d_high)}</div>
           </div>
-
+          <div class="stock-item">
+            <div class="stock-label">營收</div>
+            <div class="stock-value">${renderMetric3(s.rev, s.rev_mom, s.rev_qoq, s.rev_yoy)}</div>
+          </div>
+          <div class="stock-item">
+            <div class="stock-label">毛利率</div>
+            <div class="stock-value">${renderMetric3(s.gross_margin, null, s.gross_margin_qoq, s.gross_margin_yoy_diff)}</div>
+          </div>
+          <div class="stock-item">
+            <div class="stock-label">營益率</div>
+            <div class="stock-value">${renderMetric3(s.operating_margin, null, s.operating_margin_qoq, s.operating_margin_yoy_diff)}</div>
+          </div>
+          <div class="stock-item">
+            <div class="stock-label">淨利率</div>
+            <div class="stock-value">${renderMetric3(s.net_margin, null, s.net_margin_qoq, s.net_margin_yoy_diff)}</div>
+          </div>
           <div class="stock-item">
             <div class="stock-label">PBR 90天低/高</div>
-            <div class="stock-value">
-              ${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}
-            </div>
+            <div class="stock-value">${renderRangeMetric(s.pbr_latest, s.pbr_90d_low, s.pbr_90d_high)}</div>
           </div>
-
           <div class="stock-item">
             <div class="stock-label">KD</div>
             <div class="stock-value">
-              <div class="table-lv1">${fmt(s.k)}</div>
-              <div class="table-lv2">${fmt(s.d)}</div>
+              <div class="table-lv1">${fmt(s.k)} / ${fmt(s.d)}</div>
             </div>
           </div>
 
           <div class="stock-item">
             <div class="stock-label">布林% 價格低/高</div>
             <div class="stock-value">
-              <div>  ${renderRangeMetric(s.bb_pct, s.bb_lower, s.bb_upper)}</div>
+              <div class="table-lv1 ${trendClass(s.bb_trend)}">${fmtTrend(s.bb_trend)}</div>
+              ${renderRangeMetric(s.bb_pct, s.bb_lower, s.bb_upper)}
             </div>
           </div>
-         
-
 
           <div class="stock-item">
             <div class="stock-label">Bias6 低/高</div>
-            <div class="stock-value ${distClass(s.bias6)}">
+            <div class="stock-value">
               ${renderRangeMetric(s.bias6, s.bias6_min, s.bias6_max, "%")}
             </div>
           </div>
 
           <div class="stock-item">
             <div class="stock-label">Bias18 低/高</div>
-            <div class="stock-value ${distClass(s.bias18)}">
+            <div class="stock-value">
               ${renderRangeMetric(s.bias18, s.bias18_min, s.bias18_max, "%")}
             </div>
           </div>
 
           <div class="stock-item">
             <div class="stock-label">Bias50 低/高</div>
-            <div class="stock-value ${distClass(s.bias50)}">
+            <div class="stock-value">
               ${renderRangeMetric(s.bias50, s.bias50_min, s.bias50_max, "%")}
             </div>
           </div>
-
-          <div class="stock-item">
-            <div class="stock-label">月線</div>
-            <div class="stock-value">
-              <div class="table-lv1">${fmt(s.ma18)}</div>
-              <div class="table-lv2 ${s.ma18_break ? 'text-red' : ''}">
-                ${s.ma18_break ? '站上月線' : '-'}
-              </div>
-            </div>
-          </div>
-
+          
           <div class="stock-item">
             <div class="stock-label">成交量</div>
             <div class="stock-value">
-              <div class="table-lv1">${fmt(s.volume)} 張</div>
+              <div>${fmt(s.volume)} 張</div>
               <div class="table-lv2">昨: ${fmt(s.prev_volume)}</div>
             </div>
           </div>
 
           <div class="stock-item">
             <div class="stock-label">量增%</div>
-            <div class="stock-value ${((s.volume_ratio ?? 0) > 0) ? 'up' : 'dn'}">
-              <div class="table-lv1">${fmt(s.volume_ratio, "%")}</div>
+            <div class="stock-value">
+              <div class="${(s.volume_ratio ?? 0) > 0 ? 'up' : 'dn'}">
+                ${fmt(s.volume_ratio, "%")}
+              </div>
               <div class="table-lv2">${fmt(s.volume_add)} 張</div>
             </div>
           </div>
 
-          <div class="stock-item">
-            <div class="stock-label">評分</div>
-            <div class="stock-value">
-              <div class="table-lv1">${fmt(s.score)}</div>
-            </div>
+        </div>  <!-- stock-grid -->
+
+          <div class="stock-signal">
+            <span class="sig ${s.sig == 1 ? 'up' : s.sig == -1 ? 'dn' : 'watch'}">
+              ${s.sig == 1 ? '買入' : s.sig == -1 ? '賣出' : '觀察'}
+            </span>
+            <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
+            <div class="table-lv2">${s.signal_text ?? ""}</div>
+            <div class="table-lv3">${s.strategy ?? ""}</div>
+            <div class="table-lv3">${s.reason ?? ""}</div>
           </div>
 
-          <div class="stock-item">
-            <div class="stock-label">殖利率</div>
-            <div class="stock-value">
-              <div class="table-lv1">${fmt(s.yield_value, "%")}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="stock-signal">
-          <div>
-            <span class="sig ${sigClass[s.sig] ?? 'watch'}">${(sigLabel[s.sig] ?? '觀望').trim()}</span>
-          </div>
-          <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
-          <div class="table-lv2">${s.signal_text ?? ""}</div>
-          <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
-          <div class="table-lv3">${s.reason ?? ""}</div>
-        </div>
-      </div>`;
+      </div>
+      `;
     }
+
 
     function renderTable(data) {
       document.getElementById("stockBody").innerHTML = data.map(renderRow).join("");
@@ -681,7 +723,7 @@
         case "sig":
           return Number(s.sig ?? -999999);
         case "yield_value":
-          return Number(s.yield_value ?? -999999);
+          return Number(((s.yield_value ?? 0) * 0.65).toFixed(4));
         case "score":
         case "per_latest":
         case "pbr_latest":
@@ -744,10 +786,10 @@
       });
     }
 
-    const buy = sortedStocks.filter(s => s.strategy === "買入").length;
-    const sell = sortedStocks.filter(s => (s.strategy ?? "").includes("出貨")).length;
-    const watch = sortedStocks.filter(s => s.strategy === "觀察").length;
-    const hold = sortedStocks.filter(s => s.strategy === "整理").length;
+    const buy = sortedStocks.filter(s => s?.strategy === "買入").length;
+    const sell = sortedStocks.filter(s => s?.strategy?.includes("出貨")).length;
+    const watch = sortedStocks.filter(s => s?.strategy === "觀察").length;
+    const hold = sortedStocks.filter(s => s?.strategy === "整理").length;
 
     renderTable(sortedStocks);
     renderMobileCards(sortedStocks);
