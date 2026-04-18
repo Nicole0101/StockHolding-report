@@ -1,5 +1,5 @@
 import pandas as pd
-from data_sources import get_stock_data, get_per_pbr_90d_stats
+from data_sources import get_stock_data, get_revenue_raw, get_per_pbr_90d_stats
 from financial_analysis import (
     calc_eps_score,
     calc_margin_score,
@@ -10,7 +10,8 @@ from financial_analysis import (
     get_profit_ratio,
 )
 from signals import get_tech_signal
-from technical_indicators import add_indicators, get_MABias
+from technical_indicators import add_indicators, get_kd_trend, get_bb_trend, get_MABias
+import numpy as np
 
 
 def get_price_90d_high_low(df):
@@ -31,6 +32,47 @@ def get_price_90d_high_low(df):
     }
 
 
+def get_revenue_trend(stock_id):
+    try:
+        data = get_revenue_raw(stock_id)
+        if not data:
+            return None
+
+        df = pd.DataFrame(data)
+
+        if 'revenue' not in df.columns:
+            if 'value' in df.columns:
+                df['revenue'] = df['value']
+            else:
+                return None
+
+        df['date'] = pd.to_datetime(df['date'])
+        df['revenue'] = pd.to_numeric(df['revenue'], errors='coerce')
+        df = df.sort_values('date').dropna()
+
+        if len(df) < 13:
+            return None
+
+        curr = df.iloc[-1]['revenue']
+        prev_m = df.iloc[-2]['revenue']
+        prev_q = df.iloc[-4]['revenue']
+        prev_y = df.iloc[-13]['revenue']
+
+        def pct(a, b):
+            return (a - b) / b * 100 if b else None
+
+        return {
+            "rev": round(curr / 1e8, 2),   # 👉 bn
+            "mom": round(pct(curr, prev_m), 2),
+            "qoq": round(pct(curr, prev_q), 2),
+            "yoy": round(pct(curr, prev_y), 2),
+        }
+
+    except Exception as e:
+        print(f"❌ revenue error {stock_id}: {e}")
+        return None
+
+
 PER_PBR_CACHE = {}
 
 
@@ -40,6 +82,7 @@ def get_per_pbr_cached(stock_id):
             PER_PBR_CACHE.clear()
         PER_PBR_CACHE[stock_id] = get_per_pbr_90d_stats(stock_id)
     return PER_PBR_CACHE[stock_id]
+
 
 def process_stock(s):
     try:
@@ -60,11 +103,14 @@ def process_stock(s):
         if not eps_res or not isinstance(eps_res, tuple):
             eps_res = (None,) * 6
 
+        rev = get_revenue_trend(s['stock_id']) or {}
+
         profit_res = get_profit_ratio(s['stock_id']) or {
             'current': {},
             'qoq': {},
             'yoy_diff': {},
         }
+
         cur_g, qoq_g, yoy_g = extract_metric(profit_res, 'gross')
         cur_o, qoq_o, yoy_o = extract_metric(profit_res, 'op')
         cur_n, qoq_n, yoy_n = extract_metric(profit_res, 'net')
@@ -92,6 +138,8 @@ def process_stock(s):
         d = latest['D'] if pd.notna(latest['D']) else 50
         prev_k = prev['K'] if pd.notna(prev['K']) else 50
         prev_d = prev['D'] if pd.notna(prev['D']) else 50
+        kd_trend = get_kd_trend(df)
+        bb_trend = get_bb_trend(df)
 
         ma18 = latest['MA18'] if pd.notna(latest['MA18']) else None
         prev_ma18 = prev['MA18'] if pd.notna(prev['MA18']) else None
@@ -182,7 +230,23 @@ def process_stock(s):
         score = round(margin_score * 0.4 + eps_score *
                       0.3 + trend_score * 0.3, 2)
 
-        return {
+        def to_py(v):
+
+            if isinstance(v, (np.bool_,)):
+                return bool(v)
+
+            if isinstance(v, (np.integer,)):
+                return int(v)
+
+            if isinstance(v, (np.floating,)):
+                return float(v)
+
+            if pd.isna(v):
+                return None
+
+            return v
+
+        result = {
             'name': s['name'],
             'code': s['stock_id'],
             'price': float(round(close, 2)),
@@ -191,6 +255,10 @@ def process_stock(s):
             'chg': float(round(chg, 2)),
             'chgPct': float(chgPct),
             'amp': float(amp),
+            "rev": rev.get("rev"),
+            "rev_mom": rev.get("mom"),
+            "rev_qoq": rev.get("qoq"),
+            "rev_yoy": rev.get("yoy"),
 
             'gross_margin': float(cur_g) if cur_g is not None else None,
             'gross_margin_qoq': float(qoq_g) if qoq_g is not None else None,
@@ -222,12 +290,17 @@ def process_stock(s):
 
             'k': float(round(k, 1)),
             'd': float(round(d, 1)),
+            "kd_3d_up": kd_trend["kd_3d_up"],
+            "kd_trend": kd_trend["kd_trend"],
             'ma18': float(round(ma18, 2)) if ma18 is not None else None,
             'ma18_break': bool(ma18_break),
             'kd_buy': bool(kd_buy),
             'bb_pct': float(bb_pct) if bb_pct is not None else None,
             'bb_upper': float(round(bb_upper, 2)) if bb_upper is not None and pd.notna(bb_upper) else None,
             'bb_lower': float(round(bb_lower, 2)) if bb_lower is not None and pd.notna(bb_lower) else None,
+            "bb_3d_up": bb_trend["bb_3d_up"],
+            "bb_trend": bb_trend["bb_trend"],
+
 
             'volume': int(round(volume, 0)) if pd.notna(volume) else None,
             'prev_volume': int(round(prev_volume, 0)) if pd.notna(prev_volume) else None,
@@ -245,6 +318,8 @@ def process_stock(s):
             'reason': reason,
             'entry_note': entry_note,
         }
+        result = {k: to_py(v) for k, v in result.items()}
+        return result
     except Exception as e:
         print(f"❌ process error {s['stock_id']}: {e}")
         return None
