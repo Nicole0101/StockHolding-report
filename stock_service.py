@@ -149,20 +149,10 @@ def process_stock(s):
             kd_score = 0.5  # 多頭但未交叉
         elif k < d:
             kd_score = -0.5  # 空頭但未交叉
-
-        if k is None or prev_k is None:
-            k_trend = None
-        else:
-            k_trend = 1 if k > prev_k else -1 if k < prev_k else 0
-
-        if d is None or prev_d is None:
-            d_trend = None
-        else:
-            d_trend = 1 if d > prev_d else -1 if d < prev_d else 0
-
         kd_trend = get_kd_trend(df) or {"kd_3d_up": None, "kd_trend": None}
         bb_trend = get_bb_trend(df) or {"bb_3d_up": None, "bb_trend": None}
-
+        k_trend = kd_trend.get("kd_trend")
+        d_trend = None
         ma18 = latest['MA18'] if pd.notna(latest['MA18']) else None
         prev_ma18 = prev['MA18'] if pd.notna(prev['MA18']) else None
 
@@ -171,15 +161,14 @@ def process_stock(s):
 
         volume = latest.get('volume', None)
         prev_volume = prev.get('volume', None)
+        prev2 = df.iloc[-3]
+        prev2_volume = prev2.get('volume', None)
         volume_ratio = None
         volume_add = None
-        volume_ok = False
 
         if pd.notna(volume) and pd.notna(prev_volume) and prev_volume > 0:
             volume_ratio = round((volume / prev_volume - 1) * 100, 2)
             volume_add = int(volume - prev_volume)
-            volume_ok = bool((volume >= prev_volume * 1.1)
-                             or ((volume - prev_volume) >= 500))
 
         bb_upper = latest['BB_upper'] if 'BB_upper' in latest else None
         bb_lower = latest['BB_lower'] if 'BB_lower' in latest else None
@@ -202,7 +191,9 @@ def process_stock(s):
             close=close,
             chgPct=chgPct,
             amp=amp,
-            volume_ok=volume_ok,
+            volume=volume,
+            prev_volume=prev_volume,
+            prev2_volume=prev2_volume,
             k=k,
             d=d,
             prev_k=prev_k,
@@ -224,14 +215,13 @@ def process_stock(s):
             prev_close=prev_close,
         )
 
-        signal_result = signal_res['signal_result']
-        strategy = signal_res['strategy']
+        signal = signal_res['signal']
         reason = signal_res['reason']
         signal_text = signal_res['signal_text']
 
-        if signal_result == '買進訊號':
+        if signal == '買進':
             sig = 1
-        elif signal_result == '賣出訊號':
+        elif signal == '賣出':
             sig = -1
         else:
             sig = 0
@@ -248,9 +238,9 @@ def process_stock(s):
         entry_note = ''
         if '短線過熱' in reason or '不宜追價' in reason:
             entry_note = '不追價'
-        elif strategy == '買入' and kd_buy and ma18_break and k < 35:
+        elif signal == '買進' and kd_buy and ma18_break and k is not None and k < 35:
             entry_note = '抄底'
-        elif strategy == '買入' and ma18_break and chgPct >= 3:
+        elif signal == '買進' and ma18_break and chgPct >= 3:
             entry_note = '追漲'
 
         margin_score = calc_margin_score(cur_g, cur_o, cur_n)
@@ -335,16 +325,15 @@ def process_stock(s):
             "bb_score": bb_trend.get("bb_score"),
             'volume': int(round(volume, 0)) if pd.notna(volume) else None,
             'prev_volume': int(round(prev_volume, 0)) if pd.notna(prev_volume) else None,
+            'prev2_volume': int(round(prev2_volume, 0)) if pd.notna(prev2_volume) else None,
             'volume_ratio': float(volume_ratio) if volume_ratio is not None else None,
             'volume_add': volume_add if volume_add is not None else None,
-            'volume_ok': bool(volume_ok),
 
             **safe_ma_stats,
 
             'sig': int(sig),
-            'signal_result': signal_result,
+            'signal': signal,
             'score': float(score),
-            'strategy': strategy,
             'signal_text': signal_text,
             'reason': reason,
             'entry_note': entry_note,

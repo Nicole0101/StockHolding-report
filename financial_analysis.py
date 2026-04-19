@@ -156,9 +156,12 @@ def get_eps_analysis(stock_id, current_price):
             start = last_3.iloc[0]
             end = last_3.iloc[-1]
             years = len(last_3) - 1
-            if start > 0 and years > 0:
+            if start > 0 and end > 0 and years > 0:
                 cagr = (end / start) ** (1 / years) - 1
                 eps_est = round(end * (1 + cagr), 2)
+            else:
+                eps_est = None
+
 
         def calc_per(price, eps):
             return round(price / eps, 2) if eps and eps > 0 else None

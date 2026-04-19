@@ -583,11 +583,10 @@
 
         <td class="signal-cell">
           <div class="signal-wrap">
-            <div class="sig ${s.sig == 1 ? 'up' : s.sig == -1 ? 'dn' : 'watch'}">${s.sig == 1 ? '買入' : s.sig == -1 ? '賣出' : '觀察'}</div>
-            <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
-                <div class="table-lv2">${s.signal_text ?? ""}</div>
-                <div class="table-lv3">${s.strategy ?? ""}${s.entry_note ? ` / ${s.entry_note}` : ""}</div>
-                <div class="table-lv3">${s.reason ?? ""}</div>
+            <div class="sig ${s.sig == 1 ? 'up' : s.sig == -1 ? 'dn' : 'watch'}">${s.signal ?? '等待觀察'}</div>                 
+              <div class="table-lv2">${s.signal_text ?? ""}</div>
+              <div class="table-lv3">${s.entry_note ? s.entry_note : ""}</div>
+              <div class="table-lv3">${s.reason ?? ""}</div>          
           </div>
         </td>
 
@@ -600,8 +599,6 @@
       const chgPct = Number(s.chgPct ?? 0);
       const chgClass = chgPct >= 0 ? "up" : "dn";
       const chgSign = chgPct >= 0 ? "+" : "";
-      const sigClass = { 1: 'up', 0: 'watch', '-1': 'dn' }[s.sig] || 'watch';
-      const sigLabel = { 1: "買入", 0: "觀望", "-1": "賣出" };
 
       return `
       <div class="stock-card">
@@ -695,13 +692,12 @@
         </div>  <!-- stock-grid -->
 
           <div class="stock-signal">
-            <span class="sig ${s.sig == 1 ? 'up' : s.sig == -1 ? 'dn' : 'watch'}">
-              ${s.sig == 1 ? '買入' : s.sig == -1 ? '賣出' : '觀察'}
-            </span>
-            <div class="table-lv2"><b>${s.signal_result ?? ""}</b></div>
-            <div class="table-lv2">${s.signal_text ?? ""}</div>
-            <div class="table-lv3">${s.strategy ?? ""}</div>
-            <div class="table-lv3">${s.reason ?? ""}</div>
+        <span class="sig ${s.sig == 1 ? 'up' : s.sig == -1 ? 'dn' : 'watch'}">
+          ${s.signal ?? '等待觀察'}
+        </span>
+              <div class="table-lv2">${s.signal_text ?? ""}</div>
+              <div class="table-lv3">${s.entry_note ?? ""}</div>
+              <div class="table-lv3">${s.reason ?? ""}</div>
           </div>
 
       </div>
@@ -789,10 +785,15 @@
       });
     }
 
-    const buy = sortedStocks.filter(s => s?.strategy === "買入").length;
-    const sell = sortedStocks.filter(s => s?.strategy?.includes("出貨")).length;
-    const watch = sortedStocks.filter(s => s?.strategy === "觀察").length;
-    const hold = sortedStocks.filter(s => s?.strategy === "整理").length;
+
+    const buy = sortedStocks.filter(s => s?.signal === "買進").length;
+    const sell = sortedStocks.filter(s => s?.signal === "賣出").length;
+    const watch = sortedStocks.filter(s => s?.signal === "等待觀察").length;
+    const hold = sortedStocks.filter(
+      s => s?.signal === "觀察再買進" || s?.signal === "觀察再賣出").length;
+
+
+
 
     renderTable(sortedStocks);
     renderMobileCards(sortedStocks);
