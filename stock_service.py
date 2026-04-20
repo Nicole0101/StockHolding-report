@@ -100,9 +100,9 @@ def process_stock(s):
         amp = round((chgamp / prev['close']) * 100, 2)
 
         eps_res = get_eps_analysis(s['stock_id'], latest['close'])
-        eps_res = tuple(eps_res) if isinstance(eps_res, tuple) else (None,) * 6
-        eps_res = eps_res + (None,) * (6 - len(eps_res))
-
+        eps_res = tuple(eps_res) if isinstance(eps_res, tuple) else (None,) * 4
+        eps_res = eps_res + (None,) * (4 - len(eps_res))
+        eps_last, eps_ttm, per_last, per_ttm = eps_res
         rev = get_revenue_trend(s['stock_id']) or {}
         profit_res = get_profit_ratio(s['stock_id']) or {
             'current': {},
@@ -244,7 +244,7 @@ def process_stock(s):
             entry_note = '追漲'
 
         margin_score = calc_margin_score(cur_g, cur_o, cur_n)
-        eps_score = calc_eps_score(eps_res[1], eps_res[2])
+        eps_score = calc_eps_score(eps_last, eps_ttm)
         trend_score = calc_trend_score(qoq_g, yoy_g, qoq_n, yoy_n)
         score = round(margin_score * 0.4 + eps_score *
                       0.3 + trend_score * 0.3, 2)
@@ -274,6 +274,8 @@ def process_stock(s):
             'chg': float(round(chg, 2)),
             'chgPct': float(chgPct),
             'amp': float(amp),
+            'eps_Y': float(eps_last) if eps_last is not None else None,
+            'eps_ttm': float(eps_ttm) if eps_ttm is not None else None,
             "rev": rev.get("rev"),
             "rev_mom": rev.get("mom"),
             "rev_qoq": rev.get("qoq"),
@@ -291,14 +293,11 @@ def process_stock(s):
             'net_margin_qoq': float(qoq_n) if qoq_n is not None else None,
             'net_margin_yoy_diff': float(yoy_n) if yoy_n is not None else None,
 
-            'eps_Y': float(eps_res[0]) if eps_res[0] is not None else None,
-            'eps_ttm': float(eps_res[1]) if eps_res[1] is not None else None,
-            'eps_est': float(eps_res[2]) if eps_res[2] is not None else None,
+            'per_Y': float(per_last) if per_last is not None else None,
+            'per_ttm': float(per_ttm) if per_ttm is not None else None,            
 
             'dividend': float(dividend) if dividend is not None else None,
             'yield_value': float(yield_value) if yield_value is not None and not pd.isna(yield_value) else None,
-
-            'per_Y': float(eps_res[3]) if eps_res[3] is not None else None,
             'per_latest': per_pbr_stats.get('per'),
             'per_90d_high': per_pbr_stats.get('per_90d_high'),
             'per_90d_low': per_pbr_stats.get('per_90d_low'),
