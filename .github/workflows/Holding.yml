@@ -26,7 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests jinja2 FinMind PyYAML loguru tqdm
 
-      - name: Prepare config for Gold report
+      - name: Prepare config for 持股report
         run: |
           cat > config.py <<'PY'
           REPORT_TYPE = "持股"
