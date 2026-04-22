@@ -1,68 +1,59 @@
-name: Holding
+name: 持股 Rpt
 
 on:
-  schedule:
-    - cron: "0 7 * * 1-5"  # 🇹🇼 15:00（UTC+8）
   workflow_dispatch:
+  schedule:
+    - cron: "30 22 * * 1-5"   # 台灣時間平日 06:30
 
-env:
-  FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
-  LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
-  LINE_USER_ID: ${{ secrets.LINE_USER_ID }}  
+permissions:
+  contents: write
 
 jobs:
-  build:
+  build-gold-report:
     runs-on: ubuntu-latest
 
     steps:
-      # ========================
-      # 1. Checkout
-      # ========================
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # ========================
-      # 2. Setup Python
-      # ========================
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
-      # ========================
-      # 3. Install dependencies
-      # ========================
-      - name: Install deps
-        run: pip install -r requirements.txt
-
-      # ========================
-      # 4. Debug（可選）
-      # ========================
-      - name: Check secrets
+      - name: Install dependencies
         run: |
-          echo "FINMIND: ${FINMIND_TOKEN:0:5}****"
-          echo "LINE: ${LINE_TOKEN:0:5}****"
+          python -m pip install --upgrade pip
+          pip install pandas requests jinja2 FinMind PyYAML loguru tqdm
 
-      # ========================
-      # 5. Run script（只跑一次🔥）
-      # ========================
-      - name: Generate report
-        run: python generate_html.py
-
-      # ========================
-      # 6. Commit & Push（只 commit 有變更）
-      # ========================
-      - name: Commit & Push
+      - name: Prepare config for Gold report
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          cat > config.py <<'PY'
+          REPORT_TYPE = "持股"
+          CSV_FILE = " stock.csv"
+          REPORT_TITLE = "(持股)技術分析報告"
+          OUTPUT_FILE = "持股"
+          STATIC_OUTPUT_FILE = "AllStatic.csv"
+          PY
 
-          git add *.html
+      - name: Verify AllStatic.csv exists
+        run: |
+          test -f AllStatic.csv || (echo "AllStatic.csv not found. Run update_static.yml first." && exit 1)
 
-          if git diff --cached --quiet; then
-            echo "No changes"
-          else
-            git commit -m "📊 auto update stock report"
-            git push
-          fi
+      - name: Generate HTML
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+          STATIC_CSV_FILE: AllStatic.csv
+        run: |
+          python generate_html.py
+
+      - name: Commit generated report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add *.html config.py
+          git diff --cached --quiet || git commit -m "Update Gold report"
+
+      - name: Push changes
+        run: |
+          git push
