@@ -1,5 +1,5 @@
 REPORT_TYPE = "持股"
-CSV_FILE = "stocks.csv"
+CSV_FILE = "stock.csv"
 REPORT_TITLE = "(持股)技術分析報告"
 OUTPUT_FILE = "持股"
 STATIC_OUTPUT_FILE = "AllStatic.csv"
