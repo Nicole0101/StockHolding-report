@@ -30,7 +30,7 @@ jobs:
         run: |
           cat > config.py <<'PY'
           REPORT_TYPE = "持股"
-          CSV_FILE = " stock.csv"
+          CSV_FILE = "stock.csv"
           REPORT_TITLE = "(持股)技術分析報告"
           OUTPUT_FILE = "持股"
           STATIC_OUTPUT_FILE = "AllStatic.csv"
@@ -52,7 +52,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add *.html config.py
-          git diff --cached --quiet || git commit -m "Update Gold report"
+          git diff --cached --quiet || git commit -m "Update 持股report"
 
       - name: Push changes
         run: |
