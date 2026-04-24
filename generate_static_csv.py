@@ -186,9 +186,10 @@ def build_all_static(stock_list: list[dict]) -> pd.DataFrame:
 
     ordered_cols = [
         "stock_id", "name",
-
-        "eps_Y", "eps_ttm", "eps_est", "per_Y",
-
+        "eps_Y": None,
+        "eps_ttm": None,
+        "per_Y": None,
+        "per_ttm": None,
         "rev", "rev_mom", "rev_qoq", "rev_yoy",
 
         "gross_margin", "gross_margin_qoq", "gross_margin_yoy_diff",

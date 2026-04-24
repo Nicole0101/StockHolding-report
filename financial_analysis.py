@@ -194,7 +194,7 @@ def get_eps_analysis(stock_id, current_price):
 
             # 沒營收資料時，退回去年同季 EPS
             if prev_rev is None or prev_rev <= 0 or curr_rev is None or curr_rev <= 0:
-                return round(prev_eps, 2)
+                return None
 
             growth_ratio = curr_rev / prev_rev
             growth_ratio = max(0.5, min(growth_ratio, 1.5))
