@@ -78,8 +78,8 @@ def build_static_row(s: dict) -> dict:
         # EPS
         "eps_Y": None,
         "eps_ttm": None,
-        "eps_est": None,
         "per_Y": None,
+        "per_ttm": None,
 
         # Revenue
         "rev": None,
@@ -186,19 +186,13 @@ def build_all_static(stock_list: list[dict]) -> pd.DataFrame:
 
     ordered_cols = [
         "stock_id", "name",
-        "eps_Y": None,
-        "eps_ttm": None,
-        "per_Y": None,
-        "per_ttm": None,
+        "eps_Y", "eps_ttm", "per_Y", "per_ttm",
         "rev", "rev_mom", "rev_qoq", "rev_yoy",
-
         "gross_margin", "gross_margin_qoq", "gross_margin_yoy_diff",
         "operating_margin", "operating_margin_qoq", "operating_margin_yoy_diff",
         "net_margin", "net_margin_qoq", "net_margin_yoy_diff",
-
         "per_latest", "per_90d_high", "per_90d_low",
         "pbr_latest", "pbr_90d_high", "pbr_90d_low",
-
         "static_updated_at", "static_status", "static_reason",
     ]
 

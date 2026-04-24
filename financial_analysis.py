@@ -264,16 +264,16 @@ def get_eps_analysis(stock_id, current_price):
         per_ttm = calc_per(current_price, eps_ttm)
 
         return eps_last, eps_ttm, per_last, per_ttm
-
     except Exception as e:
         print(f"❌ EPS error {stock_id}: {e}")
         return (None,) * 4
 
-    def calc_eps_score(eps_last, eps_ttm):
-        if eps_last is None or eps_ttm is None or eps_last <= 0:
-            return 0
-        growth = (eps_ttm - eps_last) / eps_last * 100
-        return round(growth, 2)
+
+def calc_eps_score(eps_last, eps_ttm):
+    if eps_last is None or eps_ttm is None or eps_last <= 0:
+        return 0
+    growth = (eps_ttm - eps_last) / eps_last * 100
+    return round(growth, 2)
 
 
 def get_dividend_yield(stock_id, current_price=None):
@@ -335,10 +335,10 @@ def calc_margin_score(gross, op, net):
     return round(score, 2)
 
 
-def calc_eps_score(eps_ttm, eps_est):
-    if eps_ttm is None or eps_est is None or eps_ttm <= 0:
+def calc_eps_score(eps_last, eps_ttm):
+    if eps_last is None or eps_ttm is None or eps_last <= 0:
         return 0
-    growth = (eps_est - eps_ttm) / eps_ttm * 100
+    growth = (eps_ttm - eps_last) / eps_last * 100
     return round(growth, 2)
 
 
