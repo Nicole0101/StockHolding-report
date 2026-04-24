@@ -502,7 +502,7 @@
           <div class="table-lv1 ${chgClass}">${chgSign}${fmt(s.chg)}</div>
             <div class="table-lv2">${fmt(s.price_min)}</div>
             <div class="table-lv2">${fmt(s.price_max)}</div>
-            <div class="table-lv3">(${fmt(s.price_max) - fmt(s.price_min)})</div>
+            <div class="table-lv3"><div class="table-lv3">(${(Number(s.price_max ?? 0) - Number(s.price_min ?? 0)).toFixed(2)})</div>            
         </td>
         
         <td class="col-md">

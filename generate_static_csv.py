@@ -117,13 +117,15 @@ def build_static_row(s: dict) -> dict:
     try:
         # EPS
         # current_price 只為沿用既有函式介面，這裡給 1 避免 None 出錯
-        eps_last, eps_ttm, eps_est, per_last, _, _ = get_eps_analysis(
-            stock_id, 1)
+        eps_res = get_eps_analysis(stock_id, 1)
+        eps_res = tuple(eps_res) if isinstance(eps_res, tuple) else (None,) * 4
+        eps_res = eps_res + (None,) * (4 - len(eps_res))
+        eps_last, eps_ttm, per_last, per_ttm = eps_res
 
         row["eps_Y"] = eps_last
         row["eps_ttm"] = eps_ttm
-        row["eps_est"] = eps_est
         row["per_Y"] = per_last
+        row["per_ttm"] = per_ttm
 
         # Revenue
         rev = get_revenue_trend(stock_id) or {}
