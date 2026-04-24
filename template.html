@@ -377,7 +377,7 @@
               <th data-key="price">價格<br><small>90天低/高</small></th>
               <th data-key="chg">漲跌<br><small>低/高</small></th>
               <th data-key="chgPct">漲跌%<br><small>震幅%</small></th>
-              <th class="col-lg" data-key="eps_Y">EPS<br><small>去年/TTM</small></th>
+              <th class="col-lg" data-key="eps_Y">EPS<br><small>TTM</small></th>
               <th class="col-lg" data-key="rev">營收(bn)<br><small>M / Q / Y</small></th>
               <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ / YoY</small></th>
               <th class="col-lg" data-key="operating_margin">營益率%<br><small>QoQ / YoY</small></th>
@@ -502,11 +502,12 @@
           <div class="table-lv1 ${chgClass}">${chgSign}${fmt(s.chg)}</div>
             <div class="table-lv2">${fmt(s.price_min)}</div>
             <div class="table-lv2">${fmt(s.price_max)}</div>
+            <div class="table-lv3">(${fmt(s.price_max) - fmt(s.price_min)})</div>
         </td>
         
         <td class="col-md">
           <div class="table-lv1 ${chgClass}">${chgSign}${fmt(s.chgPct, "%")}</div>
-          <div class="table-lv2">Amp: ${fmt(s.amp, "%")}</div>
+          <div class="table-lv2">${fmt(s.amp, "%")}</div>
         </td>
 
         <td class="col-lg">
