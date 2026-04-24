@@ -75,19 +75,16 @@ def build_static_row(s: dict) -> dict:
         "stock_id": stock_id,
         "name": name,
 
-        # EPS
         "eps_Y": None,
         "eps_ttm": None,
         "per_Y": None,
         "per_ttm": None,
 
-        # Revenue
         "rev": None,
         "rev_mom": None,
         "rev_qoq": None,
         "rev_yoy": None,
 
-        # Margins
         "gross_margin": None,
         "gross_margin_qoq": None,
         "gross_margin_yoy_diff": None,
@@ -100,7 +97,6 @@ def build_static_row(s: dict) -> dict:
         "net_margin_qoq": None,
         "net_margin_yoy_diff": None,
 
-        # PER / PBR
         "per_latest": None,
         "per_90d_high": None,
         "per_90d_low": None,
@@ -108,15 +104,12 @@ def build_static_row(s: dict) -> dict:
         "pbr_90d_high": None,
         "pbr_90d_low": None,
 
-        # Metadata
         "static_updated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "static_status": "ok",
         "static_reason": "",
     }
 
     try:
-        # EPS
-        # current_price 只為沿用既有函式介面，這裡給 1 避免 None 出錯
         eps_res = get_eps_analysis(stock_id, 1)
         eps_res = tuple(eps_res) if isinstance(eps_res, tuple) else (None,) * 4
         eps_res = eps_res + (None,) * (4 - len(eps_res))
@@ -127,14 +120,12 @@ def build_static_row(s: dict) -> dict:
         row["per_Y"] = per_last
         row["per_ttm"] = per_ttm
 
-        # Revenue
         rev = get_revenue_trend(stock_id) or {}
         row["rev"] = rev.get("rev")
         row["rev_mom"] = rev.get("mom")
         row["rev_qoq"] = rev.get("qoq")
         row["rev_yoy"] = rev.get("yoy")
 
-        # 毛利 / 營益 / 淨利率
         profit_res = get_profit_ratio(stock_id)
         cur_g, qoq_g, yoy_g = extract_metric(profit_res, "gross")
         cur_o, qoq_o, yoy_o = extract_metric(profit_res, "op")
@@ -152,7 +143,6 @@ def build_static_row(s: dict) -> dict:
         row["net_margin_qoq"] = qoq_n
         row["net_margin_yoy_diff"] = yoy_n
 
-        # PER / PBR
         per_pbr = get_per_pbr_90d_stats(stock_id) or {}
         row["per_latest"] = per_pbr.get("per")
         row["per_90d_high"] = per_pbr.get("per_90d_high")

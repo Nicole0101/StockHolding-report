@@ -53,7 +53,7 @@ def build_output(result):
 def get_profit_ratio(stock_id):
     try:
         df = get_profit_ratio_raw(stock_id)
-        if df.empty:
+        if df is None or df.empty:
             return None
 
         df['date'] = pd.to_datetime(df['date'])
@@ -153,13 +153,11 @@ def get_eps_analysis(stock_id, current_price):
             val = row.iloc[-1]["value"]
             return float(val) if pd.notna(val) else None
 
-        # 去年整年 EPS
         eps_last = None
         df_last = df[df["year"] == last_year]
         if df_last["season"].nunique() == 4:
             eps_last = round(df_last["value"].sum(), 2)
 
-        # 讀季度營收，用來補缺季
         rev_map = {}
         rev_raw = get_profit_ratio_raw(stock_id)
         if rev_raw is not None:
@@ -192,7 +190,6 @@ def get_eps_analysis(stock_id, current_price):
             if prev_eps is None:
                 return None
 
-            # 沒營收資料時，退回去年同季 EPS
             if prev_rev is None or prev_rev <= 0 or curr_rev is None or curr_rev <= 0:
                 return None
 
@@ -200,7 +197,6 @@ def get_eps_analysis(stock_id, current_price):
             growth_ratio = max(0.5, min(growth_ratio, 1.5))
             return round(prev_eps * growth_ratio, 2)
 
-        # 計算最近四季 EPS
         eps_ttm = None
         this_year_seasons = sorted(
             df[df["year"] == this_year]["season"].dropna().astype(
@@ -264,16 +260,10 @@ def get_eps_analysis(stock_id, current_price):
         per_ttm = calc_per(current_price, eps_ttm)
 
         return eps_last, eps_ttm, per_last, per_ttm
+
     except Exception as e:
         print(f"❌ EPS error {stock_id}: {e}")
         return (None,) * 4
-
-
-def calc_eps_score(eps_last, eps_ttm):
-    if eps_last is None or eps_ttm is None or eps_last <= 0:
-        return 0
-    growth = (eps_ttm - eps_last) / eps_last * 100
-    return round(growth, 2)
 
 
 def get_dividend_yield(stock_id, current_price=None):
