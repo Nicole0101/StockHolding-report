@@ -111,6 +111,7 @@ def build_static_row(s: dict) -> dict:
 
     try:
         eps_res = get_eps_analysis(stock_id, 1)
+        print("EPS test =", stock_id, get_eps_analysis(stock_id, 1))
         eps_res = tuple(eps_res) if isinstance(eps_res, tuple) else (None,) * 4
         eps_res = eps_res + (None,) * (4 - len(eps_res))
         eps_last, eps_ttm, per_last, per_ttm = eps_res
@@ -185,7 +186,6 @@ def build_all_static(stock_list: list[dict]) -> pd.DataFrame:
         "pbr_latest", "pbr_90d_high", "pbr_90d_low",
         "static_updated_at", "static_status", "static_reason",
     ]
-    print("EPS test =", stock_id, get_eps_analysis(stock_id, 1))
     existing_cols = [c for c in ordered_cols if c in df.columns]
     return df[existing_cols]
 
