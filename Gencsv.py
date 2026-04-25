@@ -3,33 +3,51 @@ import pandas as pd
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 allcsv_dir = os.path.join(base_dir, "Allcsv")
-output_holding = os.path.join(base_dir, "holding.csv")
+output_gold = os.path.join(base_dir, "Holding.csv")
 
 all_rows = []
 
 print("cwd =", os.getcwd(), flush=True)
 print("script dir =", base_dir, flush=True)
 print("allcsv_dir =", allcsv_dir, flush=True)
-print("output_holding =", output_holding, flush=True)
+print("output_gold =", output_gold, flush=True)
 
 if not os.path.isdir(allcsv_dir):
     raise FileNotFoundError(f"Allcsv directory not found: {allcsv_dir}")
+
+
+def read_csv_flexible(file_path):
+    encodings = ["utf-8-sig", "utf-8", "cp950", "big5"]
+
+    last_error = None
+    for enc in encodings:
+        try:
+            df = pd.read_csv(file_path, sep="\t", encoding=enc)
+
+            if len(df.columns) == 1:
+                df = pd.read_csv(file_path, encoding=enc)
+
+            return df, enc
+        except Exception as e:
+            last_error = e
+
+    raise last_error
+
 
 for filename in os.listdir(allcsv_dir):
     file_path = os.path.join(allcsv_dir, filename)
 
     if not os.path.isfile(file_path):
+        print(f"skip not file: {filename}", flush=True)
         continue
-    if filename.lower() == "holding.csv":
-        continue
+
     if not filename.lower().endswith((".csv", ".txt")):
+        print(f"skip ext: {filename}", flush=True)
         continue
 
     try:
-        df = pd.read_csv(file_path, sep="\t", encoding="utf-8-sig")
-
-        if len(df.columns) == 1:
-            df = pd.read_csv(file_path, encoding="utf-8-sig")
+        df, used_encoding = read_csv_flexible(file_path)
+        df.columns = df.columns.str.strip()
 
         if {"Ticker", "Name"}.issubset(df.columns):
             temp = df[["Ticker", "Name"]].copy()
@@ -37,7 +55,10 @@ for filename in os.listdir(allcsv_dir):
             temp = df[["代碼", "名稱"]].copy()
             temp.columns = ["Ticker", "Name"]
         else:
-            print(f"skip: {filename}, columns={df.columns.tolist()}", flush=True)
+            print(
+                f"skip columns: {filename}, encoding={used_encoding}, columns={df.columns.tolist()}",
+                flush=True
+            )
             continue
 
         temp["Ticker"] = temp["Ticker"].astype(str).str.strip()
@@ -53,7 +74,7 @@ for filename in os.listdir(allcsv_dir):
         if not temp.empty:
             all_rows.append(temp)
 
-        print(f"loaded: {filename}, rows={len(temp)}", flush=True)
+        print(f"loaded: {filename}, encoding={used_encoding}, rows={len(temp)}", flush=True)
 
     except Exception as e:
         print(f"failed: {filename}, error={e}", flush=True)
@@ -70,9 +91,9 @@ if all_rows:
         .reset_index(drop=True)
     )
 
-    result.to_csv(output_holding, sep="\t", index=False, encoding="utf-8-sig")
+    result.to_csv(output_gold, sep="\t", index=False, encoding="utf-8-sig")
 
-    print(f"written: {output_holding}", flush=True)
+    print(f"written: {output_gold}", flush=True)
     print(f"rows: {len(result)}", flush=True)
 else:
     print("no data", flush=True)
