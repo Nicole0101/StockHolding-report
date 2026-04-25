@@ -2,7 +2,13 @@ from datetime import datetime
 
 import pandas as pd
 
-from data_sources import get_dividend_raw, get_eps_raw, get_per_raw, get_profit_ratio as get_profit_ratio_raw
+from data_sources import (
+    get_dividend_raw,
+    get_eps_raw,
+    get_per_raw,
+    get_profit_ratio as get_profit_ratio_raw,
+    get_revenue_raw,
+)
 
 
 def safe_margin(num, denom):
@@ -158,26 +164,37 @@ def get_eps_analysis(stock_id, current_price):
         if df_last["season"].nunique() == 4:
             eps_last = round(df_last["value"].sum(), 2)
 
+        # 用月營收彙總季度營收，來補缺季 EPS
         rev_map = {}
-        rev_raw = get_profit_ratio_raw(stock_id)
-        if rev_raw is not None:
+        rev_raw = get_revenue_raw(stock_id)
+        if rev_raw:
             rev_df = pd.DataFrame(rev_raw)
-            if not rev_df.empty and "type" in rev_df.columns and "value" in rev_df.columns:
-                rev_df["date"] = pd.to_datetime(rev_df["date"])
-                rev_df["year"] = rev_df["date"].dt.year
-                rev_df["season"] = rev_df["date"].dt.quarter
-                rev_df = rev_df[rev_df["type"] == "Revenue"].copy()
-                rev_df["value"] = pd.to_numeric(
-                    rev_df["value"], errors="coerce")
-                rev_df = (
-                    rev_df.sort_values("date")
-                          .drop_duplicates(["year", "season"], keep="last")
-                )
-                rev_map = {
-                    (int(r["year"]), int(r["season"])): float(r["value"])
-                    for _, r in rev_df.iterrows()
-                    if pd.notna(r["value"])
-                }
+
+            if not rev_df.empty:
+                if "revenue" not in rev_df.columns and "value" in rev_df.columns:
+                    rev_df["revenue"] = rev_df["value"]
+
+                if "revenue" in rev_df.columns and "date" in rev_df.columns:
+                    rev_df["date"] = pd.to_datetime(rev_df["date"])
+                    rev_df["revenue"] = pd.to_numeric(
+                        rev_df["revenue"], errors="coerce")
+                    rev_df = rev_df.dropna(subset=["date", "revenue"]).copy()
+
+                    rev_df["year"] = rev_df["date"].dt.year
+                    rev_df["quarter"] = rev_df["date"].dt.quarter
+
+                    q_rev = (
+                        rev_df.groupby(["year", "quarter"],
+                                       as_index=False)["revenue"]
+                        .sum()
+                        .sort_values(["year", "quarter"])
+                    )
+
+                    rev_map = {
+                        (int(r["year"]), int(r["quarter"])): float(r["revenue"])
+                        for _, r in q_rev.iterrows()
+                        if pd.notna(r["revenue"])
+                    }
 
         def get_revenue(year, season):
             return rev_map.get((year, season))
@@ -186,15 +203,6 @@ def get_eps_analysis(stock_id, current_price):
             prev_eps = get_eps(target_year - 1, target_season)
             prev_rev = get_revenue(target_year - 1, target_season)
             curr_rev = get_revenue(target_year, target_season)
-            print(
-                "EPS rev debug =",
-                stock_id,
-                target_year,
-                target_season,
-                "prev_eps=", prev_eps,
-                "prev_rev=", prev_rev,
-                "curr_rev=", curr_rev,
-            )
 
             if prev_eps is None:
                 return None
