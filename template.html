@@ -375,10 +375,9 @@
             <tr>
               <th data-key="code">代碼<br><small>名稱</small></th>
               <th data-key="price">價格<br><small>90天低/高</small></th>
-              <th data-key="chg">漲跌</th>
-              <th data-key="chgPct">漲跌%</th>
-              <th class="col-md" data-key="amp">震幅%</th>
-              <th class="col-lg" data-key="eps_Y">EPS<br><small>去年/預估</small></th>
+              <th data-key="chg">漲跌<br><small>低/高</small></th>
+              <th data-key="chgPct">漲跌%<br><small>震幅%</small></th>
+              <th class="col-lg" data-key="eps_Y">EPS<br><small>TTM</small></th>
               <th class="col-lg" data-key="rev">營收(bn)<br><small>M / Q / Y</small></th>
               <th class="col-lg" data-key="gross_margin">毛利率%<br><small>QoQ / YoY</small></th>
               <th class="col-lg" data-key="operating_margin">營益率%<br><small>QoQ / YoY</small></th>
@@ -499,10 +498,17 @@
 
         <td class="col-lg">${renderRangeMetric(s.price, s.price_90d_low, s.price_90d_high)}</td>
 
-        <td class="${chgClass}">${chgSign}${fmt(s.chg)}</td>
-        <td class="${chgClass}">${chgSign}${fmt(s.chgPct, "%")}</td>
-
-        <td class="col-md">${fmt(s.amp, "%")}</td>
+        <td>
+          <div class="table-lv1 ${chgClass}">${chgSign}${fmt(s.chg)}</div>
+            <div class="table-lv2">${fmt(s.price_min)}</div>
+            <div class="table-lv2">${fmt(s.price_max)}</div>
+            <div class="table-lv3"><div class="table-lv3">(${(Number(s.price_max ?? 0) - Number(s.price_min ?? 0)).toFixed(2)})</div>            
+        </td>
+        
+        <td class="col-md">
+          <div class="table-lv1 ${chgClass}">${chgSign}${fmt(s.chgPct, "%")}</div>
+          <div class="table-lv2">${fmt(s.amp, "%")}</div>
+        </td>
 
         <td class="col-lg">
           <div class="table-lv1">${fmt(s.eps_Y)}</div>

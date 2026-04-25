@@ -2,7 +2,13 @@ from datetime import datetime
 
 import pandas as pd
 
-from data_sources import get_dividend_raw, get_eps_raw, get_per_raw, get_profit_ratio as get_profit_ratio_raw
+from data_sources import (
+    get_dividend_raw,
+    get_eps_raw,
+    get_per_raw,
+    get_profit_ratio as get_profit_ratio_raw,
+    get_revenue_raw,
+)
 
 
 def safe_margin(num, denom):
@@ -53,7 +59,7 @@ def build_output(result):
 def get_profit_ratio(stock_id):
     try:
         df = get_profit_ratio_raw(stock_id)
-        if df.empty:
+        if df is None or df.empty:
             return None
 
         df['date'] = pd.to_datetime(df['date'])
@@ -125,55 +131,156 @@ def get_eps_analysis(stock_id, current_price):
     try:
         data = get_eps_raw(stock_id)
         if not data:
-            return (None,) * 6
+            return (None,) * 4
 
         df = pd.DataFrame(data)
-        df = df[df['type'] == 'EPS']
+        df = df[df["type"] == "EPS"]
         if df.empty:
-            return (None,) * 6
+            return (None,) * 4
 
-        df['date'] = pd.to_datetime(df['date'])
-        df['year'] = df['date'].dt.year
-        df['season'] = df['date'].dt.quarter
-        df['value'] = pd.to_numeric(df['value'], errors='coerce')
-        df = df.sort_values('date').drop_duplicates(
-            ['year', 'season'], keep='last')
+        df["date"] = pd.to_datetime(df["date"])
+        df["year"] = df["date"].dt.year
+        df["season"] = df["date"].dt.quarter
+        df["value"] = pd.to_numeric(df["value"], errors="coerce")
 
-        last_year = datetime.now().year - 1
-        df_last = df[df['year'] == last_year]
+        df = (
+            df.sort_values("date")
+              .drop_duplicates(["year", "season"], keep="last")
+              .reset_index(drop=True)
+        )
+
+        this_year = datetime.now().year
+        last_year = this_year - 1
+
+        def get_eps(year, season):
+            row = df[(df["year"] == year) & (df["season"] == season)]
+            if row.empty:
+                return None
+            val = row.iloc[-1]["value"]
+            return float(val) if pd.notna(val) else None
 
         eps_last = None
-        if df_last['season'].nunique() >= 4:
-            eps_last = round(df_last['value'].sum(), 2)
+        df_last = df[df["year"] == last_year]
+        if df_last["season"].nunique() == 4:
+            eps_last = round(df_last["value"].sum(), 2)
 
-        df_ttm = df.sort_values('date').tail(4)
-        eps_ttm = round(df_ttm['value'].sum(), 2) if len(df_ttm) == 4 else None
+        # 用月營收彙總季度營收，來補缺季 EPS
+        rev_map = {}
+        rev_raw = get_revenue_raw(stock_id)
+        if rev_raw:
+            rev_df = pd.DataFrame(rev_raw)
 
-        yearly_eps = df.groupby('year')['value'].sum().sort_index()
-        eps_est = None
-        if len(yearly_eps) >= 3:
-            last_3 = yearly_eps.tail(3)
-            start = last_3.iloc[0]
-            end = last_3.iloc[-1]
-            years = len(last_3) - 1
-            if start > 0 and end > 0 and years > 0:
-                cagr = (end / start) ** (1 / years) - 1
-                eps_est = round(end * (1 + cagr), 2)
-            else:
-                eps_est = None
+            if not rev_df.empty:
+                if "revenue" not in rev_df.columns and "value" in rev_df.columns:
+                    rev_df["revenue"] = rev_df["value"]
 
+                if "revenue" in rev_df.columns and "date" in rev_df.columns:
+                    rev_df["date"] = pd.to_datetime(rev_df["date"])
+                    rev_df["revenue"] = pd.to_numeric(
+                        rev_df["revenue"], errors="coerce")
+                    rev_df = rev_df.dropna(subset=["date", "revenue"]).copy()
+
+                    rev_df["year"] = rev_df["date"].dt.year
+                    rev_df["quarter"] = rev_df["date"].dt.quarter
+
+                    q_rev = (
+                        rev_df.groupby(["year", "quarter"],
+                                       as_index=False)["revenue"]
+                        .sum()
+                        .sort_values(["year", "quarter"])
+                    )
+
+                    rev_map = {
+                        (int(r["year"]), int(r["quarter"])): float(r["revenue"])
+                        for _, r in q_rev.iterrows()
+                        if pd.notna(r["revenue"])
+                    }
+
+        def get_revenue(year, season):
+            return rev_map.get((year, season))
+
+        def estimate_eps_by_revenue_growth(target_year, target_season):
+            prev_eps = get_eps(target_year - 1, target_season)
+            prev_rev = get_revenue(target_year - 1, target_season)
+            curr_rev = get_revenue(target_year, target_season)
+
+            if prev_eps is None:
+                return None
+
+            # 沒營收資料時，退回去年同季 EPS
+            if prev_rev is None or prev_rev <= 0 or curr_rev is None or curr_rev <= 0:
+                return round(prev_eps, 2)
+            growth_ratio = curr_rev / prev_rev
+            growth_ratio = max(0.5, min(growth_ratio, 1.5))
+            return round(prev_eps * growth_ratio, 2)
+
+        eps_ttm = None
+        this_year_seasons = sorted(
+            df[df["year"] == this_year]["season"].dropna().astype(
+                int).unique().tolist()
+        )
+
+        if this_year_seasons == []:
+            vals = [
+                get_eps(last_year, 2),
+                get_eps(last_year, 3),
+                get_eps(last_year, 4),
+                estimate_eps_by_revenue_growth(this_year, 1),
+            ]
+            if all(v is not None for v in vals):
+                eps_ttm = round(sum(vals), 2)
+
+        elif this_year_seasons == [1]:
+            vals = [
+                get_eps(last_year, 2),
+                get_eps(last_year, 3),
+                get_eps(last_year, 4),
+                get_eps(this_year, 1),
+            ]
+            if all(v is not None for v in vals):
+                eps_ttm = round(sum(vals), 2)
+
+        elif this_year_seasons == [1, 2]:
+            vals = [
+                get_eps(last_year, 3),
+                get_eps(last_year, 4),
+                get_eps(this_year, 1),
+                get_eps(this_year, 2),
+            ]
+            if all(v is not None for v in vals):
+                eps_ttm = round(sum(vals), 2)
+
+        elif this_year_seasons == [1, 2, 3]:
+            vals = [
+                get_eps(last_year, 4),
+                get_eps(this_year, 1),
+                get_eps(this_year, 2),
+                get_eps(this_year, 3),
+            ]
+            if all(v is not None for v in vals):
+                eps_ttm = round(sum(vals), 2)
+
+        elif this_year_seasons == [1, 2, 3, 4]:
+            vals = [
+                get_eps(this_year, 1),
+                get_eps(this_year, 2),
+                get_eps(this_year, 3),
+                get_eps(this_year, 4),
+            ]
+            if all(v is not None for v in vals):
+                eps_ttm = round(sum(vals), 2)
 
         def calc_per(price, eps):
-            return round(price / eps, 2) if eps and eps > 0 else None
+            return round(price / eps, 2) if eps is not None and eps > 0 else None
 
         per_last = calc_per(current_price, eps_last)
         per_ttm = calc_per(current_price, eps_ttm)
-        per_est = calc_per(current_price, eps_est)
 
-        return eps_last, eps_ttm, eps_est, per_last, per_ttm, per_est
+        return eps_last, eps_ttm, per_last, per_ttm
+
     except Exception as e:
-        print(f'❌ EPS error {stock_id}: {e}')
-        return (None,) * 6
+        print(f"❌ EPS error {stock_id}: {e}")
+        return (None,) * 4
 
 
 def get_dividend_yield(stock_id, current_price=None):
@@ -235,10 +342,10 @@ def calc_margin_score(gross, op, net):
     return round(score, 2)
 
 
-def calc_eps_score(eps_ttm, eps_est):
-    if eps_ttm is None or eps_est is None or eps_ttm <= 0:
+def calc_eps_score(eps_last, eps_ttm):
+    if eps_last is None or eps_ttm is None or eps_last <= 0:
         return 0
-    growth = (eps_est - eps_ttm) / eps_ttm * 100
+    growth = (eps_ttm - eps_last) / eps_last * 100
     return round(growth, 2)
 
 

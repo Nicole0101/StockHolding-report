@@ -20,18 +20,18 @@ _STATIC_MAP_MTIME = None
 
 def get_price_90d_high_low(df):
     df_90 = df.tail(90)
-    max_price = pd.to_numeric(df_90["max"], errors="coerce").max()
-    min_price = pd.to_numeric(df_90["min"], errors="coerce").min()
+    max_price90 = pd.to_numeric(df_90["max"], errors="coerce").max()
+    min_price90 = pd.to_numeric(df_90["min"], errors="coerce").min()
 
-    if pd.isna(max_price) or pd.isna(min_price):
+    if pd.isna(max_price90) or pd.isna(min_price90):
         return {
             "price_90d_high": None,
             "price_90d_low": None,
         }
 
     return {
-        "price_90d_high": float(max_price),
-        "price_90d_low": float(min_price),
+        "price_90d_high": float(max_price90),
+        "price_90d_low": float(min_price90),
     }
 
 
@@ -47,7 +47,8 @@ def load_static_map(static_csv_path=STATIC_CSV_PATH, force_reload=False):
         if (not force_reload) and _STATIC_MAP_CACHE is not None and _STATIC_MAP_MTIME == mtime:
             return _STATIC_MAP_CACHE
 
-        df = pd.read_csv(static_csv_path, encoding="utf-8-sig", dtype={"stock_id": str})
+        df = pd.read_csv(static_csv_path, encoding="utf-8-sig",
+                         dtype={"stock_id": str})
         df.columns = df.columns.str.strip()
 
         if "stock_id" not in df.columns:
@@ -157,8 +158,10 @@ def process_stock(s, static_map=None):
         df = add_indicators(df)
         latest, prev = df.iloc[-1], df.iloc[-2]
         price_stats = get_price_90d_high_low(df)
-
+        max_price = latest["max"]
+        min_price = latest["min"]
         chg = latest["close"] - prev["close"]
+
         chgPct = round((chg / prev["close"]) * 100, 2)
         chgamp = latest["max"] - latest["min"]
         amp = round((chgamp / prev["close"]) * 100, 2)
@@ -206,8 +209,10 @@ def process_stock(s, static_map=None):
             elif k < d:
                 kd_score = -0.5
 
-        kd_trend = get_kd_trend(df) or {"kd_3d_up": None, "kd_trend": None, "kd_score": None}
-        bb_trend = get_bb_trend(df) or {"bb_3d_up": None, "bb_trend": None, "bb_score": None}
+        kd_trend = get_kd_trend(
+            df) or {"kd_3d_up": None, "kd_trend": None, "kd_score": None}
+        bb_trend = get_bb_trend(
+            df) or {"bb_3d_up": None, "bb_trend": None, "bb_score": None}
         k_trend = kd_trend.get("kd_trend")
         d_trend = None
 
@@ -237,12 +242,18 @@ def process_stock(s, static_map=None):
         bias6 = safe_ma_stats.get("bias6")
         bias18 = safe_ma_stats.get("bias18")
         bias50 = safe_ma_stats.get("bias50")
-        bias6_min = safe_ma_stats.get("bias6_90d_low") or safe_ma_stats.get("bias6_min")
-        bias6_max = safe_ma_stats.get("bias6_90d_high") or safe_ma_stats.get("bias6_max")
-        bias18_min = safe_ma_stats.get("bias18_90d_low") or safe_ma_stats.get("bias18_min")
-        bias18_max = safe_ma_stats.get("bias18_90d_high") or safe_ma_stats.get("bias18_max")
-        bias50_min = safe_ma_stats.get("bias50_90d_low") or safe_ma_stats.get("bias50_min")
-        bias50_max = safe_ma_stats.get("bias50_90d_high") or safe_ma_stats.get("bias50_max")
+        bias6_min = safe_ma_stats.get(
+            "bias6_90d_low") or safe_ma_stats.get("bias6_min")
+        bias6_max = safe_ma_stats.get(
+            "bias6_90d_high") or safe_ma_stats.get("bias6_max")
+        bias18_min = safe_ma_stats.get(
+            "bias18_90d_low") or safe_ma_stats.get("bias18_min")
+        bias18_max = safe_ma_stats.get(
+            "bias18_90d_high") or safe_ma_stats.get("bias18_max")
+        bias50_min = safe_ma_stats.get(
+            "bias50_90d_low") or safe_ma_stats.get("bias50_min")
+        bias50_max = safe_ma_stats.get(
+            "bias50_90d_high") or safe_ma_stats.get("bias50_max")
 
         try:
             signal_res = get_tech_signal(
@@ -274,7 +285,8 @@ def process_stock(s, static_map=None):
             ) or {"signal": "等待觀察", "reason": "", "signal_text": "等待觀察"}
         except Exception as e:
             print(f"❌ signal error {stock_id}: {e}")
-            signal_res = {"signal": "等待觀察", "reason": f"signal error: {e}", "signal_text": "等待觀察"}
+            signal_res = {"signal": "等待觀察",
+                          "reason": f"signal error: {e}", "signal_text": "等待觀察"}
 
         signal = signal_res.get("signal", "等待觀察")
         reason = signal_res.get("reason", "")
@@ -282,7 +294,8 @@ def process_stock(s, static_map=None):
 
         sig = 1 if signal == "買進" else -1 if signal == "賣出" else 0
 
-        kd_buy = bool(None not in (k, d, prev_k, prev_d) and (prev_k <= prev_d) and (k > d))
+        kd_buy = bool(None not in (k, d, prev_k, prev_d)
+                      and (prev_k <= prev_d) and (k > d))
         ma18_break = bool(
             ma18 is not None and prev_ma18 is not None and prev_close <= prev_ma18 and close > ma18
         )
@@ -303,8 +316,8 @@ def process_stock(s, static_map=None):
             static_fields.get("net_margin"),
         )
         eps_score = calc_eps_score(
+            static_fields.get("eps_Y"),
             static_fields.get("eps_ttm"),
-            static_fields.get("eps_est"),
         )
         trend_score = calc_trend_score(
             static_fields.get("gross_margin_qoq"),
@@ -312,7 +325,8 @@ def process_stock(s, static_map=None):
             static_fields.get("net_margin_qoq"),
             static_fields.get("net_margin_yoy_diff"),
         )
-        score = round(margin_score * 0.4 + eps_score * 0.3 + trend_score * 0.3, 2)
+        score = round(margin_score * 0.4 + eps_score *
+                      0.3 + trend_score * 0.3, 2)
 
         def to_py(v):
             if isinstance(v, np.bool_):
@@ -329,6 +343,8 @@ def process_stock(s, static_map=None):
             "name": name,
             "code": stock_id,
             "price": float(round(close, 2)),
+            "price_max": float(round(max_price, 2)),
+            "price_min": float(round(min_price, 2)),
             "price_90d_high": price_stats.get("price_90d_high"),
             "price_90d_low": price_stats.get("price_90d_low"),
             "chg": float(round(chg, 2)),
@@ -339,7 +355,6 @@ def process_stock(s, static_map=None):
 
             "dividend": float(dividend) if dividend is not None else None,
             "yield_value": float(yield_value) if yield_value is not None and not pd.isna(yield_value) else None,
-
             "k": float(round(k, 1)) if k is not None else None,
             "d": float(round(d, 1)) if d is not None else None,
             "kd_3d_up": kd_trend.get("kd_3d_up"),
@@ -401,9 +416,8 @@ def _build_static_fields(static_row):
     return {
         "eps_Y": to_float_or_none(static_row.get("eps_Y")),
         "eps_ttm": to_float_or_none(static_row.get("eps_ttm")),
-        "eps_est": to_float_or_none(static_row.get("eps_est")),
         "per_Y": to_float_or_none(static_row.get("per_Y")),
-
+        "per_ttm": to_float_or_none(static_row.get("per_ttm")),
         "rev": to_float_or_none(static_row.get("rev")),
         "rev_mom": to_float_or_none(static_row.get("rev_mom")),
         "rev_qoq": to_float_or_none(static_row.get("rev_qoq")),
