@@ -12,6 +12,8 @@ from financial_analysis import (
     extract_metric,
 )
 
+print("EPS test =", stock_id, get_eps_analysis(stock_id, 1))
+
 
 def get_finmind_usage():
     token = os.getenv("FINMIND_TOKEN")
