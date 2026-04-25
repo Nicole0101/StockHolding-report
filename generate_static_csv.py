@@ -12,8 +12,6 @@ from financial_analysis import (
     extract_metric,
 )
 
-print("EPS test =", stock_id, get_eps_analysis(stock_id, 1))
-
 
 def get_finmind_usage():
     token = os.getenv("FINMIND_TOKEN")
@@ -187,7 +185,7 @@ def build_all_static(stock_list: list[dict]) -> pd.DataFrame:
         "pbr_latest", "pbr_90d_high", "pbr_90d_low",
         "static_updated_at", "static_status", "static_reason",
     ]
-
+    print("EPS test =", stock_id, get_eps_analysis(stock_id, 1))
     existing_cols = [c for c in ordered_cols if c in df.columns]
     return df[existing_cols]
 
