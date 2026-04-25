@@ -12,8 +12,8 @@ jobs:
 
       # ✅ 刪除 HTML 報表（你原本的）
       - name: Delete old reports
-        run: rm 持股_*.html || true
-
+        run: |
+          ls -1t *股_*.html 2>/dev/null | tail -n +3 | xargs -r rm -f
       # ✅ Commit
       - name: Commit
         run: |
