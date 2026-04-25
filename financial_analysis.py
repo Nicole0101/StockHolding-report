@@ -186,6 +186,15 @@ def get_eps_analysis(stock_id, current_price):
             prev_eps = get_eps(target_year - 1, target_season)
             prev_rev = get_revenue(target_year - 1, target_season)
             curr_rev = get_revenue(target_year, target_season)
+            print(
+                "EPS rev debug =",
+                stock_id,
+                target_year,
+                target_season,
+                "prev_eps=", prev_eps,
+                "prev_rev=", prev_rev,
+                "curr_rev=", curr_rev,
+            )
 
             if prev_eps is None:
                 return None
