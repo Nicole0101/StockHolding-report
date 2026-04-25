@@ -1,0 +1,51 @@
+name: Gen Holding CSV
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pandas
+
+      - name: Run Gencsv.py
+        run: python Gencsv.py
+
+      - name: Verify generated files
+        run: |
+          pwd
+          ls -la
+          ls -la Allcsv || true
+          test -f Holding.csv && echo "Holding.csv exists" || (echo "Holding.csv missing" && exit 1)
+
+      - name: Commit and push Holding.csv
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add Holding.csv
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Update Holding.csv"
+          git pull --rebase origin main
+          git push origin main
