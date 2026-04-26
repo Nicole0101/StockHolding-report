@@ -110,8 +110,7 @@ def build_static_row(s: dict) -> dict:
     }
 
     try:
-        eps_res = get_eps_analysis(stock_id, 1)
-        print("EPS test =", stock_id, get_eps_analysis(stock_id, 1))
+        eps_res = get_eps_analysis(stock_id, 1)        
         eps_res = tuple(eps_res) if isinstance(eps_res, tuple) else (None,) * 4
         eps_res = eps_res + (None,) * (4 - len(eps_res))
         eps_last, eps_ttm, per_last, per_ttm = eps_res
